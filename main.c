@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:34:45 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/09 14:46:00 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/09 14:49:09 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,6 @@ int	main(int ac, char **argv)
 			printf("FAILURE\n");
 	}
 	else
-		printf("salut:.\n");
+		printf("aurevoir:.\n");
 	return (EXIT_SUCCESS);
 }
