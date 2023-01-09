@@ -1,38 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strtrim.c                                       :+:      :+:    :+:   */
+/*   ft_count_strs_set.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/26 15:55:26 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 01:42:25 by zharzi           ###   ########.fr       */
+/*   Created: 2022/12/27 01:45:14 by zharzi            #+#    #+#             */
+/*   Updated: 2022/12/27 01:45:31 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-char	*ft_strtrim(char const *s1, char const *set)
+ssize_t	ft_count_strs_set(const char *s, char *set)
 {
-	char	*str;
+	ssize_t	n;
 	ssize_t	i;
-	ssize_t	j;
 
+	n = 0;
 	i = 0;
-	j = ft_strlen(s1);
-	if (s1)
+	while (s && s[i])
 	{
-		while (s1 && s1[i] && ft_strchr(set, s1[i]))
+		while (s[i] && ft_strchr(set, s[i]))
 			i++;
-		while (s1 && s1[i] && ft_strrchr(set, s1[j]))
-			j--;
-		str = ft_substr(s1, i, (j - i + 1));
-		if (str)
-			return (str);
+		if (s[i] && !ft_strchr(set, s[i]))
+			n++;
+		while (s[i] && !ft_strchr(set, s[i]))
+			i++;
 	}
-	str = malloc(sizeof(char));
-	if (!str)
-		return (NULL);
-	str[0] = '\0';
-	return (str);
+	return (n);
 }

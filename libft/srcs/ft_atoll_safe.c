@@ -1,18 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_atoll.c                                         :+:      :+:    :+:   */
+/*   ft_atoll_safe.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/05 23:59:32 by zharzi            #+#    #+#             */
-/*   Updated: 2022/09/06 18:39:35 by zharzi           ###   ########.fr       */
+/*   Updated: 2022/12/27 02:17:16 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
-
-long long int	ft_atoll_safe2(const char *nptr, int *check, \
+static long long int	ft_atoll_safe2(const char *nptr, int *check, \
 	long long int i, long long int j)
 {
 	int	k;

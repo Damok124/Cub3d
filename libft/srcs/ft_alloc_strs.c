@@ -1,38 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strtrim.c                                       :+:      :+:    :+:   */
+/*   ft_alloc_strs.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/26 15:55:26 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 01:42:25 by zharzi           ###   ########.fr       */
+/*   Created: 2022/12/27 01:57:16 by zharzi            #+#    #+#             */
+/*   Updated: 2022/12/27 01:57:37 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-char	*ft_strtrim(char const *s1, char const *set)
+char	**ft_alloc_strs(int size)
 {
-	char	*str;
-	ssize_t	i;
-	ssize_t	j;
+	char	**strs;
 
-	i = 0;
-	j = ft_strlen(s1);
-	if (s1)
-	{
-		while (s1 && s1[i] && ft_strchr(set, s1[i]))
-			i++;
-		while (s1 && s1[i] && ft_strrchr(set, s1[j]))
-			j--;
-		str = ft_substr(s1, i, (j - i + 1));
-		if (str)
-			return (str);
-	}
-	str = malloc(sizeof(char));
-	if (!str)
+	strs = (char **)malloc(sizeof(char *) * (size + 1));
+	if (!strs)
 		return (NULL);
-	str[0] = '\0';
-	return (str);
+	strs[size] = NULL;
+	return (strs);
 }

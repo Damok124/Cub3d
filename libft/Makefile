@@ -6,7 +6,7 @@
 #    By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/07/06 17:12:24 by zharzi            #+#    #+#              #
-#    Updated: 2022/09/26 14:48:31 by zharzi           ###   ########.fr        #
+#    Updated: 2022/12/31 11:17:40 by zharzi           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,7 @@ SRCSDIR = ./srcs/
 SRCS = $(SRCSDIR)ft_memset.c \
 $(SRCSDIR)ft_abs.c \
 $(SRCSDIR)ft_bzero.c \
+$(SRCSDIR)ft_count_strs.c \
 $(SRCSDIR)ft_check_extension.c \
 $(SRCSDIR)ft_memcpy.c \
 $(SRCSDIR)ft_memmove.c \
@@ -71,6 +72,7 @@ $(SRCSDIR)ft_lstclear.c \
 $(SRCSDIR)ft_lstiter.c \
 $(SRCSDIR)ft_lstmap.c \
 $(SRCSDIR)ft_full_free.c \
+$(SRCSDIR)ft_full_free_nb.c \
 $(SRCSDIR)ft_true_free.c \
 $(SRCSDIR)ft_atoi_safe.c \
 $(SRCSDIR)ft_atoi_base_safe.c \
@@ -93,6 +95,16 @@ $(SRCSDIR)ft_memset_lst.c \
 $(SRCSDIR)ft_full_free_lst.c \
 $(SRCSDIR)ft_index_intlst.c \
 $(SRCSDIR)ft_lst_find_one.c \
+$(SRCSDIR)ft_count_strs_set.c \
+$(SRCSDIR)ft_split_set.c \
+$(SRCSDIR)ft_strslen.c \
+$(SRCSDIR)ft_alloc_strs.c \
+$(SRCSDIR)ft_isspace.c \
+$(SRCSDIR)ft_strsdup.c \
+$(SRCSDIR)ft_split_at_index.c \
+$(SRCSDIR)ft_triple_free.c \
+${SRCSDIR}ft_strs_triple_into_double.c \
+$(SRCSDIR)ft_triple_strslen.c \
 $(SRCSDIR)get_next_line.c
 
 HEADERDIR = includes/
@@ -101,9 +113,9 @@ HEADER = libft.h
 
 OBJ = $(SRCS:.c=.o)
 
-CC = gcc
+CC = clang
 
-FLAGS = -Wall -Wextra -Werror -ggdb
+FLAGS = -Wall -Wextra -Werror -g3 -gdwarf-4
 
 IFLAG = -I$(HEADERDIR)
 
