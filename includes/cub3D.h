@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   fdf.h                                              :+:      :+:    :+:   */
+/*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2022/09/26 01:07:36 by zharzi           ###   ########.fr       */
+/*   Updated: 2023/01/09 17:17:20 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef FDF_H
-# define FDF_H
+#ifndef CUB3D_H
+# define CUB3D_H
 # define WINDOW_WIDTH 1920
 # define WINDOW_HEIGHT 1080
 
@@ -23,42 +23,59 @@
 # include "libft.h"
 # include "ft_printf.h"
 
-enum {
-	ON_KEYDOWN = 2,
-	ON_KEYUP = 3,
-	ON_MOUSEDOWN = 4,
-	ON_MOUSEUP = 5,
-	ON_MOUSEMOVE = 6,
-	ON_EXPOSE = 12,
-	ON_DESTROY = 17
-};
+typedef struct s_rgb {
+	int	r;
+	int	g;
+	int	b;
+}	t_rgb;
 
-typedef struct s_vars {
-	void			*mlx;
-	void			*win;
-	void			*img;
-	void			*addr;
-	int				bits_per_pixel;
-	int				line_length;
-	int				endian;
-	char			*hexcolor;
-	int				red;
-	int				green;
-	int				blue;
-	int				rows;
-	int				len;
-	int				spacing;
-}					t_vars;
+typedef struct s_context {
+	char	*texture_NO;
+	char	*texture_SO;
+	char	*texture_WE;
+	char	*texture_EA;
+	t_rgb	floor;
+	t_rgb	ceiling;
+	char	**map;
+}	t_context;
 
-typedef struct s_spot {
-	float			x;
-	float			y;
-	float			z;
-	int				red;
-	int				green;
-	int				blue;
-}					t_spot;
+// enum {
+// 	ON_KEYDOWN = 2,
+// 	ON_KEYUP = 3,
+// 	ON_MOUSEDOWN = 4,
+// 	ON_MOUSEUP = 5,
+// 	ON_MOUSEMOVE = 6,
+// 	ON_EXPOSE = 12,
+// 	ON_DESTROY = 17
+// };
 
+// typedef struct s_vars {
+// 	void			*mlx;
+// 	void			*win;
+// 	void			*img;
+// 	void			*addr;
+// 	int				bits_per_pixel;
+// 	int				line_length;
+// 	int				endian;
+// 	char			*hexcolor;
+// 	int				red;
+// 	int				green;
+// 	int				blue;
+// 	int				rows;
+// 	int				len;
+// 	int				spacing;
+// }					t_vars;
+
+// typedef struct s_spot {
+// 	float			x;
+// 	float			y;
+// 	float			z;
+// 	int				red;
+// 	int				green;
+// 	int				blue;
+// }					t_spot;
+
+/*
 /////////////////////////
 //	INTERACTIONS
 /////////////////////////
@@ -119,5 +136,6 @@ unsigned int	ft_fdf_btou(const char *nptr, char *base);
 /////////////////////////
 void			ft_fdf_free_matrix(t_spot **matrix, t_vars *vars);
 void			ft_end_mlx(t_vars **vars);
+*/
 
 #endif
