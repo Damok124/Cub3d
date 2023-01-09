@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/12/10 15:34:45 by zharzi            #+#    #+#             */
+/*   Updated: 2023/01/09 14:49:34 by zharzi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "philo.h"
 
 int	main(int ac, char **argv)
@@ -16,6 +28,6 @@ int	main(int ac, char **argv)
 			printf("FAILURE\n");
 	}
 	else
-		printf("salut:.\n");
+		printf("gooooood:.\n");
 	return (EXIT_SUCCESS);
 }
