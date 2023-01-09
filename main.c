@@ -6,7 +6,7 @@
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:34:45 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/09 13:49:40 by zharzi           ###   ########.fr       */
+/*   Updated: 2023/01/09 14:40:43 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,6 @@ int	main(int ac, char **argv)
 			printf("FAILURE\n");
 	}
 	else
-		printf("Wrong arguments.\n");
+		printf("salut:.\n");
 	return (EXIT_SUCCESS);
 }
