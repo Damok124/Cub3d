@@ -6,13 +6,13 @@
 #    By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/08/31 13:40:41 by zharzi            #+#    #+#              #
-#    Updated: 2023/01/09 15:36:16 by zharzi           ###   ########.fr        #
+#    Updated: 2023/01/09 15:46:33 by alprival         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = libfdf.a
 
-BINARY = fdf
+BINARY = cub3d
 
 SRCSDIR = ./srcs/
 

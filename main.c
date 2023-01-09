@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
+/*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:40:17 by zharzi            #+#    #+#             */
-/*   Updated: 2022/09/26 15:26:06 by zharzi           ###   ########.fr       */
+/*   Updated: 2023/01/09 17:49:00 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
+
 
 void	ft_fdf_setup_matrix(t_vars *vars, t_spot **matrix)
 {
@@ -59,14 +60,42 @@ int	ft_fdf_error_management(int ac, char **argv)
 	return (0);
 }
 
+
+void	my_mlx_pixel_put(t_vars *data, int x, int y, int color)
+{
+	char	*dst;
+
+	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
+	*(unsigned int*)dst = color;
+}
+
 int	main(int ac, char **argv)
 {
-	int	error;
+	t_vars	img;
+	int px;
+	int py;
+	char	map[10][10] = {	"..........",
+							".11111111.",
+							".10000001.",
+							".10000001.",
+							".10000001.",
+							".10000001.",
+							".10000001.",
+							".10000001.",
+							".11111111.",
+							".........."};
 
-	error = ft_fdf_error_management(ac, argv);
-	if (!error)
-		ft_fdf(argv[ac - 1]);
-	else
-		ft_printf("Error. Wrong argument(s).\n");
-	return (0);
+	(void)map;
+	px = 300;
+	py = 300;
+	(void)ac;
+	(void)argv;
+	img.mlx = mlx_init();
+	img.win = mlx_new_window(img.mlx, 1920, 1080, "Hello world!");
+	img.img = mlx_new_image(img.mlx, 1920, 1080);
+	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length,
+								&img.endian);
+	my_mlx_pixel_put(&img, px, py, 0x00FF0000);
+	mlx_put_image_to_window(img.mlx, img.win, img.img, 0, 0);
+	mlx_loop(img.mlx);
 }
