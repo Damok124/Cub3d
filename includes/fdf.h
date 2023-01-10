@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/09 16:48:50 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/10 17:41:08 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,12 @@ enum {
 	ON_DESTROY = 17
 };
 
+#define IMG 64
+#define PI 3.1415926535
+#define SPEED 5
+#define RSPEED 0.1
+#define P2 PI / 2
+#define P3 3 * PI /2
 typedef struct s_vars {
 	void			*mlx;
 	void			*win;
@@ -48,7 +54,37 @@ typedef struct s_vars {
 	int				rows;
 	int				len;
 	int				spacing;
+	float			py;
+	float			px;
+	float			pdx;
+	float			pdy;
+	float			pa;
+	float			px_base;
+	float			py_base;
+	char			**map;
+	int				map_height;
+	int				map_lenght;
 }					t_vars;
+
+typedef struct s_rays {
+	int		r;
+	int		mx;
+	int		my;
+	int		dof;
+	float	rx;
+	float	ry;
+	float	ra;
+	float	xo;
+	float	yo;
+	float	hx;
+	float	hy;
+	float	vx;
+	float	vy;
+	float	aTan;
+	float	distH;
+	float	distV;
+	float	nTan;
+}					t_rays;
 
 typedef struct s_spot {
 	float			x;
