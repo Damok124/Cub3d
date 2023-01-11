@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:40:17 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/10 17:51:24 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/11 20:45:42 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,27 +117,23 @@ void	ft_draw_map(t_vars *vars)
 		}
 		y++;
 	}
-		// my_mlx_pixel_put(&vars, vars.px, vars.py, 0x00FF0000);
 }
 
 void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
 {
-	my_mlx_pixel_put(vars, rays->rx + 1, rays->ry, color);
-	my_mlx_pixel_put(vars, rays->rx - 1, rays->ry, color);
-	my_mlx_pixel_put(vars, rays->rx, rays->ry + 1, color);
-	my_mlx_pixel_put(vars, rays->rx, rays->ry - 1, color);
+	my_mlx_pixel_put(vars, rays->sx + 1, rays->sy, color);
+	my_mlx_pixel_put(vars, rays->sx - 1, rays->sy, color);
+	my_mlx_pixel_put(vars, rays->sx, rays->sy + 1, color);
+	my_mlx_pixel_put(vars, rays->sx, rays->sy - 1, color);
 }
 
-float	ft_dist(float ax, float ay, float bx, float by, float ang)
+float	ft_dist(float ax, float ay, float bx, float by)
 {
-	(void)ang;
 	return (sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay)));
 }	
 
 void	ft_horizontal_line(t_vars *vars, t_rays *rays)
 {
-	rays->hx = vars->px;
-	rays->hy = vars->py;
 	rays->dof = 0;
 	rays->aTan = - 1 / tan(rays->ra);
 	if(rays->ra > PI)
@@ -158,19 +154,17 @@ void	ft_horizontal_line(t_vars *vars, t_rays *rays)
 	{
 		rays->rx = vars->px;
 		rays->ry = vars->py;
-		rays->dof= 64;
+		rays->dof= 16;
 	}
-	while(rays->dof < 64)
+	while(rays->dof < 16)
 	{
 		rays->mx = (int)(rays->rx) >> 6;
 		rays->my = (int)(rays->ry) >> 6;
-		if(rays->mx > 0 && rays->my > 0 && rays->mx < vars->map_lenght && rays->my < vars->map_height && vars->map[rays->my][rays->mx] > '0')
-		{
-			rays->hx = rays->rx;
-			rays->hy = rays->ry;
-			rays->distH = ft_dist(vars->px,vars->py,rays->hx,rays->hy,rays->ra);
-			rays->dof = 64;
-		}
+		if(rays->mx >= 0 && rays->my >= 0 
+			&& rays->mx < vars->map_lenght 
+			&& rays->my < vars->map_height 
+			&& vars->map[rays->my][rays->mx] == '1')
+			rays->dof = 16;
 		else
 		{
 			rays->rx+=rays->xo;
@@ -178,18 +172,18 @@ void	ft_horizontal_line(t_vars *vars, t_rays *rays)
 			rays->dof+=1;
 		}
 	}
+	rays->sx = rays->rx;
+	rays->sy = rays->ry;
 }
 
 void	ft_vertical_line(t_vars *vars, t_rays *rays)
 {
-	rays->vx = vars->px;
-	rays->vy = vars->py;
 	rays->dof = 0;
 	rays->nTan = -tan(rays->ra);
 	if(rays->ra > P2 && rays->ra < P3)
 	{
 		rays->rx = (((int)vars->px >> 6) << 6) - 0.0001;
-		rays->ry = (vars->py - rays->rx) * rays->nTan + vars->py;
+		rays->ry = (vars->px - rays->rx) * rays->nTan + vars->py;
 		rays->xo = -64;
 		rays->yo = -rays->xo * rays->nTan;
 	}
@@ -204,19 +198,17 @@ void	ft_vertical_line(t_vars *vars, t_rays *rays)
 	{
 		rays->rx = vars->px;
 		rays->ry = vars->py;
-		rays->dof= 64;
+		rays->dof= 16;
 	}
-	while(rays->dof < 64)
+	while(rays->dof < 16)
 	{
 		rays->mx = (int)(rays->rx) >> 6;
 		rays->my = (int)(rays->ry) >> 6;
-		if(rays->mx > 0 && rays->my > 0 && rays->mx < vars->map_lenght && rays->my < vars->map_height && vars->map[rays->my][rays->mx] > '0')
-		{
-			rays->vx = rays->rx;
-			rays->vy = rays->ry;
-			rays->distV = ft_dist(vars->px,vars->py,rays->vx,rays->vy,rays->ra);
-			rays->dof = 64;
-		}
+		if(rays->mx >= 0 && rays->my >= 0
+			&& rays->mx < vars->map_lenght 
+			&& rays->my < vars->map_height 
+			&& vars->map[rays->my][rays->mx] == '1')
+			rays->dof = 16;
 		else
 		{
 			rays->rx+=rays->xo;
@@ -224,31 +216,80 @@ void	ft_vertical_line(t_vars *vars, t_rays *rays)
 			rays->dof+=1;
 		}
 	}
+	if(ft_dist(vars->px,vars->py,rays->rx,rays->ry) < ft_dist(vars->px,vars->py,rays->sx,rays->sy))
+	{
+		rays->sx = rays->rx;
+		rays->sy = rays->ry;
+		rays->color = 0x00FF0000;
+	}
+	else
+		rays->color = 0x00AA0000;
+	rays->distT = ft_dist(vars->px,vars->py,rays->sx,rays->sy);
+}
+
+void	ft_draw_line(t_vars *vars, t_rays *rays,int line_start, int line_end)
+{
+	int i;
+	int gl_line_width;
+
+	gl_line_width = ((vars->map_lenght + 1) * IMG) / 90;
+	i = 0;
+	while(line_start < line_end)
+	{
+		i = 0;
+		while(i < gl_line_width)
+		{
+			my_mlx_pixel_put(vars, ((vars->map_lenght - 1) * IMG) + (rays->r * gl_line_width + i), line_start, rays->color);
+			i++;
+		}
+		line_start++;
+	}
+}
+
+void	ft_3d_display(t_vars *vars, t_rays *rays)
+{
+	float	lineH;
+	float	line_start;
+	float	line_end;
+	float	ca;
+	
+	ca = vars->pa - rays->ra;
+	if (ca < 0)
+		ca += 2 *PI;
+	if (ca > 2 * PI)
+		ca -= 2 * PI;
+	rays->distT = rays->distT *cos(ca);
+	lineH = (IMG * (IMG * vars->map_height)) / rays->distT;
+	if(lineH > (IMG * vars->map_height))
+		lineH = (IMG * vars->map_height);
+	line_start = ((vars->map_height * IMG) / 2) - (lineH / 2);
+	line_end = line_start + lineH;
+	ft_draw_line(vars, rays, line_start, line_end);
+}
+
+void	ft_ang_rays(t_rays *rays)
+{
+	if(rays->ra < 0)
+		rays->ra += 2 * PI;
+	if(rays->ra > 2 * PI)
+		rays->ra -= 2 * PI;
 }
 
 void	ft_draw_rays(t_vars *vars)
 {
-	t_rays rays;
-
+	t_rays 	rays;
+	
 	rays.r = 0;
-	rays.ra = vars->pa - 0.0017*30;
-	while(rays.r < 1)
+	rays.ra = vars->pa - DR * 30;
+	ft_ang_rays(&rays);
+	while(rays.r < 90)
 	{
-		rays.distH = 10000;
-		rays.distV = 10000;
 		ft_horizontal_line(vars, &rays);
 		ft_vertical_line(vars, &rays);
-		if(rays.distV <= rays.distH)
-		{
-			rays.rx = fabs(rays.vx);
-			rays.ry = fabs(rays.vy);
-		}
-		else if(rays.distV > rays.distH)
-		{
-			rays.rx = fabs(rays.hx);
-			rays.ry = fabs(rays.hy);
-		}
-		ft_draw_ray_hit(vars, &rays, 0x00FF0000);
+		ft_draw_ray_hit(vars, &rays, rays.color);
+		ft_3d_display(vars, &rays);
+		ft_ang_rays(&rays);
+		rays.ra += DR;
 		rays.r++;
 	}
 }
@@ -256,16 +297,17 @@ void	ft_draw_rays(t_vars *vars)
 
 void	ft_draw_player(t_vars *vars)
 {
-	my_mlx_pixel_put(vars, vars->px  - 1, vars->py, 0x00FF0000);
-	my_mlx_pixel_put(vars, vars->px + 1, vars->py, 0x00FF0000);
-	my_mlx_pixel_put(vars, vars->px,vars->py -1, 0x00FF0000);
-	my_mlx_pixel_put(vars, vars->px, vars->py +1, 0x00FF0000);
+	my_mlx_pixel_put(vars, vars->px  - 1, vars->py, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->px + 1, vars->py, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->px,vars->py -1, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->px, vars->py +1, 0x00BBCCBB);
 }
 
 
 
 void	ft_display(t_vars *vars)
 {
+
 	vars->img = mlx_new_image(vars->mlx, 1920, 1080);
 	vars->addr = mlx_get_data_addr(vars->img, &vars->bits_per_pixel, &vars->line_length,
 								&vars->endian);
@@ -277,25 +319,13 @@ void	ft_display(t_vars *vars)
 int	ft_close_key(t_vars *vars)
 {
 	mlx_destroy_window(vars->mlx, vars->win);
-	printf("%f\n%f\n%f\n%f\n%f\n",vars->pa, vars->pdx, vars->pdy, vars->px, vars->py);
 	exit(0);
 	return (0);
 }
 
 int	ft_move_keycode(int keycode, t_vars *vars)
 {
-	if (keycode == 65361 || keycode == 97) // right
-	{
-		vars->pa -= RSPEED;
-		if (vars->pa < 0)
-			vars->pa += (2 * PI);
-		vars->pdx=cos(vars->pa) * 5;
-		vars->pdy=sin(vars->pa) * 5;
-		mlx_destroy_image(vars->mlx, vars->img);
-		ft_display(vars);
-		mlx_put_image_to_window(vars->mlx, vars->win, vars->img,0 , 0);
-	}
-	if (keycode == 65363 || keycode == 100) // left
+	if (keycode ==  65363 || keycode == 'd') // right
 	{
 		vars->pa += RSPEED;
 		if (vars->pa > (2 * PI))
@@ -306,18 +336,29 @@ int	ft_move_keycode(int keycode, t_vars *vars)
 		ft_display(vars);
 		mlx_put_image_to_window(vars->mlx, vars->win, vars->img,0 , 0);
 	}
-	if (keycode == 65362|| keycode == 119) // bottom
+	if (keycode == 65361 || keycode == 'a') // left
 	{
-		vars->px += vars->pdx;
-		vars->py += vars->pdy;
+		vars->pa -= RSPEED;
+		if (vars->pa < 0)
+			vars->pa += (2 * PI);
+		vars->pdx=cos(vars->pa) * 5;
+		vars->pdy=sin(vars->pa) * 5;
 		mlx_destroy_image(vars->mlx, vars->img);
 		ft_display(vars);
 		mlx_put_image_to_window(vars->mlx, vars->win, vars->img,0 , 0);
 	}
-	if (keycode == 65364 || keycode == 115) // up
+	if (keycode == 65364 || keycode == 's') // bottom
 	{
 		vars->px -= vars->pdx;
 		vars->py -= vars->pdy;
+		mlx_destroy_image(vars->mlx, vars->img);
+		ft_display(vars);
+		mlx_put_image_to_window(vars->mlx, vars->win, vars->img,0 , 0);
+	}
+	if (keycode == 65362 || keycode == 'w' ) // up
+	{
+		vars->px += vars->pdx;
+		vars->py += vars->pdy;
 		mlx_destroy_image(vars->mlx, vars->img);
 		ft_display(vars);
 		mlx_put_image_to_window(vars->mlx, vars->win, vars->img,0 , 0);
@@ -382,14 +423,13 @@ int	main(int ac, char **argv)
 		vars.map[i + 1] = get_next_line(fd);
 		i++;
 	}
-	vars.map_height = i;
+	vars.map_height = i - 1;
 	ft_init(&vars);
 	(void)ac;
 	(void)argv;
 	vars.mlx = mlx_init();
-	vars.win = mlx_new_window(vars.mlx, (vars.map_lenght -1) * IMG, vars.map_height * IMG, "Hello world!");
+	vars.win = mlx_new_window(vars.mlx, (vars.map_lenght -1) * 2 * IMG, vars.map_height * IMG, "Hello world!");
 	ft_display(&vars);
-	printf("%f\n%f\n%f\n%f\n%f\n\n",vars.pa, vars.pdx, vars.pdy, vars.px, vars.py);
 	mlx_hook(vars.win, 2, 1L << 0, ft_move_keycode, &vars);
 	mlx_put_image_to_window(vars.mlx, vars.win, vars.img, 0, 0);
 	mlx_loop(vars.mlx);

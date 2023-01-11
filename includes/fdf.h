@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/10 17:41:08 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/11 20:20:49 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,16 +33,22 @@ enum {
 	ON_DESTROY = 17
 };
 
-#define IMG 64
+#define IMG 64			//size_image
+#define SPEED 5			//speed
+#define RSPEED 0.1 		//rotation speed
+#define DR 0.0174533 	// one degree in radian
 #define PI 3.1415926535
-#define SPEED 5
-#define RSPEED 0.1
 #define P2 PI / 2
-#define P3 3 * PI /2
+#define P3 3 * PI /2 
+
 typedef struct s_vars {
 	void			*mlx;
 	void			*win;
 	void			*img;
+	void			*img_xpm;
+	int				lenght_img_xpm;
+	int				height_img_xpm;
+	char			*addr_xpm;
 	void			*addr;
 	int				bits_per_pixel;
 	int				line_length;
@@ -80,8 +86,12 @@ typedef struct s_rays {
 	float	hy;
 	float	vx;
 	float	vy;
+	float	sx;
+	float	sy;
 	float	aTan;
 	float	distH;
+	float	color;
+	float	distT;
 	float	distV;
 	float	nTan;
 }					t_rays;
