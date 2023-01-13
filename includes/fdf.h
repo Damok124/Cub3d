@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/11 20:20:49 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/13 19:58:13 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,12 +34,22 @@ enum {
 };
 
 #define IMG 64			//size_image
-#define SPEED 5			//speed
-#define RSPEED 0.1 		//rotation speed
+#define SPEED 1			//speed
+#define RSPEED 0.01 		//rotation speed
 #define DR 0.0174533 	// one degree in radian
 #define PI 3.1415926535
+#define DOF 10
 #define P2 PI / 2
 #define P3 3 * PI /2 
+
+
+typedef struct t_keys {
+	int w;
+	int a;
+	int d;
+	int s;
+}					t_keys;
+
 
 typedef struct s_vars {
 	void			*mlx;
@@ -70,6 +80,7 @@ typedef struct s_vars {
 	char			**map;
 	int				map_height;
 	int				map_lenght;
+	t_keys 			key;
 }					t_vars;
 
 typedef struct s_rays {
@@ -104,6 +115,31 @@ typedef struct s_spot {
 	int				green;
 	int				blue;
 }					t_spot;
+
+
+/////////////////////////
+//	cub3d
+/////////////////////////
+
+
+void	ft_vertical_line(t_vars *vars, t_rays *rays);
+void	ft_horizontal_line(t_vars *vars, t_rays *rays);
+int		ft_display(t_vars *vars);
+void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color);
+void	ft_draw_map(t_vars *vars);
+void	ft_draw_squarre(t_vars *vars, int y, int x, int color);
+int		ft_if_player(t_vars *vars, int y, int x);
+void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color);
+void	ft_3d_display(t_vars *vars, t_rays *rays);
+void	ft_ang_rays(t_rays *rays);
+void	ft_draw_player(t_vars *vars);
+int		ft_move_keycode(int keycode, t_vars *vars);
+void	ft_pars_pos_player(t_vars *vars);
+int		ButtonUp(int keycode, t_vars *vars);
+int		ButtonDown(int keycode, t_vars *vars);
+void	ft_init(t_vars *vars);
+void	ft_draw_rays(t_vars *vars);
+float	ft_dist(float ax, float ay, float bx, float by);
 
 /////////////////////////
 //	INTERACTIONS

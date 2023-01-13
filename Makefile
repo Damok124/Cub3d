@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+         #
+#    By: alprival <alprival@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/08/31 13:40:41 by zharzi            #+#    #+#              #
-#    Updated: 2023/01/09 15:46:33 by alprival         ###   ########.fr        #
+#    Updated: 2023/01/13 16:19:47 by alprival         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,9 +18,12 @@ SRCSDIR = ./srcs/
 
 UTILSDIR = ./utils/
 
-SRCS = \
-${SRCSDIR}test.c
-
+SRCS = 	${SRCSDIR}ft_display.c\
+		${SRCSDIR}ft_keycode_input.c\
+		${SRCSDIR}parsing/ft_parsing.c\
+		${SRCSDIR}ft_3d_display.c\
+		${SRCSDIR}init/ft_init.c\
+		
 UTILS = \
 ${UTILSDIR}ft_fdf_free_matrix.c \
 ${UTILSDIR}ft_fdf_spacing.c \
