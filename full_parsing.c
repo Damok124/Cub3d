@@ -434,19 +434,54 @@ void	ft_spotted_spaces(char *str)
 			str[i] = '.';
 }
 
+t_lines	*ft_add_empty_map_line(int max, t_lines *next)
+{
+	char	*empty_line;
+	t_lines	*new;
+	int		i;
+
+	i = -1;
+	new = (t_lines *)malloc(sizeof(t_lines));
+	if (!new)
+		return (NULL);
+	empty_line = (char *)malloc(sizeof(char) * (max + 1));
+	if (!empty_line)
+	{
+		ft_true_free((void **)&new);
+		return (NULL);
+	}
+	empty_line[max] = '\0';
+	while (++i < max)
+		empty_line[i] = '.';
+	new->len = max;
+	new->index = 0;
+	new->type = 'M';
+	new->next = next;
+	new->line = empty_line;
+	return (new);
+}
+
 void	ft_square_shaped_dotted_map(t_lines *content)
 {
+	t_lines *tmp;
 	int		max;
 
+	tmp = NULL;
 	max = ft_get_greatest_len(content) + 2;
 	while (content && content->type != 'M')
+	{
+		tmp = content;
 		content = content->next;
+	}
+	tmp->next = ft_add_empty_map_line(max, content);
 	while (content)
 	{
 		content->line = ft_line_to_standard(content->line, max);
 		ft_spotted_spaces(content->line);
+		tmp = content;
 		content = content->next;
 	}
+	tmp->next = ft_add_empty_map_line(max, NULL);
 }
 
 t_context	*ft_cub3d_parsing(char **argv)
