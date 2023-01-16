@@ -280,6 +280,7 @@ t_lines	*ft_get_all_lines(char *filename)
 	int		size;
 	int		fd;
 
+	lst = NULL;
 	size = ft_file_lines_counter(filename);
 	fd = open(filename, O_RDONLY);
 	if (fd > 0)
@@ -484,6 +485,100 @@ void	ft_square_shaped_dotted_map(t_lines *content)
 	tmp->next = ft_add_empty_map_line(max, NULL);
 }
 
+int	ft_get_map_size(t_lines *lst)
+{
+	int	size;
+
+	size = 0;
+	while (lst && lst->type != 'M')
+		lst = lst->next;
+	while (lst && lst->type == 'M')
+	{
+		lst = lst->next;
+		size++;
+	}
+	return (size);
+}
+
+char	**ft_get_map(t_lines *lst)
+{
+	char	**map;
+	int		size;
+	int		i;
+
+	i = 0;
+	size = ft_get_map_size(lst);
+	map = (char **)malloc(sizeof(char *) * (size + 1));
+	if (!map)
+		return (NULL);
+	map[size] = NULL;
+	while (lst && lst->type != 'M')
+		lst = lst->next;
+	while (lst && lst->type == 'M')
+	{
+		map[i] = ft_strdup(lst->line);
+		i++;
+		lst = lst->next;
+	}
+	return (map);
+}
+
+void	ft_show_strs(char **map)
+{
+	int	i;
+
+	i = 0;
+	while (map[i])
+	{
+		printf("%s\n", map[i]);
+		i++;
+	}
+}
+
+char	**ft_strsdup(char **src)
+{
+	char	**dest;
+	int		i;
+
+	i = 0;
+	while (src && src[i])
+		i++;
+	dest = ft_alloc_strs(i);
+	while (--i >= 0)
+		dest[i] = ft_strdup(src[i]);
+	return (dest);
+}
+
+int	ft_check_if_flawless(char **map)
+{
+	int	i;
+	int	j;
+	int	size;
+	int	len;
+
+	i = 1;
+	j = 1;
+	size = ft_strslen(map);
+	len = ft_strlen(map[0]);
+	while (i < (size - 1))
+	{
+		while (j < (len - 1))
+		{
+			if (ft_strchr("NSWE0", map[i][j]))
+			{
+				if (map[i - 1][j] == '.' || map[i + 1][j] == '.' \
+					|| map[i][j - 1] == '.' || map[i][j + 1] == '.')
+					return (0);
+			}
+			j++;
+		}
+		j = 1;
+		i++;
+	}
+	printf("SUCCESS!!!!\n");
+	return (1);
+}
+
 t_context	*ft_cub3d_parsing(char **argv)
 {
 	t_context	*context;
@@ -500,7 +595,11 @@ t_context	*ft_cub3d_parsing(char **argv)
 		if (!ft_check_content(content))
 			printf("Error.\n");//////////////et exit le programme
 		ft_square_shaped_dotted_map(content);
-		ft_check_lst_lines(content);/////////////////////////////////
+		context->map = ft_get_map(content);
+		if (!ft_check_if_flawless(context->map))///if ok, next ft, then free free free
+			return (context);
+		ft_show_strs(context->map);
+		//ft_check_lst_lines(content);/////////////////////////////////
 		// ft_content_into_context(content, context);
 	}
 	ft_unset_content(content);
