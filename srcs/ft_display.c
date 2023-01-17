@@ -87,7 +87,7 @@ void	ft_horizontal_line(t_vars *vars, t_rays *rays)
 		rays->my = (int)(rays->ry) >> 6;
 		if(rays->mx >= 0 && rays->my >= 0 
 			&& rays->mx < vars->map_lenght 
-			&& rays->my < vars->map_height
+			&& rays->my < vars->map_height + 1
 			&& rays->my < WINDOW_HEIGHT
 			&& rays->mx < WINDOW_WIDTH
 			&& vars->map[rays->my][rays->mx] == '1')
@@ -133,7 +133,7 @@ void	ft_vertical_line(t_vars *vars, t_rays *rays)
 		rays->my = (int)(rays->ry) >> 6;
 		if(rays->mx >= 0 && rays->my >= 0
 			&& rays->mx < vars->map_lenght 
-			&& rays->my < vars->map_height
+			&& rays->my < vars->map_height + 1
 			&& rays->my < WINDOW_HEIGHT
 			&& rays->mx < WINDOW_WIDTH
 			&& vars->map[rays->my][rays->mx] == '1')
