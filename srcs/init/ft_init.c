@@ -1,10 +1,13 @@
-#include "../includes/fdf.h"
+#include "cub3D.h"
 
-void	ft_init(t_vars *vars)
+void	ft_init(t_context *context)
 {
-	vars->key.a = 0;
-	vars->key.w = 0;
-	vars->key.s = 0;
-	vars->key.d = 0;
-	ft_pars_pos_player(vars);
+	context->vars.key.a = 0;
+	context->vars.key.w = 0;
+	context->vars.key.s = 0;
+	context->vars.key.d = 0;
+	context->vars.map_height = 12;
+	context->vars.map_lenght = ft_strlen(context->map[0]);
+	context->vars.map = context->map;
+	ft_pars_pos_player(&context->vars);
 }

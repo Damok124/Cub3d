@@ -1,4 +1,4 @@
-#include "../includes/fdf.h"
+#include "cub3D.h"
 
 int	ft_close_key(t_vars *vars)
 {

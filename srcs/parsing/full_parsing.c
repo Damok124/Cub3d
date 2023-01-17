@@ -1,43 +1,9 @@
-# define WINDOW_WIDTH 1920
-# define WINDOW_HEIGHT 1080
 
-# include <math.h>
-# include "X11/keysym.h"
-# include "X11/X.h"
-# include "mlx/mlx.h"
-# include "mlx/mlx_int.h"
-# include <stdio.h>
-# include "libft/includes/libft.h"
-# include "ft_printf/includes/ft_printf.h"
+#include "cub3D.h"
 
 /*
 clang -Wall -Wextra -Werror -g3 full_parsing.c -Iincludes/ -Ift_printf/includes/ -Ilibft/includes/ -Imlx/ -L. -lcub3D -L./mlx -lmlx -lXext -lX11 -L./libft -lft -L./ft_printf -lft_printf -o parsing -lm
 */
-
-typedef struct s_lines {
-	char			*line;
-	int				index;
-	int				len;
-	char			type;
-	struct s_lines	*next;
-}	t_lines;
-
-typedef struct s_rgb {
-	int	r;
-	int	g;
-	int	b;
-}	t_rgb;
-
-typedef struct s_context {
-	char	*path_t_NO;
-	char	*path_t_SO;
-	char	*path_t_WE;
-	char	*path_t_EA;
-	t_rgb	floor;
-	t_rgb	ceiling;
-	char	player_orient;
-	char	**map;
-}	t_context;
 
 void	ft_show_strs(char **map)
 {
@@ -63,7 +29,16 @@ void	ft_cub3d(t_context *context)
 	printf("ceiling R%d G%d B%d\n", context->ceiling.r, context->ceiling.g, context->ceiling.b);
 	printf("map :\n");
 	ft_show_strs(context->map);
-	(void)context;
+	ft_init(context);
+	context->vars.mlx = mlx_init();
+	context->vars.win = mlx_new_window(context->vars.mlx, WINDOW_WIDTH , WINDOW_HEIGHT, "Hello world!");
+	context->vars.img = mlx_new_image(context->vars.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
+	context->vars.addr = mlx_get_data_addr(context->vars.img, &context->vars.bits_per_pixel, &context->vars.line_length,
+						&context->vars.endian);
+	mlx_hook(context->vars.win, 2, 1L << 0, ButtonDown, &(context->vars));
+	mlx_hook(context->vars.win, 3, 1L << 1, ButtonUp, &(context->vars));
+	mlx_loop_hook(context->vars.mlx, ft_display, context);
+	mlx_loop(context->vars.mlx);
 }
 
 void	ft_check_lst_lines(t_lines *lst)
@@ -639,27 +614,4 @@ t_context	*ft_cub3d_parsing(char **argv)
 	return (context);
 }
 
-////PROCHAINES ETAPES : GERER LES ERR_MSG - GERER LES TEXTURES
-
-int	main(int ac, char **argv)
-{
-	t_context	*context;
-	// int			err_no;
-
-	// err_no = 0;
-	context = NULL;
-	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
-	{
-		context = ft_cub3d_parsing(argv);
-		if (context)
-		{
-			ft_cub3d(context);
-			ft_unset_context(context);
-		}
-		else
-			printf("Error.\n");
-	}
-	else
-		write(2, "Wrong arguments.\n", 17);
-	return (0);
-}
+//PROCHAINES ETAPES : GERER LES ERR_MSG - GERER LES TEXTURES

@@ -1,4 +1,4 @@
-#include "../../includes/fdf.h"
+#include "cub3D.h"
 
 void	ft_pars_pos_player(t_vars *vars)
 {

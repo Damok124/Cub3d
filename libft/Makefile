@@ -6,7 +6,7 @@
 #    By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/07/06 17:12:24 by zharzi            #+#    #+#              #
-#    Updated: 2022/12/31 11:17:40 by zharzi           ###   ########.fr        #
+#    Updated: 2023/01/17 17:26:10 by alprival         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -115,7 +115,7 @@ OBJ = $(SRCS:.c=.o)
 
 CC = clang
 
-FLAGS = -Wall -Wextra -Werror -g3 -gdwarf-4
+FLAGS = -fPIE -Wall -Wextra -Werror -g3 -gdwarf-4
 
 IFLAG = -I$(HEADERDIR)
 

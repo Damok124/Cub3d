@@ -1,4 +1,4 @@
-#include "../includes/fdf.h"
+#include "cub3D.h"
 
 void	ft_draw_player(t_vars *vars)
 {
@@ -173,57 +173,61 @@ void	ft_ang_rays(t_rays *rays)
 }
 
 
-void	ft_draw_ceilling(t_vars *vars)
+void	ft_draw_ceilling(t_context *context)
 {
 	int x;
+	int color;
 	int y;
 	
+	color = (context->ceiling.r << 16) + (context->ceiling.g << 8) + (context->ceiling.b);
 	y = 0;
 	while(y <  WINDOW_HEIGHT / 2)
 	{
 		x = 0;
 		while(x < WINDOW_WIDTH)
 		{
-			my_mlx_pixel_put(vars, x ,y , CEILING);
+			my_mlx_pixel_put(&context->vars, x ,y , color);
 			x++;
 		}
 		y++;
 	}
 }
 
-void	ft_draw_floor(t_vars *vars)
+void	ft_draw_floor(t_context *context)
 {
 	int x;
+	int color;
 	int y;
-
+	
+	color = (context->floor.r << 16) + (context->floor.g << 8) + (context->floor.b);
 	y = WINDOW_HEIGHT / 2;
 	while(y < WINDOW_HEIGHT)
 	{
 		x = 0;
 		while(x < WINDOW_WIDTH)
 		{
-			my_mlx_pixel_put(vars, x ,y , FLOOR);
+			my_mlx_pixel_put(&context->vars, x ,y , color);
 			x++;
 		}
 		y++;
 	}
 }
-void	ft_draw_rays(t_vars *vars)
+void	ft_draw_rays(t_context *context)
 {
-	vars->rays.r = 0;
-	vars->rays.ra = vars->pa - (DR * 30);
-	ft_draw_ceilling(vars);
-	ft_draw_floor(vars);
-	ft_ang_rays(&vars->rays);
-	while(vars->rays.r < WINDOW_WIDTH)
+	context->vars.rays.r = 0;
+	context->vars.rays.ra = context->vars.pa - (DR * 30);
+	ft_draw_ceilling(context);
+	ft_draw_floor(context);
+	ft_ang_rays(&context->vars.rays);
+	while(context->vars.rays.r < WINDOW_WIDTH)
 	{
-		ft_horizontal_line(vars, &vars->rays);
-		ft_vertical_line(vars, &vars->rays);
-		// ft_draw_ray_hit(vars,&vars->rays,0x00FF00);
-		ft_3d_display(vars, &vars->rays);
-		ft_ang_rays(&vars->rays);
-		vars->rays.ra += ((M_PI / 3 /WINDOW_WIDTH));
-		vars->rays.r++;
+		ft_horizontal_line(&context->vars, &context->vars.rays);
+		ft_vertical_line(&context->vars, &context->vars.rays);
+		// ft_draw_ray_hit(context->vars,&context->vars.rays,0x00FF00);
+		ft_3d_display(&context->vars, &context->vars.rays);
+		ft_ang_rays(&context->vars.rays);
+		context->vars.rays.ra += ((M_PI / 3 /WINDOW_WIDTH));
+		context->vars.rays.r++;
 	}
 }
 
@@ -285,18 +289,18 @@ void	ft_key_input(t_vars *vars)
 	}
 }
 
-int	ft_display(t_vars *vars)
+int	ft_display(t_context *context)
 {
-	if(vars->img)
-		mlx_destroy_image(vars->mlx, vars->img);
-	ft_key_input(vars);
-	vars->img = mlx_new_image(vars->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
-	vars->addr = mlx_get_data_addr(vars->img, &vars->bits_per_pixel, &vars->line_length,
-								&vars->endian);
-	ft_draw_rays(vars);
-	// ft_draw_map(vars);
-	// ft_draw_player(vars);
-	mlx_put_image_to_window(vars->mlx, vars->win, vars->img, 0, 0);
+	if(context->vars.img)
+		mlx_destroy_image(context->vars.mlx, context->vars.img);
+	ft_key_input(&context->vars);
+	context->vars.img = mlx_new_image(context->vars.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
+	context->vars.addr = mlx_get_data_addr(context->vars.img, &context->vars.bits_per_pixel, &context->vars.line_length,
+								&context->vars.endian);
+	ft_draw_rays(context);
+	ft_draw_map(&context->vars);
+	ft_draw_player(&context->vars);
+	mlx_put_image_to_window(context->vars.mlx, context->vars.win, context->vars.img, 0, 0);
 	return (1);
 }
 

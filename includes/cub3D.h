@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/17 16:16:27 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/17 19:17:33 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ enum {
 	ON_DESTROY = 17
 };
 
-#define IMG 64			//size_image
+#define IMG 32			//size_image
 #define SPEED 2			//speed
 #define RSPEED 0.06 		//rotation speed
 #define DR 0.0174533 	// one degree in radian
@@ -45,6 +45,22 @@ enum {
 #define P3 3 * PI /2 
 
 
+typedef struct s_lines {
+	char			*line;
+	int				index;
+	int				len;
+	char			type;
+	struct s_lines	*next;
+}	t_lines;
+
+typedef struct s_rgb {
+	int	r;
+	int	g;
+	int	b;
+}	t_rgb;
+
+
+
 typedef struct t_keys {
 	int w;
 	int a;
@@ -53,56 +69,44 @@ typedef struct t_keys {
 }					t_keys;
 
 typedef struct s_rays {
-	int		r;
-	int		mx;
-	int		my;
-	int		dof;
-	int		orientation;
-	float	rx;
-	float	ry;
-	float	ra;
-	float	xo;
-	float	yo;
-	float	hx;
-	float	hy;
-	float	vx;
-	float	vy;
-	float	sx;
-	float	sy;
-	float	aTan;
-	float	distH;
+	int				r;
+	int				mx;
+	int				my;
+	int				dof;
+	int				orientation;
+	float			rx;
+	float			ry;
+	float			ra;
+	float			xo;
+	float			yo;
+	float			hx;
+	float			hy;
+	float			vx;
+	float			vy;
+	float			sx;
+	float			sy;
+	float			aTan;
+	float			distH;
 	unsigned int	color;
-	float	distT;
-	float	distV;
-	float	nTan;
+	float			distT;
+	float			distV;
+	float			nTan;
 }					t_rays;
+
 
 typedef struct s_vars {
 	void			*mlx;
 	void			*win;
 	void			*img;
-	void			*img_xpm;
-	int				lenght_img_xpm;
-	int				height_img_xpm;
-	char			*addr_xpm;
 	void			*addr;
 	int				bits_per_pixel;
 	int				line_length;
 	int				endian;
-	char			*hexcolor;
-	int				red;
-	int				green;
-	int				blue;
-	int				rows;
-	int				len;
-	int				spacing;
 	float			py;
 	float			px;
 	float			pdx;
 	float			pdy;
 	float			pa;
-	float			px_base;
-	float			py_base;
 	char			**map;
 	int				map_height;
 	int				map_lenght;
@@ -110,16 +114,17 @@ typedef struct s_vars {
 	t_rays			rays;
 }					t_vars;
 
-
-
-typedef struct s_spot {
-	float			x;
-	float			y;
-	float			z;
-	int				red;
-	int				green;
-	int				blue;
-}					t_spot;
+typedef struct s_context {
+	char	*path_t_NO;
+	char	*path_t_SO;
+	char	*path_t_WE;
+	char	*path_t_EA;
+	t_rgb	floor;
+	t_rgb	ceiling;
+	char	player_orient;
+	char	**map;
+	t_vars	vars;
+}	t_context;
 
 
 /////////////////////////
@@ -129,7 +134,7 @@ typedef struct s_spot {
 
 void	ft_vertical_line(t_vars *vars, t_rays *rays);
 void	ft_horizontal_line(t_vars *vars, t_rays *rays);
-int		ft_display(t_vars *vars);
+int		ft_display(t_context *context);
 void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color);
 void	ft_draw_map(t_vars *vars);
 void	ft_draw_squarre(t_vars *vars, int y, int x, int color);
@@ -142,9 +147,48 @@ int		ft_move_keycode(int keycode, t_vars *vars);
 void	ft_pars_pos_player(t_vars *vars);
 int		ButtonUp(int keycode, t_vars *vars);
 int		ButtonDown(int keycode, t_vars *vars);
-void	ft_init(t_vars *vars);
-void	ft_draw_rays(t_vars *vars);
+void	ft_init(t_context *context);
+void	ft_draw_rays(t_context *context);
 float	ft_dist(float ax, float ay, float bx, float by);
+
+
+/////////////////////////
+//	cub3d parsing
+/////////////////////////
+
+t_context	*ft_cub3d_parsing(char **argv);
+void		ft_show_content(t_lines *content);
+void		ft_unset_context(t_context *context);
+char		ft_get_player_orientation(t_lines *content);
+t_rgb		ft_get_rgb(t_lines *content, char type);
+void		ft_get_textures_paths(t_context **context, t_lines *content);
+int			ft_check_if_flawless(char **map);
+char		**ft_get_map(t_lines *lst);
+int			ft_get_map_size(t_lines *lst);
+void		ft_square_shaped_dotted_map(t_lines *content);
+t_lines		*ft_add_empty_map_line(int max, t_lines *next);
+void		ft_spotted_spaces(char *str);
+char		*ft_line_to_standard(char *str, int	max);
+int			ft_check_content(t_lines *content);
+int			ft_just_enough_args(t_lines *content, int *tab);
+void		ft_unset_content(t_lines *content);
+t_context	*ft_init_t_context(void);
+t_lines		*ft_get_all_lines(char *filename);
+t_lines		*ft_setup_lst(int size, int fd, int index);
+char		ft_define_line_type(char *str, int	len);
+char		ft_type_specifier(char *str, int target_size);
+char		ft_find_valid_nswe(char *str);
+char		ft_find_valid_fc(char *str);
+int			ft_strs_are_digits(char **strs);
+int			ft_file_lines_counter(char *filename);
+void		ft_check_lst_lines(t_lines *lst);
+void		ft_show_strs(char **map);
+void		ft_cub3d(t_context *context);
+int			ft_potential_map_line(char *str, int len);
+int			ft_one_last_map(t_lines *content);
+int			ft_only_one_position(t_lines *content);
+int			ft_get_greatest_len(t_lines *content);
+char		**ft_strsdup(char **src);
 
 /////////////////////////
 //	INTERACTIONS
@@ -153,59 +197,5 @@ int				ft_keypress(int key, t_vars *vars);
 char			ft_base_key(int *tab, int key);
 int				ft_click_cross(t_vars *vars);
 int				ft_manual_color(t_vars *vars, int key);
-/////////////////////////
-//	OCTANTS
-/////////////////////////
-int				ft_get_octant(int x1, int x2, int y1, int y2);
-int				ft_get_octant2(int x1, int x2, int y1, int y2);
-void			ft_trace_oct5(t_vars *vars, t_spot a, t_spot b);
-void			ft_trace_oct6(t_vars *vars, t_spot a, t_spot b);
-void			ft_trace_oct7(t_vars *vars, t_spot a, t_spot b);
-void			ft_trace_oct8(t_vars *vars, t_spot a, t_spot b);
-/////////////////////////
-//	PRINTING
-/////////////////////////
-void			ft_print_grid(t_vars *vars, t_spot **matrix);
-void			ft_print_dot(t_vars *vars, t_spot dot);
-int				ft_link(t_vars *vars, t_spot a, t_spot b);
-void			ft_pixel_put(t_vars *vars, int x, int y);
-int				ft_renew_image(t_vars *vars);
-int				ft_frame(t_vars	*vars);
-/////////////////////////
-//	CHECKING
-/////////////////////////
-int				ft_pix_is_visible(int x, int y);
-int				ft_fdf_lencheck(t_vars *vars, char *str);
-/////////////////////////
-//	DATAS
-/////////////////////////
-int				ft_fdf_getlen(char *str);
-int				ft_fdf_rowcount(char *filename);
-void			ft_fdf_initcol(t_vars *vars);
-char			*ft_standard_buffer(char *buffer);
-t_spot			**ft_map_to_matrix(t_vars *vars, char *filename);
-t_spot			*ft_fdf_init_rows(char **buffer, t_vars *vars, int y);
-t_spot			ft_fdf_setup_dot(char **buffer, int x, int y, t_vars *vars);
-int				ft_fdf_spacing(t_vars *vars);
-t_vars			*ft_fdf_initvars(char *filename);
-void			ft_fdf_get_col(t_vars *vars, t_spot a, t_spot b, double ratio);
-/////////////////////////
-//	DOTS POSITION
-/////////////////////////
-void			ft_fdf_first_position(t_vars *vars, t_spot **matrix);
-void			ft_fdf_last_position(t_vars *vars, t_spot **matrix);
-void			ft_fdf_rotation_z(t_vars *vars, t_spot **matrix, double angle);
-void			ft_fdf_rotation_x(t_vars *vars, t_spot **matrix, double angle);
-/////////////////////////
-//	MATHEMATICS
-/////////////////////////
-double			ft_hypotenuse(int a, int b);
-unsigned int	ft_fdf_btou(const char *nptr, char *base);
-/////////////////////////
-//	ENDING
-/////////////////////////
-void			ft_fdf_free_matrix(t_spot **matrix, t_vars *vars);
-void			ft_end_mlx(t_vars **vars);
-*/
 
 #endif
