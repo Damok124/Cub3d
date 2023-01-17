@@ -6,7 +6,7 @@
 #    By: alprival <alprival@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/08/31 13:40:41 by zharzi            #+#    #+#              #
-#    Updated: 2023/01/13 16:19:47 by alprival         ###   ########.fr        #
+#    Updated: 2023/01/17 16:15:39 by alprival         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -60,9 +60,9 @@ ${UTILSDIR}ft_pixel_put.c
 
 HEADERDIR = includes/
 
-HEADER = fdf.h
+HEADER = cub3D.h
 
-OBJ = $(SRCS:.c=.o) $(UTILS:.c=.o)
+OBJ = $(SRCS:.c=.o)
 
 CC = gcc
 
@@ -70,24 +70,26 @@ FLAGS = -Wall -Wextra -Werror -g3
 
 IFLAG = -I$(HEADERDIR) -Ift_printf/includes/ -Ilibft/includes/ -Imlx/
 
-all : libmlx.a libfdf.a libft_printf.a libft.a
-	$(CC) $(FLAGS) main.c $(IFLAG) -L. -lfdf -L./mlx -lmlx -lXext -lX11 \
+all : $(BINARY)
+
+$(BINARY) : libmlx.a libcub3D.a libft_printf.a libft.a
+	$(CC) $(FLAGS) main.c $(IFLAG) -L. -lcub3D -L./mlx -lmlx -lXext -lX11 \
 	-L./libft -lft -L./ft_printf -lft_printf -o $(BINARY) -lm
 
 %.o : %.c
 	$(CC) $(FLAGS) $(IFLAG) -o $@ -c $^
 
-libfdf.a : $(OBJ) $(HEADERDIR)$(HEADER)
+libcub3D.a : $(OBJ) $(HEADERDIR)$(HEADER)
 	ar -rcs $(NAME) $^
 
 libft_printf.a :
-	${MAKE} -C ft_printf/
+	${MAKE} -sC ft_printf/
 
 libft.a :
-	${MAKE} -C libft/
+	${MAKE} -sC libft/
 
 libmlx.a :
-	${MAKE} -C mlx/
+	${MAKE} -sC mlx/
 
 clean :
 	rm -f $(OBJ)

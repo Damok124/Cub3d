@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   fdf.h                                              :+:      :+:    :+:   */
+/*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/16 21:53:30 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/17 16:16:27 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef FDF_H
-# define FDF_H
+#ifndef CUB3D_H
+# define CUB3D_H
 # define WINDOW_WIDTH 1920
 # define WINDOW_HEIGHT 1080
 
@@ -206,5 +206,6 @@ unsigned int	ft_fdf_btou(const char *nptr, char *base);
 /////////////////////////
 void			ft_fdf_free_matrix(t_spot **matrix, t_vars *vars);
 void			ft_end_mlx(t_vars **vars);
+*/
 
 #endif

@@ -6,31 +6,31 @@
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/05 23:59:19 by zharzi            #+#    #+#             */
-/*   Updated: 2022/09/26 11:49:04 by zharzi           ###   ########.fr       */
+/*   Updated: 2022/12/27 02:16:33 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-long	ft_atol_safe2(const char *nptr, int *check, long long i, long long j)
+static long	ft_atol_safe2(const char *ptr, int *check, long long i, long long j)
 {
 	int	k;
 
 	k = 0;
-	while ((*nptr >= '\t' && *nptr <= '\r') || *nptr == ' ')
-		nptr++;
-	if (*nptr == '-')
+	while ((*ptr >= '\t' && *ptr <= '\r') || *ptr == ' ')
+		ptr++;
+	if (*ptr == '-')
 		k = -1;
-	else if (*nptr == '+' || (*nptr >= '0' && *nptr <= '9'))
+	else if (*ptr == '+' || (*ptr >= '0' && *ptr <= '9'))
 		k = 1;
-	if (*nptr == '-' || *nptr == '+')
-		nptr++;
-	while (*nptr && *nptr >= '0' && *nptr <= '9')
+	if (*ptr == '-' || *ptr == '+')
+		ptr++;
+	while (*ptr && *ptr >= '0' && *ptr <= '9')
 	{
 		j = i;
 		i *= 10;
-		i += *nptr - '0';
+		i += *ptr - '0';
 		if (j > i)
 			*check = 0;
-		nptr++;
+		ptr++;
 	}
 	return (i * k);
 }

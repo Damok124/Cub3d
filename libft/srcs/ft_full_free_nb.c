@@ -1,38 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strtrim.c                                       :+:      :+:    :+:   */
+/*   ft_full_free_nb.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/26 15:55:26 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 01:42:25 by zharzi           ###   ########.fr       */
+/*   Created: 2022/08/02 01:23:40 by zharzi            #+#    #+#             */
+/*   Updated: 2022/10/28 14:12:42 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-char	*ft_strtrim(char const *s1, char const *set)
+void	ft_full_free_nb(void **tobefreed, int nb)
 {
-	char	*str;
-	ssize_t	i;
-	ssize_t	j;
+	int	i;
 
-	i = 0;
-	j = ft_strlen(s1);
-	if (s1)
+	i = -1;
+	while (tobefreed && ++i < nb)
 	{
-		while (s1 && s1[i] && ft_strchr(set, s1[i]))
-			i++;
-		while (s1 && s1[i] && ft_strrchr(set, s1[j]))
-			j--;
-		str = ft_substr(s1, i, (j - i + 1));
-		if (str)
-			return (str);
+		if (tobefreed[i])
+			ft_true_free(&tobefreed[i]);
 	}
-	str = malloc(sizeof(char));
-	if (!str)
-		return (NULL);
-	str[0] = '\0';
-	return (str);
+	free(tobefreed);
+	tobefreed = NULL;
 }

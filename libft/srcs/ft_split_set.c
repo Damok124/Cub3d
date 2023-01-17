@@ -1,18 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_split.c                                         :+:      :+:    :+:   */
+/*   ft_split_set.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/26 15:58:24 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 02:21:41 by zharzi           ###   ########.fr       */
+/*   Created: 2022/12/27 01:48:51 by zharzi            #+#    #+#             */
+/*   Updated: 2022/12/27 01:53:40 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-static void	ft_true_split(char const *s, char **strs, char c, ssize_t len)
+static void	ft_true_splitset(const char *s, char **strs, char *set, ssize_t len)
 {
 	ssize_t	i;
 	ssize_t	j;
@@ -23,11 +23,11 @@ static void	ft_true_split(char const *s, char **strs, char c, ssize_t len)
 	j = 0;
 	while (s[i] && a < len)
 	{
-		while (s[i + j] && s[i + j] == c)
+		while (s[i + j] && ft_strchr(set, s[i + j]))
 			i++;
-		while ((s[i + j] && s[i + j] != c))
+		while ((s[i + j] && !ft_strchr(set, s[i + j])))
 			j++;
-		if (s[i + j] == c || s[i + j] == 0)
+		if (ft_strchr(set, s[i + j]) || s[i + j] == 0)
 			strs[a] = ft_substr(s, i, j);
 		a++;
 		i = i + j;
@@ -35,7 +35,7 @@ static void	ft_true_split(char const *s, char **strs, char c, ssize_t len)
 	}
 }
 
-char	**ft_split(char const *s, char c)
+char	**ft_split_set(const char *s, char *set)
 {
 	char	**strs;
 	ssize_t	len;
@@ -43,12 +43,12 @@ char	**ft_split(char const *s, char c)
 	strs = NULL;
 	if (s)
 	{
-		len = ft_count_strs(s, c);
+		len = ft_count_strs_set(s, set);
 		strs = (char **)malloc(sizeof(char *) * (len + 1));
 		if (!strs)
 			return (NULL);
 		strs[len] = NULL;
-		ft_true_split(s, strs, c, len);
+		ft_true_splitset(s, strs, set, len);
 	}
 	return (strs);
 }

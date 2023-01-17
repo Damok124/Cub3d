@@ -1,38 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strtrim.c                                       :+:      :+:    :+:   */
+/*   ft_split_at_index.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/26 15:55:26 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 01:42:25 by zharzi           ###   ########.fr       */
+/*   Created: 2022/12/27 01:59:49 by zharzi            #+#    #+#             */
+/*   Updated: 2022/12/27 02:00:08 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-char	*ft_strtrim(char const *s1, char const *set)
+char	**ft_split_at_index(char *str, int i)
 {
-	char	*str;
-	ssize_t	i;
-	ssize_t	j;
+	char	**final;
+	char	*first;
+	char	*last;
 
-	i = 0;
-	j = ft_strlen(s1);
-	if (s1)
+	final = NULL;
+	if (str)
 	{
-		while (s1 && s1[i] && ft_strchr(set, s1[i]))
-			i++;
-		while (s1 && s1[i] && ft_strrchr(set, s1[j]))
-			j--;
-		str = ft_substr(s1, i, (j - i + 1));
-		if (str)
-			return (str);
+		last = ft_strdup(str + i);
+		str[i] = '\0';
+		first = ft_strdup(str);
+		final = (char **)malloc(sizeof(char *) * 3);
+		if (!final)
+			return (NULL);
+		final[0] = first;
+		final[1] = last;
+		final[2] = NULL;
 	}
-	str = malloc(sizeof(char));
-	if (!str)
-		return (NULL);
-	str[0] = '\0';
-	return (str);
+	return (final);
 }

@@ -1,38 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strtrim.c                                       :+:      :+:    :+:   */
+/*   ft_triple_strslen.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/04/26 15:55:26 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 01:42:25 by zharzi           ###   ########.fr       */
+/*   Created: 2022/12/31 11:07:18 by zharzi            #+#    #+#             */
+/*   Updated: 2022/12/31 11:14:09 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
-
-char	*ft_strtrim(char const *s1, char const *set)
+int	ft_triple_strslen(char ***strs)
 {
-	char	*str;
-	ssize_t	i;
-	ssize_t	j;
+	int	i;
+	int	j;
+	int	total;
 
 	i = 0;
-	j = ft_strlen(s1);
-	if (s1)
+	j = 0;
+	total = 0;
+	while (strs && strs[i])
 	{
-		while (s1 && s1[i] && ft_strchr(set, s1[i]))
-			i++;
-		while (s1 && s1[i] && ft_strrchr(set, s1[j]))
-			j--;
-		str = ft_substr(s1, i, (j - i + 1));
-		if (str)
-			return (str);
+		while (strs[i][j])
+		{
+			total++;
+			j++;
+		}
+		j = 0;
+		i++;
 	}
-	str = malloc(sizeof(char));
-	if (!str)
-		return (NULL);
-	str[0] = '\0';
-	return (str);
+	return (total);
 }

@@ -6,7 +6,7 @@
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/04 00:25:33 by zharzi            #+#    #+#             */
-/*   Updated: 2022/09/18 17:21:12 by zharzi           ###   ########.fr       */
+/*   Updated: 2022/10/09 02:22:52 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ int	*ft_strs_to_tab(int len, char **strs)
 	if (tester == 0)
 	{
 		if (tab)
-			ft_true_free(&tab);
+			ft_true_free((void **)&tab);
 		return (NULL);
 	}
 	return (tab);

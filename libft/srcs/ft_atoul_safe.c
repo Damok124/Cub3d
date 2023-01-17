@@ -6,11 +6,11 @@
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/06 00:03:22 by zharzi            #+#    #+#             */
-/*   Updated: 2022/09/26 11:49:09 by zharzi           ###   ########.fr       */
+/*   Updated: 2022/12/27 02:18:14 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-unsigned long int	ft_atoul_safe2(const char *nptr, int *check, \
+static unsigned long int	ft_atoul_safe2(const char *nptr, int *check, \
 	unsigned long long int i, unsigned long long int j)
 {
 	int	k;
@@ -36,7 +36,7 @@ unsigned long int	ft_atoul_safe2(const char *nptr, int *check, \
 	return (i * k);
 }
 
-unsigned long int	ft_atoul_safe1(const char *nptr, int *check)
+unsigned long int	ft_atoul_safe(const char *nptr, int *check)
 {
 	unsigned long long int	i;
 	unsigned long long int	j;
