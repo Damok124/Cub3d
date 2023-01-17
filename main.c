@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:40:17 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/13 20:11:09 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/16 21:44:54 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,10 +104,10 @@ int	main(int ac, char **argv)
 	int fd;
 	int i;
 	fd = open("map.cub",O_RDWR);
-	vars.map = malloc(sizeof(char *) * 11);
+	vars.map = malloc(sizeof(char *) * 15);
 	if(!vars.map)
 		return (1);
-	vars.map_height = 11;
+	vars.map_height = 15;
 	i = 0;
 	vars.map[i] = get_next_line(fd);
 	vars.map_lenght = ft_strlen(vars.map[i]);
@@ -121,8 +121,8 @@ int	main(int ac, char **argv)
 	(void)ac;
 	(void)argv;
 	vars.mlx = mlx_init();
-	vars.win = mlx_new_window(vars.mlx, (vars.map_lenght -1) * 2 * IMG, vars.map_height * IMG, "Hello world!");
-	vars.img = mlx_new_image(vars.mlx, 1920, 1080);
+	vars.win = mlx_new_window(vars.mlx, WINDOW_WIDTH , WINDOW_HEIGHT, "Hello world!");
+	vars.img = mlx_new_image(vars.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	vars.addr = mlx_get_data_addr(vars.img, &vars.bits_per_pixel, &vars.line_length,
 						&vars.endian);
 	mlx_hook(vars.win, 2, 1L << 0, ButtonDown, &vars);

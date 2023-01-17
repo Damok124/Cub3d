@@ -87,7 +87,9 @@ void	ft_horizontal_line(t_vars *vars, t_rays *rays)
 		rays->my = (int)(rays->ry) >> 6;
 		if(rays->mx >= 0 && rays->my >= 0 
 			&& rays->mx < vars->map_lenght 
-			&& rays->my < vars->map_height 
+			&& rays->my < vars->map_height
+			&& rays->my < WINDOW_HEIGHT
+			&& rays->mx < WINDOW_WIDTH
 			&& vars->map[rays->my][rays->mx] == '1')
 			rays->dof = DOF;
 		else
@@ -131,7 +133,9 @@ void	ft_vertical_line(t_vars *vars, t_rays *rays)
 		rays->my = (int)(rays->ry) >> 6;
 		if(rays->mx >= 0 && rays->my >= 0
 			&& rays->mx < vars->map_lenght 
-			&& rays->my < vars->map_height 
+			&& rays->my < vars->map_height
+			&& rays->my < WINDOW_HEIGHT
+			&& rays->mx < WINDOW_WIDTH
 			&& vars->map[rays->my][rays->mx] == '1')
 			rays->dof = DOF;
 		else
@@ -145,10 +149,18 @@ void	ft_vertical_line(t_vars *vars, t_rays *rays)
 	{
 		rays->sx = rays->rx;
 		rays->sy = rays->ry;
-		rays->color = 0x00FF0000;
+		if((int)rays->sx > (int)vars->px) // OUEST
+			rays->color = 0xf4c430;
+		else
+			rays->color = 0x0000FF00;	//EST
 	}
 	else
-		rays->color = 0x00AA0000;
+	{
+		if((int)rays->sy > (int)vars->py) // NORTH
+			rays->color = 0x000000FF;
+		else
+			rays->color = 0x00FF0000;	//SOUTH
+	}
 	rays->distT = ft_dist(vars->px,vars->py,rays->sx,rays->sy);
 }
 
@@ -160,47 +172,58 @@ void	ft_ang_rays(t_rays *rays)
 		rays->ra -= 2 * PI;
 }
 
-// void	ft_floor(t_vars *vars)
-// {
 
-// }
-
-void	ft_draw_floor(t_vars *vars)
+void	ft_draw_ceilling(t_vars *vars)
 {
 	int x;
 	int y;
-
-	x = (vars->map_lenght * IMG) / 2;
-	y = (vars->map_height * IMG) / 2;
-	while(y < vars->map_height)
+	
+	y = 0;
+	while(y <  WINDOW_HEIGHT / 2)
 	{
-		x = (vars->map_lenght * IMG) / 2;
-		while(x	< vars->map_lenght * IMG)
+		x = 0;
+		while(x < WINDOW_WIDTH)
 		{
-			my_mlx_pixel_put(vars, x ,y , 0xFFFFFFFF);
+			my_mlx_pixel_put(vars, x ,y , CEILING);
 			x++;
 		}
 		y++;
 	}
 }
 
+void	ft_draw_floor(t_vars *vars)
+{
+	int x;
+	int y;
+
+	y = WINDOW_HEIGHT / 2;
+	while(y < WINDOW_HEIGHT)
+	{
+		x = 0;
+		while(x < WINDOW_WIDTH)
+		{
+			my_mlx_pixel_put(vars, x ,y , FLOOR);
+			x++;
+		}
+		y++;
+	}
+}
 void	ft_draw_rays(t_vars *vars)
 {
-	t_rays 	rays;
-	
-	rays.r = 0;
-	rays.ra = vars->pa - (DR * 30);
+	vars->rays.r = 0;
+	vars->rays.ra = vars->pa - (DR * 30);
+	ft_draw_ceilling(vars);
 	ft_draw_floor(vars);
-	ft_ang_rays(&rays);
-	while(rays.r < ((vars->map_lenght + 1) * IMG))
+	ft_ang_rays(&vars->rays);
+	while(vars->rays.r < WINDOW_WIDTH)
 	{
-		ft_horizontal_line(vars, &rays);
-		ft_vertical_line(vars, &rays);
-		ft_draw_ray_hit(vars, &rays, rays.color);
-		ft_3d_display(vars, &rays);
-		ft_ang_rays(&rays);
-		rays.ra += (DR * 0.1);
-		rays.r++;
+		ft_horizontal_line(vars, &vars->rays);
+		ft_vertical_line(vars, &vars->rays);
+		// ft_draw_ray_hit(vars,&vars->rays,0x00FF00);
+		ft_3d_display(vars, &vars->rays);
+		ft_ang_rays(&vars->rays);
+		vars->rays.ra += ((M_PI / 3 /WINDOW_WIDTH));
+		vars->rays.r++;
 	}
 }
 
@@ -267,13 +290,13 @@ int	ft_display(t_vars *vars)
 	if(vars->img)
 		mlx_destroy_image(vars->mlx, vars->img);
 	ft_key_input(vars);
-	vars->img = mlx_new_image(vars->mlx, 1920, 1080);
+	vars->img = mlx_new_image(vars->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	vars->addr = mlx_get_data_addr(vars->img, &vars->bits_per_pixel, &vars->line_length,
 								&vars->endian);
-	ft_draw_map(vars);
-	ft_draw_player(vars);
 	ft_draw_rays(vars);
-	mlx_put_image_to_window(vars->mlx, vars->win, vars->img,0 , 0);
+	// ft_draw_map(vars);
+	// ft_draw_player(vars);
+	mlx_put_image_to_window(vars->mlx, vars->win, vars->img, 0, 0);
 	return (1);
 }
 

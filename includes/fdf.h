@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/13 19:58:13 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/16 21:53:30 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,12 +34,14 @@ enum {
 };
 
 #define IMG 64			//size_image
-#define SPEED 1			//speed
-#define RSPEED 0.01 		//rotation speed
+#define SPEED 2			//speed
+#define RSPEED 0.06 		//rotation speed
 #define DR 0.0174533 	// one degree in radian
 #define PI 3.1415926535
-#define DOF 10
+#define DOF 64
 #define P2 PI / 2
+#define FLOOR 0xFFFFFF
+#define CEILING 0x000000
 #define P3 3 * PI /2 
 
 
@@ -50,6 +52,30 @@ typedef struct t_keys {
 	int s;
 }					t_keys;
 
+typedef struct s_rays {
+	int		r;
+	int		mx;
+	int		my;
+	int		dof;
+	int		orientation;
+	float	rx;
+	float	ry;
+	float	ra;
+	float	xo;
+	float	yo;
+	float	hx;
+	float	hy;
+	float	vx;
+	float	vy;
+	float	sx;
+	float	sy;
+	float	aTan;
+	float	distH;
+	unsigned int	color;
+	float	distT;
+	float	distV;
+	float	nTan;
+}					t_rays;
 
 typedef struct s_vars {
 	void			*mlx;
@@ -81,31 +107,10 @@ typedef struct s_vars {
 	int				map_height;
 	int				map_lenght;
 	t_keys 			key;
+	t_rays			rays;
 }					t_vars;
 
-typedef struct s_rays {
-	int		r;
-	int		mx;
-	int		my;
-	int		dof;
-	float	rx;
-	float	ry;
-	float	ra;
-	float	xo;
-	float	yo;
-	float	hx;
-	float	hy;
-	float	vx;
-	float	vy;
-	float	sx;
-	float	sy;
-	float	aTan;
-	float	distH;
-	float	color;
-	float	distT;
-	float	distV;
-	float	nTan;
-}					t_rays;
+
 
 typedef struct s_spot {
 	float			x;
