@@ -35,11 +35,34 @@ typedef struct s_context {
 	char	*path_t_EA;
 	t_rgb	floor;
 	t_rgb	ceiling;
+	char	player_orient;
 	char	**map;
 }	t_context;
 
+void	ft_show_strs(char **map)
+{
+	int	i;
+
+	i = 0;
+	while (map[i])
+	{
+		printf("%s\n", map[i]);
+		i++;
+	}
+}
+
 void	ft_cub3d(t_context *context)
 {
+	printf("\nAFTER PARSING\n");
+	printf("NO path : %s\n", context->path_t_NO);
+	printf("SO path : %s\n", context->path_t_SO);
+	printf("WE path : %s\n", context->path_t_WE);
+	printf("EA path : %s\n", context->path_t_EA);
+	printf("Player Orientation : %c\n", context->player_orient);
+	printf("floor R%d G%d B%d\n", context->floor.r, context->floor.g, context->floor.b);
+	printf("ceiling R%d G%d B%d\n", context->ceiling.r, context->ceiling.g, context->ceiling.b);
+	printf("map :\n");
+	ft_show_strs(context->map);
 	(void)context;
 }
 
@@ -170,17 +193,6 @@ char	ft_type_specifier(char *str, int target_size)
 	return (type);
 }
 
-// int	ft_are_space_only(char *str)
-// {
-// 	int	i;
-
-// 	i = -1;
-// 	while (str[++i])
-// 		if (str[i] != ' ')
-// 			return (0);
-// 	return (1);
-// }
-
 char	ft_define_line_type(char *str, int	len)
 {
 	char	type;
@@ -198,54 +210,6 @@ char	ft_define_line_type(char *str, int	len)
 	return (type);
 }
 
-// void	ft_transform_tab(char *src, char *dest)
-// {
-// 	int	i;
-// 	int	j;
-
-// 	i = -1;
-// 	j = 0;
-// 	while (src[++i])
-// 	{
-// 		if (src[i] == '\t')
-// 		{
-// 			dest[j] = ' ';
-// 			dest[j + 1] = ' ';
-// 			dest[j + 2] = ' ';
-// 			dest[j + 3] = ' ';
-// 			j += 4;
-// 		}
-// 		else
-// 		{
-// 			dest[j] = src[i];
-// 			j++;
-// 		}
-// 	}
-// 	dest[j] = '\0';
-// }
-
-// char	*ft_ajust_spec_char(char *str)
-// {
-// 	int		len;
-// 	char	*dest;
-// 	int		n;
-// 	int		i;
-
-// 	i = -1;
-// 	n = 0;
-// 	while (str[++i])
-// 		if (str[i] == '\t')
-// 			n++;
-// 	str[i - 1] = '\0';
-// 	len = (i - 1) + (n * 3);
-// 	dest = (char *)malloc(sizeof(char) * (len + 1));
-// 	if (!dest)
-// 		return (str);
-// 	ft_transform_tab(str, dest);
-// 	ft_true_free((void **)&str);
-// 	return (dest);
-// }
-
 t_lines	*ft_setup_lst(int size, int fd, int index)
 {
 	t_lines *elem;
@@ -259,7 +223,6 @@ t_lines	*ft_setup_lst(int size, int fd, int index)
 		elem = (t_lines *)malloc(sizeof(t_lines));
 		if (!elem)
 			return (NULL);
-		// buffer = ft_ajust_spec_char(buffer);
 		buffer[ft_strlen(buffer) - 1] = '\0';
 		elem->index = index;
 		elem->line = buffer;
@@ -523,18 +486,6 @@ char	**ft_get_map(t_lines *lst)
 	return (map);
 }
 
-void	ft_show_strs(char **map)
-{
-	int	i;
-
-	i = 0;
-	while (map[i])
-	{
-		printf("%s\n", map[i]);
-		i++;
-	}
-}
-
 char	**ft_strsdup(char **src)
 {
 	char	**dest;
@@ -575,35 +526,70 @@ int	ft_check_if_flawless(char **map)
 		j = 1;
 		i++;
 	}
-	printf("SUCCESS!!!!\n");
 	return (1);
 }
 
-t_context	*ft_cub3d_parsing(char **argv)
+void	ft_get_textures_paths(t_context **context, t_lines *content)
 {
-	t_context	*context;
-	t_lines		*content;
+	t_context *tmp;
 
-	context = ft_init_t_context();
-	content = NULL;
-	if (context)
+	tmp = *context;
+	while (content)
 	{
-		if (ft_check_extension(argv[1], ".cub"))///////////////////to pimp
-			content = ft_get_all_lines(argv[1]);
-		else
-			perror("Wrong extension.\n");
-		if (!ft_check_content(content))
-			printf("Error.\n");//////////////et exit le programme
-		ft_square_shaped_dotted_map(content);
-		context->map = ft_get_map(content);
-		if (!ft_check_if_flawless(context->map))///if ok, next ft, then free free free
-			return (context);
-		ft_show_strs(context->map);
-		//ft_check_lst_lines(content);/////////////////////////////////
-		// ft_content_into_context(content, context);
+		if (content->type == 'N')
+			tmp->path_t_NO = ft_strtrim(content->line + 2, " ");
+		else if (content->type == 'S')
+			tmp->path_t_SO = ft_strtrim(content->line + 2, " ");
+		else if (content->type == 'W')
+			tmp->path_t_WE = ft_strtrim(content->line + 2, " ");
+		else if (content->type == 'E')
+			tmp->path_t_EA = ft_strtrim(content->line + 2, " ");
+		content = content->next;
 	}
-	ft_unset_content(content);
-	return (context);
+}
+
+t_rgb	ft_get_rgb(t_lines *content, char type)
+{
+	char	*tmp;
+	char	**groups;
+	t_rgb	colors;
+
+	colors.r = 0;
+	colors.g = 0;
+	colors.b = 0;
+	tmp = NULL;
+	groups = NULL;
+	while (content && content->type != type)
+		content = content->next;
+	if (content && content->type == type)
+	{
+		tmp = ft_strtrim(content->line + 1, " ");
+		groups = ft_split(tmp, ',');
+		ft_true_free((void **)&tmp);
+		colors.r = ft_atoi(groups[0]);
+		colors.g = ft_atoi(groups[1]);
+		colors.b = ft_atoi(groups[2]);
+		ft_full_free((void **)groups);
+	}
+	return (colors);
+}
+
+char	ft_get_player_orientation(t_lines *content)
+{
+	int	i;
+
+	i = -1;
+	while (content && content->type != 'M')
+		content = content->next;
+	while (content && content->type == 'M')
+	{
+		while (content->line[++i])
+			if (ft_strchr("NSWE", content->line[i]))
+				return (content->line[i]);
+		i = -1;
+		content = content->next;
+	}
+	return ('N');
 }
 
 void	ft_unset_context(t_context *context)
@@ -616,11 +602,53 @@ void	ft_unset_context(t_context *context)
 	ft_true_free((void **)&context);
 }
 
+void	ft_show_content(t_lines *content)
+{
+	printf("\nBEFORE PARSING\n");
+	while (content)
+	{
+		printf("%s\n", content->line);
+		content = content->next;
+	}
+}
+
+t_context	*ft_cub3d_parsing(char **argv)
+{
+	t_context	*context;
+	t_lines		*content;
+
+	context = NULL;
+	content = ft_get_all_lines(argv[1]);
+	ft_show_content(content);
+	if (content && ft_check_content(content))
+	{
+		context = ft_init_t_context();
+		if (context)
+		{
+			ft_square_shaped_dotted_map(content);
+			ft_get_textures_paths(&context, content);
+			context->player_orient = ft_get_player_orientation(content);
+			context->floor = ft_get_rgb(content, 'F');
+			context->ceiling = ft_get_rgb(content, 'C');
+			context->map = ft_get_map(content);
+			if (!ft_check_if_flawless(context->map))
+				ft_unset_context(context);
+		}
+	}
+	ft_unset_content(content);
+	return (context);
+}
+
+////PROCHAINES ETAPES : GERER LES ERR_MSG - GERER LES TEXTURES
+
 int	main(int ac, char **argv)
 {
 	t_context	*context;
+	// int			err_no;
 
-	if (ac == 2)
+	// err_no = 0;
+	context = NULL;
+	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
 	{
 		context = ft_cub3d_parsing(argv);
 		if (context)
@@ -629,7 +657,7 @@ int	main(int ac, char **argv)
 			ft_unset_context(context);
 		}
 		else
-			perror("FAILURE.\n");
+			printf("Error.\n");
 	}
 	else
 		write(2, "Wrong arguments.\n", 17);
