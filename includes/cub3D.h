@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/20 19:11:48 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/20 20:36:47 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ typedef struct t_keys {
 	int a;
 	int d;
 	int e;
+	int weapon;
 	int s;
 	int esc;
 }					t_keys;
@@ -141,6 +142,7 @@ int			ft_display(t_context *context);
 void		ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color);
 void		ft_draw_map(t_vars *vars);
 void		ft_draw_squarre(t_vars *vars, int y, int x, int color);
+void		ft_draw_weapon(t_context *context);
 int			ft_if_player(t_vars *vars, int y, int x);
 void		my_mlx_pixel_put(t_vars *vars, int x, int y, int color);
 void		ft_3d_display(t_vars *vars, t_rays *rays);

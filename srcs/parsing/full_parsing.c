@@ -20,6 +20,30 @@ int	ft_click_cross(t_vars *vars)
 	return (0);
 }
 
+int mouse(int x, int y, t_vars *vars)
+{
+	(void)y;
+	if(x < (WINDOW_WIDTH / 2) - 20)
+	{
+		vars->pa -= RSPEED / 3;
+		if (vars->pa < 0)
+			vars->pa += (2 * PI);
+		vars->pdx=cos(vars->pa) * SPEED;
+		vars->pdy=sin(vars->pa) * SPEED;
+		mlx_mouse_move(vars->mlx, vars->win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+	}
+	else if (x >  (WINDOW_WIDTH / 2) + 20)
+	{
+		vars->pa += RSPEED / 3;
+		if (vars->pa > (2 * PI))
+			vars->pa -= (2 * PI);
+		vars->pdx=cos(vars->pa) * SPEED;
+		vars->pdy=sin(vars->pa) * SPEED;
+		mlx_mouse_move(vars->mlx, vars->win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+	}
+	return(1);
+}
+
 void	ft_cub3d(t_context *context)
 {
 	printf("\nAFTER PARSING\n");
@@ -41,6 +65,8 @@ void	ft_cub3d(t_context *context)
 	mlx_hook(context->vars.win, ON_DESTROY, DestroyAll, ft_click_cross, &(context->vars));
 	mlx_hook(context->vars.win, 2, 1L << 0, button_down, &(context->vars));
 	mlx_hook(context->vars.win, 3, 1L << 1, button_up, &(context->vars));
+	mlx_hook(context->vars.win, 6, 1L << 6, mouse, &(context->vars));
+	mlx_mouse_hide(context->vars.mlx, context->vars.win);
 	mlx_loop_hook(context->vars.mlx, ft_display, context);
 	mlx_loop(context->vars.mlx);
 }

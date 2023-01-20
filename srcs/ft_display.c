@@ -233,6 +233,7 @@ void	ft_draw_rays(t_context *context)
 
 void	ft_key_input(t_vars *vars)
 {
+	static int	i = 0;
 	int xo;
 	int	yo;
 	int	ipx;
@@ -289,13 +290,27 @@ void	ft_key_input(t_vars *vars)
 	}
 	if(vars->key.e == 1)
 	{
+		i++;
+		if (i != 1)
+			return ;
 		if (vars->map[ipy_add_yo][ipx_add_xo] == 'C')
 			vars->map[ipy_add_yo][ipx_add_xo] = 'O';
 		else if (vars->map[ipy_add_yo][ipx_add_xo] == 'O')
 			vars->map[ipy_add_yo][ipx_add_xo] = 'C';
 	}
+	
+	else
+		i = 0;
 	if(vars->key.esc == 1)
 		mlx_loop_end(vars->mlx);
+}
+
+void	ft_draw_weapon(t_context *context)
+{
+	if(context->vars.key.weapon == 1)
+	{
+		ft_draw_square(&context->vars, 0, 0, 0xFFFFFF);
+	}
 }
 
 int	ft_display(t_context *context)
@@ -308,6 +323,7 @@ int	ft_display(t_context *context)
 								&context->vars.endian);
 	ft_draw_rays(context);
 	ft_draw_map(&context->vars);
+	ft_draw_weapon(context);
 	ft_draw_player(&context->vars);
 	mlx_put_image_to_window(context->vars.mlx, context->vars.win, context->vars.img, 0, 0);
 	return (1);
