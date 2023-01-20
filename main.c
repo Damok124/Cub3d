@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:40:17 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/20 20:35:21 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/21 00:24:48 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,21 +83,4 @@ int	main(int ac, char **argv)
 		write(2, "Wrong arguments.\n", 17);
 		return (0);
 	}
-	// int fd;
-	// int i;
-	// fd = open("map.cub",O_RDWR);
-	// vars.map = malloc(sizeof(char *) * 15);
-	// if(!vars.map)
-		// return (1);
-	// context->vars.map_height = 15;
-	// i = 0;
-	// vars.map[i] = get_next_line(fd);
-	// vars.map_lenght = ft_strlen(vars.map[i]);
-	// while(vars.map[i])
-	// {
-		// vars.map[i + 1] = get_next_line(fd);
-		// i++;
-	// }
-	// vars.map_height = i - 1;
-
 }

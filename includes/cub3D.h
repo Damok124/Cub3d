@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/20 20:36:47 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/21 00:24:31 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,16 @@ enum {
 #define CEILING 0x000000
 #define P3 3 * PI /2
 
+typedef struct	s_data {
+	void	*img_xmp;
+	void	*addr;
+	char	*img;
+	int		width;
+	int		height;
+	int		bits_per_pixel;
+	int		line_length;
+	int		endian;
+}				t_data;
 
 typedef struct s_lines {
 	char			*line;
@@ -101,11 +111,6 @@ typedef struct s_rays {
 typedef struct s_vars {
 	void			*mlx;
 	void			*win;
-	void			*img;
-	void			*addr;
-	int				bits_per_pixel;
-	int				line_length;
-	int				endian;
 	float			py;
 	float			px;
 	float			pdx;
@@ -114,6 +119,8 @@ typedef struct s_vars {
 	char			**map;
 	int				map_height;
 	int				map_lenght;
+	t_data			view;
+	t_data			knife;
 	t_keys 			key;
 	t_rays			rays;
 }					t_vars;
@@ -144,7 +151,8 @@ void		ft_draw_map(t_vars *vars);
 void		ft_draw_squarre(t_vars *vars, int y, int x, int color);
 void		ft_draw_weapon(t_context *context);
 int			ft_if_player(t_vars *vars, int y, int x);
-void		my_mlx_pixel_put(t_vars *vars, int x, int y, int color);
+void		my_mlx_pixel_put(t_data *vars, int x, int y, int color);
+int			get_color(t_data *vars, int x, int y);
 void		ft_3d_display(t_vars *vars, t_rays *rays);
 void		ft_ang_rays(t_rays *rays);
 void		ft_draw_player(t_vars *vars);

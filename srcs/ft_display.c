@@ -2,18 +2,18 @@
 
 void	ft_draw_player(t_vars *vars)
 {
-	my_mlx_pixel_put(vars, (vars->px  / SCALING) - 1, vars->py / SCALING, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, (vars->px / SCALING) + 1, vars->py/ SCALING, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->px / SCALING, (vars->py / SCALING) - 1, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->px / SCALING, (vars->py / SCALING) + 1, 0x00BBCCBB);
+	my_mlx_pixel_put(&vars->view, (vars->px  / SCALING) - 1, vars->py / SCALING, 0x00BBCCBB);
+	my_mlx_pixel_put(&vars->view, (vars->px / SCALING) + 1, vars->py/ SCALING, 0x00BBCCBB);
+	my_mlx_pixel_put(&vars->view, vars->px / SCALING, (vars->py / SCALING) - 1, 0x00BBCCBB);
+	my_mlx_pixel_put(&vars->view, vars->px / SCALING, (vars->py / SCALING) + 1, 0x00BBCCBB);
 }
 
 void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
 {
-	my_mlx_pixel_put(vars, rays->sx + 1, rays->sy, color);
-	my_mlx_pixel_put(vars, rays->sx - 1, rays->sy, color);
-	my_mlx_pixel_put(vars, rays->sx, rays->sy + 1, color);
-	my_mlx_pixel_put(vars, rays->sx, rays->sy - 1, color);
+	my_mlx_pixel_put(&vars->view, rays->sx + 1, rays->sy, color);
+	my_mlx_pixel_put(&vars->view, rays->sx - 1, rays->sy, color);
+	my_mlx_pixel_put(&vars->view, rays->sx, rays->sy + 1, color);
+	my_mlx_pixel_put(&vars->view, rays->sx, rays->sy - 1, color);
 }
 
 void	ft_draw_square(t_vars *vars, int y, int x, int color)
@@ -27,7 +27,7 @@ void	ft_draw_square(t_vars *vars, int y, int x, int color)
 		i = 0;
 		while(i <= IMG / SCALING)
 		{
-			my_mlx_pixel_put(vars, i + (x * IMG) / SCALING ,j + (y * IMG) / SCALING, color);
+			my_mlx_pixel_put(&vars->view, i + (x * IMG) / SCALING ,j + (y * IMG) / SCALING, color);
 			i++;
 		}
 		j++;
@@ -186,7 +186,7 @@ void	ft_draw_ceilling(t_context *context)
 		x = 0;
 		while(x < WINDOW_WIDTH)
 		{
-			my_mlx_pixel_put(&context->vars, x ,y , color);
+			my_mlx_pixel_put(&context->vars.view, x ,y , color);
 			x++;
 		}
 		y++;
@@ -206,7 +206,7 @@ void	ft_draw_floor(t_context *context)
 		x = 0;
 		while(x < WINDOW_WIDTH)
 		{
-			my_mlx_pixel_put(&context->vars, x ,y , color);
+			my_mlx_pixel_put(&context->vars.view, x ,y , color);
 			x++;
 		}
 		y++;
@@ -305,27 +305,53 @@ void	ft_key_input(t_vars *vars)
 		mlx_loop_end(vars->mlx);
 }
 
+void	ft_draw_knife(t_context *context)
+{
+	int x;
+	int y;
+	t_data *tmp_knife;
+	int	color;
+	tmp_knife = &context->vars.knife;
+
+	y = 0;
+	while(y <= 38)
+	{
+		x = 0;
+		while(x <= 25)
+		{
+			color = get_color(tmp_knife, x, y);
+			if (color != 0xa349a4)
+				my_mlx_pixel_put(tmp_knife,x + ((WINDOW_WIDTH / 2) - (25/2)),y + ((WINDOW_HEIGHT / 2) - (38 / 2)),color);
+			x++;
+		}
+		y++;
+	}
+}
+
 void	ft_draw_weapon(t_context *context)
 {
 	if(context->vars.key.weapon == 1)
 	{
-		ft_draw_square(&context->vars, 0, 0, 0xFFFFFF);
+		ft_draw_knife(context);
 	}
 }
 
 int	ft_display(t_context *context)
 {
-	if(context->vars.img)
-		mlx_destroy_image(context->vars.mlx, context->vars.img);
+	t_data *tmp_vars;
+
+	tmp_vars = &context->vars.view;
+	if(tmp_vars->img)
+		mlx_destroy_image(context->vars.mlx, tmp_vars->img);
 	ft_key_input(&context->vars);
-	context->vars.img = mlx_new_image(context->vars.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
-	context->vars.addr = mlx_get_data_addr(context->vars.img, &context->vars.bits_per_pixel, &context->vars.line_length,
-								&context->vars.endian);
+	tmp_vars->img = mlx_new_image(context->vars.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
+	tmp_vars->addr = mlx_get_data_addr(tmp_vars->img, &tmp_vars->bits_per_pixel, &tmp_vars->line_length,
+								&tmp_vars->endian);
 	ft_draw_rays(context);
 	ft_draw_map(&context->vars);
-	ft_draw_weapon(context);
 	ft_draw_player(&context->vars);
-	mlx_put_image_to_window(context->vars.mlx, context->vars.win, context->vars.img, 0, 0);
+	ft_draw_weapon(context);
+	mlx_put_image_to_window(context->vars.mlx, context->vars.win, tmp_vars->img, 0, 0);
 	return (1);
 }
 

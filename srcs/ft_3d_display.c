@@ -1,6 +1,6 @@
 #include "cub3D.h"
 
-void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
+void	my_mlx_pixel_put(t_data *vars, int x, int y, int color)
 {
 	char	*dst;
 
@@ -8,11 +8,21 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 	*(unsigned int*)dst = color;
 }
 
+int	get_color(t_data *vars, int x, int y)
+{
+	char	*dst;
+	int		color;
+
+	dst = vars->addr + (y * vars->line_length + x * (vars->bits_per_pixel / 8));
+	color = *(unsigned int*)dst;
+	return (color);
+}
+
 void	ft_draw_line(t_vars *vars, t_rays *rays,int line_start, int line_end)
 {
 	while(line_start < line_end)
 	{
-				my_mlx_pixel_put(vars, rays->r, line_start, rays->color);
+		my_mlx_pixel_put(&vars->view, rays->r, line_start, rays->color);
 		line_start++;
 	}
 }

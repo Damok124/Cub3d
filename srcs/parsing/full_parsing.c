@@ -57,11 +57,6 @@ void	ft_cub3d(t_context *context)
 	printf("map :\n");
 	ft_show_strs(context->map);
 	ft_init(context);
-	context->vars.mlx = mlx_init();
-	context->vars.win = mlx_new_window(context->vars.mlx, WINDOW_WIDTH , WINDOW_HEIGHT, "Hello world!");
-	context->vars.img = mlx_new_image(context->vars.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
-	context->vars.addr = mlx_get_data_addr(context->vars.img, &context->vars.bits_per_pixel, &context->vars.line_length,
-						&context->vars.endian);
 	mlx_hook(context->vars.win, ON_DESTROY, DestroyAll, ft_click_cross, &(context->vars));
 	mlx_hook(context->vars.win, 2, 1L << 0, button_down, &(context->vars));
 	mlx_hook(context->vars.win, 3, 1L << 1, button_up, &(context->vars));
