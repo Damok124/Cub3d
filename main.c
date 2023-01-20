@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
+/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:40:17 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/17 19:17:37 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/20 16:59:43 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3D.h"
 
-int		ft_if_player(t_vars *vars, int y, int x)
+int	ft_if_player(t_vars *vars, int y, int x)
 {
-	if (vars->map[y][x] == 'E' || vars->map[y][x] == 'N' || vars->map[y][x] == 'S' || vars->map[y][x] == 'W')
+	if (ft_strchr("NSWE", vars->map[y][x]))
 		return (1);
 	return (0);
 }
@@ -22,42 +22,44 @@ int		ft_if_player(t_vars *vars, int y, int x)
 float	ft_dist(float ax, float ay, float bx, float by)
 {
 	return (sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay)));
-}	
-
-int	ButtonDown(int keycode, t_vars *vars)
-{
-	if	(keycode == 'a')
-		vars->key.a = 1;
-	if	(keycode == 's')
-		vars->key.s = 1;
-	if	(keycode == 'd')
-		vars->key.d = 1;
-	if	(keycode == 'w')
-		vars->key.w = 1;
-	return(keycode);
 }
 
-int	ButtonUp(int keycode, t_vars *vars)
+int	button_down(int keycode, t_vars *vars)
 {
-	if	(keycode == 'a')
+	if (keycode == 'a')
+		vars->key.a = 1;
+	if (keycode == 's')
+		vars->key.s = 1;
+	if (keycode == 'd')
+		vars->key.d = 1;
+	if (keycode == 'w')
+		vars->key.w = 1;
+	return (keycode);
+}
+
+int	button_up(int keycode, t_vars *vars)
+{
+	if (keycode == 'a')
 		vars->key.a = 0;
-	if	(keycode == 's')
+	if (keycode == 's')
 		vars->key.s = 0;
-	if	(keycode == 'd')
+	if (keycode == 'd')
 		vars->key.d = 0;
-	if	(keycode == 'w')
+	if (keycode == 'w')
 		vars->key.w = 0;
-	return(keycode);
+	return (keycode);
 }
 
 int	main(int ac, char **argv)
 {
+	int			err_no;
 	t_context	*context;
 
 	context = NULL;
+	err_no = 0;
 	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
 	{
-		context = ft_cub3d_parsing(argv);
+		context = ft_cub3d_parsing(argv, &err_no);
 		if (context)
 		{
 			ft_cub3d(context);

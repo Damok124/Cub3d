@@ -2,11 +2,17 @@ NAME = libcub3D.a
 
 BINARY = cub3D
 
+LIBFT = libft/libft.a
+
+LIBFT_PRINTF = ft_printf/libft_printf.a
+
+LIBMLX = mlx/libmlx.a
+
 SRCSDIR = ./srcs/
 
 SRCS = ${SRCSDIR}ft_display.c \
 		${SRCSDIR}ft_keycode_input.c \
-		${SRCSDIR}parsing/ft_parsing.c \
+		${SRCSDIR}parsing/ft_orientation.c \
 		${SRCSDIR}ft_3d_display.c \
 		${SRCSDIR}init/ft_init.c \
 		${SRCSDIR}parsing/full_parsing.c
@@ -17,47 +23,50 @@ HEADER = cub3D.h
 
 OBJ = $(SRCS:.c=.o)
 
-CC = gcc
+CC = clang
 
 FLAGS = -Wall -Wextra -Werror -g3
-
 
 IFLAG = -I$(HEADERDIR) -Ift_printf/includes/ -Ilibft/includes/ -Imlx/
 
 all : $(BINARY)
 
-$(BINARY) : libmlx.a libcub3D.a libft_printf.a libft.a
-	$(CC) $(FLAGS) main.c $(IFLAG) -L. -lcub3D -L./mlx -lmlx -lXext -lX11 \
+$(BINARY) : $(LIBMLX) $(NAME) $(LIBFT_PRINTF) $(LIBFT)
+	@$(CC) $(FLAGS) main.c $(IFLAG) -L. -lcub3D -L./mlx -lmlx -lXext -lX11 \
 	-L./libft -lft -L./ft_printf -lft_printf -o $(BINARY) -lm
 
 %.o : %.c
-	$(CC) $(FLAGS) $(IFLAG) -o $@ -c $^
+	@$(CC) $(FLAGS) $(IFLAG) -o $@ -c $^
 
-libcub3D.a : $(OBJ) $(HEADERDIR)$(HEADER)
-	ar -rcs $(NAME) $^
+$(NAME) : $(OBJ) $(HEADERDIR)$(HEADER)
+	@ar -rcs $(NAME) $^
 
-libft_printf.a :
-	${MAKE} -sC ft_printf/
+$(LIBFT_PRINTF) :
+	@${MAKE} -sC ft_printf/
 
-libft.a :
-	${MAKE} -sC libft/
+$(LIBFT) :
+	@${MAKE} -sC libft/
 
-libmlx.a :
-	${MAKE} -sC mlx/
+$(LIBMLX) :
+	@${MAKE} -sC mlx/
 
 clean :
-	rm -f $(OBJ)
-	${MAKE} clean -sC ft_printf/
-	${MAKE} clean -sC libft/
-	${MAKE} clean -sC mlx/
+	@rm -f $(OBJ)
+	@${MAKE} clean -sC ft_printf/
+	@${MAKE} clean -sC libft/
+	@${MAKE} clean -sC mlx/
 
 fclean : clean
-	rm -f $(NAME)
-	rm -f $(BINARY)
-	${MAKE} fclean -sC ft_printf/
-	${MAKE} fclean -sC libft/
-	${MAKE} clean -sC mlx/
+	@rm -f $(NAME)
+	@rm -f $(BINARY)
+	@${MAKE} fclean -sC ft_printf/
+	@${MAKE} fclean -sC libft/
+	@${MAKE} clean -sC mlx/
 
 re : fclean all
+
+dev :
+	@rm -f $(BINARY)
+	@${MAKE} -sC ./
 
 .PHONY : all clean fclean re

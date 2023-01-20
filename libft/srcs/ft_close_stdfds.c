@@ -1,30 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_triple_free.c                                   :+:      :+:    :+:   */
+/*   ft_close_stdfds.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/12/31 11:08:43 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/31 11:14:05 by zharzi           ###   ########.fr       */
+/*   Created: 2023/01/19 23:03:47 by zharzi            #+#    #+#             */
+/*   Updated: 2023/01/19 23:15:53 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-void	ft_triple_free(char ***tobefreed)
+void	ft_close_stdfds(void)
 {
-	int	i;
-
-	i = 0;
-	while (tobefreed && tobefreed[i])
-	{
-		ft_full_free((void **)tobefreed[i]);
-		i++;
-	}
-	if (tobefreed)
-	{
-		free(tobefreed);
-		tobefreed = NULL;
-	}
+	close(STDIN);
+	close(STDOUT);
+	close(STDERR);
 }

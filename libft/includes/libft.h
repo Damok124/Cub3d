@@ -6,7 +6,7 @@
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/04/23 17:33:23 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/31 11:18:46 by zharzi           ###   ########.fr       */
+/*   Updated: 2023/01/20 13:32:35 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,10 @@
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <fcntl.h>
+
+# define STDIN 0
+# define STDOUT 1
+# define STDERR 2
 
 typedef struct s_list
 {
@@ -59,14 +63,15 @@ void					ft_putnbr_base_fd(int nbr, char *base, int fd);
 void					ft_putstr_fd(char *s, int fd);
 void					ft_show_tab_fd(int len, int *tab, int fd);
 void					ft_show_strs_fd(char **strs, int fd);
+void					ft_show_strs(char **strs);
 /////////////////////////
-//	MEMORY
+//	FREE
 /////////////////////////
-char					**ft_alloc_strs(int size);
 void					ft_full_free_nb(void **tobefreed, int nb);
 void					ft_full_free(void **tobefree);
+void					ft_only_strs_free(char **tobefreed);
 void					ft_true_free(void **ptr);
-void					ft_triple_free(char ***tobefreed);
+void					ft_close_stdfds(void);
 /////////////////////////
 //	CHECK
 /////////////////////////
@@ -88,6 +93,7 @@ int						ft_check_extension(char *filename, char *extension);
 /////////////////////////
 //	INITIALIZATION
 /////////////////////////
+char					**ft_alloc_strs(int size);
 void					*ft_calloc(size_t nmemb, size_t size);
 void					*ft_memset(void *s, int c, size_t n);
 void					ft_bzero(void *s, size_t n);
@@ -113,16 +119,15 @@ unsigned long long int	ft_atoull_safe(const char *nptr, int *check);
 unsigned int			ft_btou(const char *nptr, char *base);
 char					*ft_itoa(int n);
 char					**ft_split(char const *s, char c);
-char					**ft_split_set(const char *s, char *set);
-char					**ft_split_at_index(char *str, int i);
 char					*ft_strjoin(char const *s1, char const *s2);
 size_t					ft_strlcat(char *dst, const char *src, size_t size);
 char					*ft_strtrim(char const *s1, char const *set);
 int						ft_tolower(int c);
 int						ft_toupper(int c);
 int						*ft_strs_to_tab(int len, char **strs);
-char					**ft_strs_triple_into_double(char ***triple);
 int						ft_cap_color(int color);
+char					**ft_split_set(const char *s, char *set);
+char					**ft_split_at_index(char *str, int i);
 /////////////////////////
 //	MATHEMATIC
 /////////////////////////
@@ -130,9 +135,9 @@ int						ft_abs(int x);
 int						ft_sqrt(int nb);
 size_t					ft_strlen(const char *str);
 int						ft_strslen(char **strs);
-int						ft_triple_strslen(char ***strs);
 ssize_t					ft_count_strs(const char *s, char c);
 ssize_t					ft_count_strs_set(const char *s, char *set);
+int						ft_sum_strlen(char **strs);
 /////////////////////////
 //	RESEARCH
 /////////////////////////

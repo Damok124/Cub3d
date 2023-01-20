@@ -5,14 +5,14 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/12/27 01:59:49 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 02:00:08 by zharzi           ###   ########.fr       */
+/*   Created: 2023/01/19 23:07:18 by zharzi            #+#    #+#             */
+/*   Updated: 2023/01/19 23:07:28 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-char	**ft_split_at_index(char *str, int i)
+char **ft_split_at_index(char *str, int i)
 {
 	char	**final;
 	char	*first;

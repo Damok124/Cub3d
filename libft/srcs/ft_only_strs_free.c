@@ -1,19 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_isspace.c                                       :+:      :+:    :+:   */
+/*   ft_only_strs_free.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2023/01/19 23:07:42 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/19 23:15:40 by zharzi           ###   ########.fr       */
+/*   Created: 2023/01/20 11:58:19 by zharzi            #+#    #+#             */
+/*   Updated: 2023/01/20 13:31:15 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-int	ft_isspace(int c)
+#include "libft.h"
+
+void	ft_only_strs_free(char **tobefreed)
 {
-	if ((c > 8 && c < 17) || c == 32)
-		return (1);
-	else
-		return (0);
+	int	i;
+
+	i = -1;
+	while (tobefreed && tobefreed[++i])
+	{
+		free(tobefreed[i]);
+		tobefreed[i] = NULL;
+	}
 }

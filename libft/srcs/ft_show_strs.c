@@ -1,39 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strs_triple_into_double.c                       :+:      :+:    :+:   */
+/*   ft_show_strs.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/12/31 11:15:51 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/31 11:18:56 by zharzi           ###   ########.fr       */
+/*   Created: 2023/01/19 22:10:47 by zharzi            #+#    #+#             */
+/*   Updated: 2023/01/19 22:49:32 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-char	**ft_strs_triple_into_double(char ***triple)
+void ft_show_strs(char **strs)
 {
-	char	**strs;
-	int		size;
-	int		i;
-	int		j;
-	int		x;
+	int i;
 
-	i = -1;
-	j = -1;
-	x = -1;
-	size = ft_triple_strslen(triple);
-	strs = (char **)malloc(sizeof(char *) * (size + 1));
-	if (!strs)
-		return (NULL);
-	strs[size] = NULL;
-	while (triple[++i])
+	i = 0;
+	while (strs && strs[i])
 	{
-		while (triple[i][++j])
-			strs[++x] = ft_strdup(triple[i][j]);
-		j = -1;
+		ft_putstr_fd(strs[i], 1);
+		ft_putstr_fd("%%\n", 1);
+		i++;
 	}
-	ft_triple_free(triple);
-	return (strs);
 }

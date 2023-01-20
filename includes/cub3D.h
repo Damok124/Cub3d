@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
+/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/17 19:17:33 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/20 17:01:37 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ enum {
 #define P2 PI / 2
 #define FLOOR 0xFFFFFF
 #define CEILING 0x000000
-#define P3 3 * PI /2 
+#define P3 3 * PI /2
 
 
 typedef struct s_lines {
@@ -132,31 +132,32 @@ typedef struct s_context {
 /////////////////////////
 
 
-void	ft_vertical_line(t_vars *vars, t_rays *rays);
-void	ft_horizontal_line(t_vars *vars, t_rays *rays);
-int		ft_display(t_context *context);
-void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color);
-void	ft_draw_map(t_vars *vars);
-void	ft_draw_squarre(t_vars *vars, int y, int x, int color);
-int		ft_if_player(t_vars *vars, int y, int x);
-void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color);
-void	ft_3d_display(t_vars *vars, t_rays *rays);
-void	ft_ang_rays(t_rays *rays);
-void	ft_draw_player(t_vars *vars);
-int		ft_move_keycode(int keycode, t_vars *vars);
-void	ft_pars_pos_player(t_vars *vars);
-int		ButtonUp(int keycode, t_vars *vars);
-int		ButtonDown(int keycode, t_vars *vars);
-void	ft_init(t_context *context);
-void	ft_draw_rays(t_context *context);
-float	ft_dist(float ax, float ay, float bx, float by);
+void		ft_vertical_line(t_vars *vars, t_rays *rays);
+void		ft_horizontal_line(t_vars *vars, t_rays *rays);
+int			ft_display(t_context *context);
+void		ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color);
+void		ft_draw_map(t_vars *vars);
+void		ft_draw_squarre(t_vars *vars, int y, int x, int color);
+int			ft_if_player(t_vars *vars, int y, int x);
+void		my_mlx_pixel_put(t_vars *vars, int x, int y, int color);
+void		ft_3d_display(t_vars *vars, t_rays *rays);
+void		ft_ang_rays(t_rays *rays);
+void		ft_draw_player(t_vars *vars);
+int			ft_move_keycode(int keycode, t_vars *vars);
+int			button_up(int keycode, t_vars *vars);
+int			button_down(int keycode, t_vars *vars);
+void		ft_init(t_context *context);
+void		ft_draw_rays(t_context *context);
+float		ft_dist(float ax, float ay, float bx, float by);
 
 
 /////////////////////////
 //	cub3d parsing
 /////////////////////////
 
-t_context	*ft_cub3d_parsing(char **argv);
+float		ft_get_begin_angle(char orientation);
+void		ft_pars_pos_player(t_vars *vars, char orientation);
+t_context	*ft_cub3d_parsing(char **argv, int *err_no);
 void		ft_show_content(t_lines *content);
 void		ft_unset_context(t_context *context);
 char		ft_get_player_orientation(t_lines *content);
@@ -168,12 +169,12 @@ int			ft_get_map_size(t_lines *lst);
 void		ft_square_shaped_dotted_map(t_lines *content);
 t_lines		*ft_add_empty_map_line(int max, t_lines *next);
 void		ft_spotted_spaces(char *str);
-char		*ft_line_to_standard(char *str, int	max);
+char		*ft_line_to_standard(char *str, int max);
 int			ft_check_content(t_lines *content);
 int			ft_just_enough_args(t_lines *content, int *tab);
 void		ft_unset_content(t_lines *content);
 t_context	*ft_init_t_context(void);
-t_lines		*ft_get_all_lines(char *filename);
+t_lines		*ft_get_all_lines(char *filename, int *err_no);
 t_lines		*ft_setup_lst(int size, int fd, int index);
 char		ft_define_line_type(char *str, int	len);
 char		ft_type_specifier(char *str, int target_size);

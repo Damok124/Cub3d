@@ -9,5 +9,5 @@ void	ft_init(t_context *context)
 	context->vars.map_height = 14;
 	context->vars.map_lenght = ft_strlen(context->map[0]);
 	context->vars.map = context->map;
-	ft_pars_pos_player(&context->vars);
+	ft_pars_pos_player(&context->vars, context->player_orient);
 }

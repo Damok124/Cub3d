@@ -5,14 +5,14 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/12/27 01:48:51 by zharzi            #+#    #+#             */
-/*   Updated: 2022/12/27 01:53:40 by zharzi           ###   ########.fr       */
+/*   Created: 2023/01/19 23:05:35 by zharzi            #+#    #+#             */
+/*   Updated: 2023/01/19 23:08:00 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-static void	ft_true_splitset(const char *s, char **strs, char *set, ssize_t len)
+static void	ft_true_split_set(char const *s, char **str, char *set, ssize_t len)
 {
 	ssize_t	i;
 	ssize_t	j;
@@ -28,7 +28,7 @@ static void	ft_true_splitset(const char *s, char **strs, char *set, ssize_t len)
 		while ((s[i + j] && !ft_strchr(set, s[i + j])))
 			j++;
 		if (ft_strchr(set, s[i + j]) || s[i + j] == 0)
-			strs[a] = ft_substr(s, i, j);
+			str[a] = ft_substr(s, i, j);
 		a++;
 		i = i + j;
 		j = 0;
@@ -48,7 +48,7 @@ char	**ft_split_set(const char *s, char *set)
 		if (!strs)
 			return (NULL);
 		strs[len] = NULL;
-		ft_true_splitset(s, strs, set, len);
+		ft_true_split_set(s, strs, set, len);
 	}
 	return (strs);
 }

@@ -1,9 +1,6 @@
-
 #include "cub3D.h"
 
-/*
-clang -Wall -Wextra -Werror -g3 full_parsing.c -Iincludes/ -Ift_printf/includes/ -Ilibft/includes/ -Imlx/ -L. -lcub3D -L./mlx -lmlx -lXext -lX11 -L./libft -lft -L./ft_printf -lft_printf -o parsing -lm
-*/
+#define BAD_FD 1
 
 void	ft_show_strs(char **map)
 {
@@ -15,6 +12,12 @@ void	ft_show_strs(char **map)
 		printf("%s\n", map[i]);
 		i++;
 	}
+}
+
+int	ft_click_cross(t_vars *vars)
+{
+	mlx_loop_end(vars->mlx);
+	return (0);
 }
 
 void	ft_cub3d(t_context *context)
@@ -35,15 +38,16 @@ void	ft_cub3d(t_context *context)
 	context->vars.img = mlx_new_image(context->vars.mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	context->vars.addr = mlx_get_data_addr(context->vars.img, &context->vars.bits_per_pixel, &context->vars.line_length,
 						&context->vars.endian);
-	mlx_hook(context->vars.win, 2, 1L << 0, ButtonDown, &(context->vars));
-	mlx_hook(context->vars.win, 3, 1L << 1, ButtonUp, &(context->vars));
+	mlx_hook(context->vars.win, ON_DESTROY, DestroyAll, ft_click_cross, &(context->vars));
+	mlx_hook(context->vars.win, 2, 1L << 0, button_down, &(context->vars));
+	mlx_hook(context->vars.win, 3, 1L << 1, button_up, &(context->vars));
 	mlx_loop_hook(context->vars.mlx, ft_display, context);
 	mlx_loop(context->vars.mlx);
 }
 
 void	ft_check_lst_lines(t_lines *lst)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	printf("check :\n");
@@ -187,7 +191,7 @@ char	ft_define_line_type(char *str, int	len)
 
 t_lines	*ft_setup_lst(int size, int fd, int index)
 {
-	t_lines *elem;
+	t_lines	*elem;
 	char	*buffer;
 
 	elem = NULL;
@@ -212,7 +216,7 @@ t_lines	*ft_setup_lst(int size, int fd, int index)
 	return (elem);
 }
 
-t_lines	*ft_get_all_lines(char *filename)
+t_lines	*ft_get_all_lines(char *filename, int *err_no)
 {
 	t_lines	*lst;
 	int		size;
@@ -223,12 +227,14 @@ t_lines	*ft_get_all_lines(char *filename)
 	fd = open(filename, O_RDONLY);
 	if (fd > 0)
 		lst = ft_setup_lst(size, fd, 0);
+	else
+		*err_no = BAD_FD;
 	return (lst);
 }
 
 t_context	*ft_init_t_context(void)
 {
-	t_context *context;
+	t_context	*context;
 
 	context = (t_context *)malloc(sizeof(t_context));
 	if (!context)
@@ -244,6 +250,7 @@ t_context	*ft_init_t_context(void)
 void	ft_unset_content(t_lines *content)
 {
 	t_lines	*tmp;
+
 	if (content)
 	{
 		while (content)
@@ -402,7 +409,7 @@ t_lines	*ft_add_empty_map_line(int max, t_lines *next)
 
 void	ft_square_shaped_dotted_map(t_lines *content)
 {
-	t_lines *tmp;
+	t_lines	*tmp;
 	int		max;
 
 	tmp = NULL;
@@ -506,7 +513,7 @@ int	ft_check_if_flawless(char **map)
 
 void	ft_get_textures_paths(t_context **context, t_lines *content)
 {
-	t_context *tmp;
+	t_context	*tmp;
 
 	tmp = *context;
 	while (content)
@@ -587,13 +594,13 @@ void	ft_show_content(t_lines *content)
 	}
 }
 
-t_context	*ft_cub3d_parsing(char **argv)
+t_context	*ft_cub3d_parsing(char **argv, int *err_no)
 {
 	t_context	*context;
 	t_lines		*content;
 
 	context = NULL;
-	content = ft_get_all_lines(argv[1]);
+	content = ft_get_all_lines(argv[1], err_no);
 	ft_show_content(content);
 	if (content && ft_check_content(content))
 	{
