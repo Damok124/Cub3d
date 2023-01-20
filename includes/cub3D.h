@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
+/*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/20 17:01:37 by zharzi           ###   ########.fr       */
+/*   Updated: 2023/01/20 17:39:35 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,12 +33,13 @@ enum {
 	ON_DESTROY = 17
 };
 
-#define IMG 32			//size_image
-#define SPEED 2			//speed
+#define IMG 64			//size_image
+#define SPEED 5		//speed
 #define RSPEED 0.06 		//rotation speed
 #define DR 0.0174533 	// one degree in radian
 #define PI 3.1415926535
 #define DOF 64
+#define SCALING 10
 #define P2 PI / 2
 #define FLOOR 0xFFFFFF
 #define CEILING 0x000000

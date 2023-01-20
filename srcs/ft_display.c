@@ -2,10 +2,10 @@
 
 void	ft_draw_player(t_vars *vars)
 {
-	my_mlx_pixel_put(vars, vars->px  - 1, vars->py, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->px + 1, vars->py, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->px,vars->py -1, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->px, vars->py +1, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, (vars->px  / SCALING) - 1, vars->py / SCALING, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, (vars->px / SCALING) + 1, vars->py/ SCALING, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->px / SCALING, (vars->py / SCALING) - 1, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->px / SCALING, (vars->py / SCALING) + 1, 0x00BBCCBB);
 }
 
 void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
@@ -16,18 +16,18 @@ void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
 	my_mlx_pixel_put(vars, rays->sx, rays->sy - 1, color);
 }
 
-void	ft_draw_squarre(t_vars *vars, int y, int x, int color)
+void	ft_draw_square(t_vars *vars, int y, int x, int color)
 {
 	int i;
 	int j;
 
-	j = 1;
-	while(j < IMG)
+	j = 0;
+	while(j <= IMG / SCALING)
 	{
-		i = 1;
-		while(i < IMG)
+		i = 0;
+		while(i <= IMG / SCALING)
 		{
-			my_mlx_pixel_put(vars, i + (x * IMG) ,j + (y * IMG), color);
+			my_mlx_pixel_put(vars, i + (x * IMG) / SCALING ,j + (y * IMG) / SCALING, color);
 			i++;
 		}
 		j++;
@@ -46,11 +46,11 @@ void	ft_draw_map(t_vars *vars)
 		while(vars->map[y][x])
 		{
 			if(vars->map[y][x] == '1')
-				ft_draw_squarre(vars, y, x, 0xFFFFFFFF);
-			else if(vars->map[y][x] == '.')
-				ft_draw_squarre(vars, y, x, 0x00BBEECC);
+				ft_draw_square(vars, y, x, 0xFFFFFFFF);
+			// else if(vars->map[y][x] == '.')
+				// ft_draw_squarre(vars, y, x, 0x00BBEECC);
 			else if(vars->map[y][x] == '0')
-				ft_draw_squarre(vars, y, x, 0xFF000000);
+				ft_draw_square(vars, y, x, 0xFF000000);
 			x++;
 		}
 		y++;
@@ -216,9 +216,9 @@ void	ft_draw_rays(t_context *context)
 {
 	context->vars.rays.r = 0;
 	context->vars.rays.ra = context->vars.pa - (DR * 30);
-	ft_draw_ceilling(context);
-	ft_draw_floor(context);
-	ft_ang_rays(&context->vars.rays);
+	ft_draw_ceilling(context);	// dessin du plafond
+	ft_draw_floor(context); // dessin du sol 
+	ft_ang_rays(&context->vars.rays); 
 	while(context->vars.rays.r < WINDOW_WIDTH)
 	{
 		ft_horizontal_line(&context->vars, &context->vars.rays);
