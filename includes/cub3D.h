@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/20 17:39:35 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/20 18:52:38 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,7 @@ typedef struct t_keys {
 	int w;
 	int a;
 	int d;
+	int e;
 	int s;
 }					t_keys;
 

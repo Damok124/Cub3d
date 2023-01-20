@@ -90,7 +90,7 @@ void	ft_horizontal_line(t_vars *vars, t_rays *rays)
 			&& rays->my < vars->map_height + 1
 			&& rays->my < WINDOW_HEIGHT
 			&& rays->mx < WINDOW_WIDTH
-			&& vars->map[rays->my][rays->mx] == '1')
+			&& (vars->map[rays->my][rays->mx] == '1' || vars->map[rays->my][rays->mx] == 'C'))
 			rays->dof = DOF;
 		else
 		{
@@ -136,7 +136,7 @@ void	ft_vertical_line(t_vars *vars, t_rays *rays)
 			&& rays->my < vars->map_height + 1
 			&& rays->my < WINDOW_HEIGHT
 			&& rays->mx < WINDOW_WIDTH
-			&& vars->map[rays->my][rays->mx] == '1')
+			&& (vars->map[rays->my][rays->mx] == '1' || vars->map[rays->my][rays->mx] == 'C'))
 			rays->dof = DOF;
 		else
 		{
@@ -275,17 +275,24 @@ void	ft_key_input(t_vars *vars)
 	}
 	if(vars->key.s == 1)
 	{
-		if(vars->map[ipy][ipx_sub_xo] == '0')
+		if(vars->map[ipy][ipx_sub_xo] == '0' || vars->map[ipy][ipx_sub_xo] == 'O')
 		vars->px -= vars->pdx;
-		if(vars->map[ipy_sub_yo][ipx] == '0')
+		if(vars->map[ipy_sub_yo][ipx] == '0' || vars->map[ipy_sub_yo][ipx] == 'O')
 		vars->py -= vars->pdy;
 	}
 	if(vars->key.w == 1)
 	{
-		if(vars->map[ipy][ipx_add_xo] == '0')
+		if(vars->map[ipy][ipx_add_xo] == '0' || vars->map[ipy][ipx_add_xo] == 'O')
 			vars->px += vars->pdx;
-		if(vars->map[ipy_add_yo][ipx] == '0')
+		if(vars->map[ipy_add_yo][ipx] == '0' || vars->map[ipy_add_yo][ipx] == 'O')
 			vars->py += vars->pdy;
+	}
+	if(vars->key.e == 1)
+	{
+		if(vars->map[ipy_add_yo][ipx_add_xo] == 'C')
+			vars->map[ipy_add_yo][ipx_add_xo] = 'O';
+		else if(vars->map[ipy_add_yo][ipx_add_xo] == 'O')
+			vars->map[ipy_add_yo][ipx_add_xo] = 'C';
 	}
 }
 

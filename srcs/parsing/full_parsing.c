@@ -88,7 +88,7 @@ int	ft_potential_map_line(char *str, int len)
 	int	i;
 
 	i = 0;
-	while (str[i] && ft_strchr(" 01NSWE", str[i]))
+	while (str[i] && ft_strchr(" 01CNSWE", str[i]))
 		i++;
 	if (i == len)
 		return (1);

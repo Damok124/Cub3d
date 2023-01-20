@@ -8,7 +8,7 @@
 			"name": "(gdb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "/nfs/homes/alprival/Cub3d/cub3D",
+			"program": "/nfs/homes/alprival/Cube3d/cub3D",
 			"args": ["pop.cub"],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",

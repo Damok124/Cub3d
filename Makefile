@@ -15,7 +15,8 @@ SRCS = ${SRCSDIR}ft_display.c \
 		${SRCSDIR}parsing/ft_orientation.c \
 		${SRCSDIR}ft_3d_display.c \
 		${SRCSDIR}init/ft_init.c \
-		${SRCSDIR}parsing/full_parsing.c
+		${SRCSDIR}parsing/full_parsing.c \
+		${SRCSDIR}ft_keypress.c \
 
 HEADERDIR = includes/
 
