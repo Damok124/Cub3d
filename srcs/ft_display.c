@@ -47,8 +47,8 @@ void	ft_draw_map(t_vars *vars)
 		{
 			if(vars->map[y][x] == '1')
 				ft_draw_square(vars, y, x, 0xFFFFFFFF);
-			// else if(vars->map[y][x] == '.')
-				// ft_draw_squarre(vars, y, x, 0x00BBEECC);
+			else if(vars->map[y][x] == 'C' || vars->map[y][x] == 'O')
+				ft_draw_square(vars, y, x, 0x00FF0000);
 			else if(vars->map[y][x] == '0')
 				ft_draw_square(vars, y, x, 0xFF000000);
 			x++;
@@ -289,11 +289,13 @@ void	ft_key_input(t_vars *vars)
 	}
 	if(vars->key.e == 1)
 	{
-		if(vars->map[ipy_add_yo][ipx_add_xo] == 'C')
+		if (vars->map[ipy_add_yo][ipx_add_xo] == 'C')
 			vars->map[ipy_add_yo][ipx_add_xo] = 'O';
-		else if(vars->map[ipy_add_yo][ipx_add_xo] == 'O')
+		else if (vars->map[ipy_add_yo][ipx_add_xo] == 'O')
 			vars->map[ipy_add_yo][ipx_add_xo] = 'C';
 	}
+	if(vars->key.esc == 1)
+		mlx_loop_end(vars->mlx);
 }
 
 int	ft_display(t_context *context)

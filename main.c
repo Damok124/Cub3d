@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:40:17 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/20 18:55:49 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/20 19:15:41 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,8 @@ int	button_down(int keycode, t_vars *vars)
 		vars->key.w = 1;
 	if (keycode == 'e')
 		vars->key.e = 1;
+	if (keycode == XK_Escape)
+		vars->key.esc = 1;
 	return (keycode);
 }
 
