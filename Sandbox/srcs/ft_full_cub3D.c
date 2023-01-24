@@ -18,7 +18,7 @@
 #define RSPEED 0.06 		//rotation speed
 #define DR 0.0174533 	// one degree in radian
 #define PI 3.1415926535
-#define DOF 64
+#define DOV 64
 #define SCALING 10
 
 enum {
@@ -137,7 +137,7 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 void	ft_draw_line(t_vars *vars, t_rays *rays, int line_start, int line_end)
 {
 	while (line_start < line_end)
-	{
+	{//etudier opportunite d'inserer couleur texture
 		my_mlx_pixel_put(vars, rays->r, line_start, rays->color);
 		line_start++;
 	}
@@ -148,7 +148,7 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	float	line_h;
 	float	line_start;
 	float	line_end;
-	float	ca;
+	float	ca;//maybe fisheye
 	float	ratio;
 
 	ratio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
@@ -156,14 +156,14 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	if (ca < 0)
 		ca += 2 * PI;
 	if (ca > 2 * PI)
-		ca -= 2 * PI;
-	rays->dist_t = rays->dist_t * cos(ca);
+		ca -= 2 * PI;//////////////////////////////////////////////////
+	rays->dist_t = rays->dist_t * cos(ca);//calcul de la taille du rayon
 	line_h = ((IMG * (WINDOW_HEIGHT)) / rays->dist_t) * ratio ;
 	if (line_h > (WINDOW_HEIGHT))
 		line_h = (WINDOW_HEIGHT);
 	line_start = ((WINDOW_HEIGHT) / 2) - (line_h / 2);
 	line_end = line_start + line_h;
-	ft_draw_line(vars, rays, line_start, line_end);
+	ft_draw_line(vars, rays, line_start, line_end);//print une colonne de pixel
 }
 
 void	ft_draw_player(t_vars *vars)
@@ -176,17 +176,11 @@ void	ft_draw_player(t_vars *vars)
 		(vars->position->py / SCALING) - 1, 0x00BBCCBB);
 	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
 		(vars->position->py / SCALING) + 1, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
+		(vars->position->py / SCALING), 0x00BBCCBB);
 }
 
-void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
-{
-	my_mlx_pixel_put(vars, rays->sx + 1, rays->sy, color);
-	my_mlx_pixel_put(vars, rays->sx - 1, rays->sy, color);
-	my_mlx_pixel_put(vars, rays->sx, rays->sy + 1, color);
-	my_mlx_pixel_put(vars, rays->sx, rays->sy - 1, color);
-}
-
-void	ft_draw_square(t_vars *vars, int y, int x, int color)
+void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
 {
 	int	i;
 	int	j;
@@ -205,7 +199,7 @@ void	ft_draw_square(t_vars *vars, int y, int x, int color)
 	}
 }
 
-void	ft_draw_map(t_vars *vars)
+void	ft_draw_minimap(t_vars *vars)
 {
 	int	x;
 	int	y;
@@ -217,56 +211,32 @@ void	ft_draw_map(t_vars *vars)
 		while (vars->context->map[y][x])
 		{
 			if (vars->context->map[y][x] == '1')
-				ft_draw_square(vars, y, x, 0xFFFFFFFF);
+				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
 			else if (vars->context->map[y][x] == 'C' \
 				|| vars->context->map[y][x] == 'O')
-				ft_draw_square(vars, y, x, 0x00FF0000);
+				ft_draw_square_minimap(vars, y, x, 0x00FF0000);
 			else if (vars->context->map[y][x] == '0')
-				ft_draw_square(vars, y, x, 0xFF000000);
+				ft_draw_square_minimap(vars, y, x, 0xFF000000);
 			x++;
 		}
 		y++;
 	}
 }
 
-void	ft_horizontal_line(t_vars *vars)
+void	ft_deep_of_view_explorer(t_vars *vars)
 {
-	vars->rays->dov = 0;
-	vars->rays->a_tan = -1 / tan(vars->rays->ra);
-	if (vars->rays->ra > PI)
-	{
-		vars->rays->ry = (((int)vars->position->py >> 6) << 6) - 0.0001;
-		vars->rays->rx = (vars->position->py - vars->rays->ry) \
-			* vars->rays->a_tan + vars->position->px;
-		vars->rays->yo = -IMG;
-		vars->rays->xo = -vars->rays->yo * vars->rays->a_tan;
-	}
-	if (vars->rays->ra < PI)
-	{
-		vars->rays->ry = (((int)vars->position->py >> 6) << 6) + IMG;
-		vars->rays->rx = (vars->position->py - vars->rays->ry) \
-			* vars->rays->a_tan + vars->position->px;
-		vars->rays->yo = IMG;
-		vars->rays->xo = -vars->rays->yo * vars->rays->a_tan;
-	}
-	if (vars->rays->ra == 0 || vars->rays->ra == PI)
-	{
-		vars->rays->rx = vars->position->px;
-		vars->rays->ry = vars->position->py;
-		vars->rays->dov = DOF;
-	}
-	while (vars->rays->dov < DOF)
+	while (vars->rays->dov < DOV)
 	{
 		vars->rays->tmp_rx = (int)(vars->rays->rx) >> 6;
 		vars->rays->tmp_ry = (int)(vars->rays->ry) >> 6;
 		if (vars->rays->tmp_rx >= 0 && vars->rays->tmp_ry >= 0
 			&& vars->rays->tmp_rx < vars->context->map_length
-			&& vars->rays->tmp_ry < vars->context->map_height///////////////////
+			&& vars->rays->tmp_ry < vars->context->map_height
 			&& vars->rays->tmp_ry < WINDOW_HEIGHT
 			&& vars->rays->tmp_rx < WINDOW_WIDTH
 			&& (vars->context->map[vars->rays->tmp_ry][vars->rays->tmp_rx] == '1' \
 			|| vars->context->map[vars->rays->tmp_ry][vars->rays->tmp_rx] == 'C'))
-			vars->rays->dov = DOF;
+			vars->rays->dov = DOV;
 		else
 		{
 			vars->rays->rx += vars->rays->xo;
@@ -274,78 +244,92 @@ void	ft_horizontal_line(t_vars *vars)
 			vars->rays->dov += 1;
 		}
 	}
-	vars->rays->sx = vars->rays->rx;
-	vars->rays->sy = vars->rays->ry;
 }
 
-void	ft_vertical_line(t_vars *vars)
+void	ft_parallel_axis(t_vars *vars)
+{
+	vars->rays->rx = vars->position->px;
+	vars->rays->ry = vars->position->py;
+	vars->rays->dov = DOV;
+}
+
+void	ft_h_not_parallel_axis(t_vars *vars, int coeff)
+{
+	float	correction;
+
+	if (coeff > 0)
+		correction = IMG;
+	else
+		correction = -0.0001;
+	vars->rays->ry = (((int)vars->position->py >> 6) << 6) + correction;
+	vars->rays->rx = (vars->position->py - vars->rays->ry) \
+		* vars->rays->a_tan + vars->position->px;
+	vars->rays->yo = IMG * coeff;
+	vars->rays->xo = -vars->rays->yo * vars->rays->a_tan;
+}
+
+void	ft_v_not_parallel_axis(t_vars *vars, int coeff)
+{
+	float	correction;
+
+	if (coeff > 0)
+		correction = IMG;
+	else
+		correction = -0.0001;
+	vars->rays->rx = (((int)vars->position->px >> 6) << 6) + correction;
+	vars->rays->ry = (vars->position->px - vars->rays->rx) \
+		* vars->rays->n_tan + vars->position->py;
+	vars->rays->xo = IMG * coeff;
+	vars->rays->yo = -vars->rays->xo * vars->rays->n_tan;
+}
+
+void	ft_horizontal_axis_intersection(t_vars *vars)
 {
 	vars->rays->dov = 0;
-	vars->rays->n_tan = -tan(vars->rays->ra);
-	if (vars->rays->ra > (3.1415926535 / 2) \
-		&& vars->rays->ra < (3 * 3.1415926535 / 2))
-	{
-		vars->rays->rx = (((int)vars->position->px >> 6) << 6) - 0.0001;
-		vars->rays->ry = (vars->position->px - vars->rays->rx) \
-			* vars->rays->n_tan + vars->position->py;
-		vars->rays->xo = -IMG;
-		vars->rays->yo = -vars->rays->xo * vars->rays->n_tan;
-	}
-	if (vars->rays->ra < (3.1415926535 / 2) \
-		|| vars->rays->ra > (3 * 3.1415926535 / 2))
-	{
-		vars->rays->rx = (((int)vars->position->px >> 6) << 6) + IMG;
-		vars->rays->ry = (vars->position->px - vars->rays->rx) \
-			* vars->rays->n_tan + vars->position->py;
-		vars->rays->xo = IMG;
-		vars->rays->yo = -vars->rays->xo * vars->rays->n_tan;
-	}
 	if (vars->rays->ra == 0 || vars->rays->ra == PI)
-	{
-		vars->rays->rx = vars->position->px;
-		vars->rays->ry = vars->position->py;
-		vars->rays->dov = DOF;
-	}
-	while (vars->rays->dov < DOF)
-	{
-		vars->rays->tmp_rx = (int)(vars->rays->rx) >> 6;
-		vars->rays->tmp_ry = (int)(vars->rays->ry) >> 6;
-		if (vars->rays->tmp_rx >= 0 && vars->rays->tmp_ry >= 0
-			&& vars->rays->tmp_rx < vars->context->map_length
-			&& vars->rays->tmp_ry < vars->context->map_height////////////////
-			&& vars->rays->tmp_ry < WINDOW_HEIGHT
-			&& vars->rays->tmp_rx < WINDOW_WIDTH
-			&& (vars->context->map[vars->rays->tmp_ry][vars->rays->tmp_rx] == '1' \
-				|| vars->context->map[vars->rays->tmp_ry][vars->rays->tmp_rx] == 'C'))
-			vars->rays->dov = DOF;
-		else
-		{
-			vars->rays->rx += vars->rays->xo;
-			vars->rays->ry += vars->rays->yo;
-			vars->rays->dov += 1;
-		}
-	}
+		ft_parallel_axis(vars);
+	else if (vars->rays->ra > PI)
+		ft_h_not_parallel_axis(vars, -1);
+	else if (vars->rays->ra < PI)
+		ft_h_not_parallel_axis(vars, 1);
+	ft_deep_of_view_explorer(vars);
+}
+
+void	ft_vertical_axis_intersection(t_vars *vars)
+{
+	vars->rays->dov = 0;
+	if (vars->rays->ra == (PI / 2) || vars->rays->ra == (3 * PI / 2))
+		ft_parallel_axis(vars);
+	else if (vars->rays->ra > (PI / 2) && vars->rays->ra < (3 * PI / 2))
+		ft_v_not_parallel_axis(vars, -1);
+	else if (vars->rays->ra < (PI / 2) || vars->rays->ra > (3 * PI / 2))
+		ft_v_not_parallel_axis(vars, 1);
+	ft_deep_of_view_explorer(vars);
+}
+
+void	ft_wall_identification(t_vars *vars)
+{
 	if (ft_dist(vars->position->px, vars->position->py, vars->rays->rx, vars->rays->ry) \
 		< ft_dist(vars->position->px, vars->position->py, vars->rays->sx, vars->rays->sy))
 	{
 		vars->rays->sx = vars->rays->rx;
 		vars->rays->sy = vars->rays->ry;
 		if (vars->rays->sx > vars->position->px)
-			vars->rays->color = 0xf4c430;
+			vars->rays->color = 0xf4c430;//changer par fonction texture EST// ou code des murs pour print ulterieur
 		else
-			vars->rays->color = 0x0000FF00;
+			vars->rays->color = 0x0000FF00;//changer par fonction texture OUEST
 	}
 	else
 	{
 		if (vars->rays->sy > vars->position->py)
-			vars->rays->color = 0x000000FF;
+			vars->rays->color = 0x000000FF;//changer par fonction texture SUD
 		else
-			vars->rays->color = 0x00FF0000;
+			vars->rays->color = 0x00FF0000;//changer par fonction texture NORD
 	}
 	vars->rays->dist_t = ft_dist(vars->position->px, vars->position->py, vars->rays->sx, vars->rays->sy);
 }
 
-void	ft_ang_rays(t_rays *rays)
+void	ft_angle_adjustement(t_rays *rays)
 {
 	if (rays->ra < 0)
 		rays->ra += 2 * PI;
@@ -395,22 +379,63 @@ void	ft_draw_floor(t_context *context, t_vars *vars)
 	}
 }
 
-void	ft_draw_rays(t_vars *vars)
+void	ft_draw_environment(t_vars *vars)
 {
 	vars->rays->r = 0;
 	vars->rays->ra = vars->position->pa - (DR * 30);
-	ft_draw_ceilling(vars->context, vars);
-	ft_draw_floor(vars->context, vars);
-	ft_ang_rays(vars->rays);//////////////////////////explication?
+	ft_angle_adjustement(vars->rays);
 	while (vars->rays->r < WINDOW_WIDTH)
 	{
-		ft_horizontal_line(vars);
-		ft_vertical_line(vars);
-		// ft_draw_ray_hit(vars,vars->rays,0x00FF00);
+		vars->rays->a_tan = -1 / tan(vars->rays->ra);
+		vars->rays->n_tan = -tan(vars->rays->ra);
+		ft_horizontal_axis_intersection(vars);
+		vars->rays->sx = vars->rays->rx;
+		vars->rays->sy = vars->rays->ry;
+		ft_vertical_axis_intersection(vars);
+		ft_wall_identification(vars);
 		ft_3d_display(vars, vars->rays);
-		ft_ang_rays(vars->rays);
-		vars->rays->ra += ((M_PI / 3 / WINDOW_WIDTH));
-		vars->rays->r++;//////////////////////////////explication?
+		ft_angle_adjustement(vars->rays);
+		vars->rays->ra += ((PI / 3 / WINDOW_WIDTH));
+		vars->rays->r++;
+	}
+}
+
+void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
+{
+	if (ft_dist(vars->position->px, vars->position->py, vars->rays->rx, vars->rays->ry) \
+		< ft_dist(vars->position->px, vars->position->py, vars->rays->sx, vars->rays->sy))
+	{
+		vars->rays->sx = vars->rays->rx;
+		vars->rays->sy = vars->rays->ry;
+	}
+	// if ((rays->sx / SCALING) + 1 < WINDOW_WIDTH && (rays->sx / SCALING) - 1 > 0
+	// 	&& (rays->sy / SCALING) + 1 < WINDOW_HEIGHT && (rays->sy / SCALING) - 1 > 0)
+	// {
+		my_mlx_pixel_put(vars, rays->sx / SCALING, (rays->sy / SCALING), color);
+		// my_mlx_pixel_put(vars, (rays->sx / SCALING) + 1, rays->sy / SCALING, color);
+		// my_mlx_pixel_put(vars, (rays->sx / SCALING) - 1, rays->sy / SCALING, color);
+		// my_mlx_pixel_put(vars, rays->sx / SCALING, (rays->sy / SCALING) + 1, color);
+		// my_mlx_pixel_put(vars, rays->sx / SCALING, (rays->sy / SCALING) - 1, color);
+	// }
+}
+
+void	ft_draw_rays_minimap(t_vars *vars)
+{
+	vars->rays->r = 0;
+	vars->rays->ra = vars->position->pa - (DR * 30);
+	ft_angle_adjustement(vars->rays);
+	while (vars->rays->r < WINDOW_WIDTH)
+	{
+		vars->rays->a_tan = -1 / tan(vars->rays->ra);
+		vars->rays->n_tan = -tan(vars->rays->ra);
+		ft_horizontal_axis_intersection(vars);
+		vars->rays->sx = vars->rays->rx;
+		vars->rays->sy = vars->rays->ry;
+		ft_vertical_axis_intersection(vars);
+		ft_draw_ray_hit(vars,vars->rays,0x00FF00);
+		ft_angle_adjustement(vars->rays);
+		vars->rays->ra += ((PI / 3 / WINDOW_WIDTH));
+		vars->rays->r++;
 	}
 }
 
@@ -438,7 +463,7 @@ void	ft_key_input(t_vars *vars)
 	ipx_sub_xo = (vars->position->px - xo) / IMG;
 	ipy = vars->position->py / IMG;
 	ipy_add_yo = (vars->position->py + yo) / IMG;
-	ipy_sub_yo = (vars->position->py - yo) / IMG;
+	ipy_sub_yo = (vars->position->py - yo) / IMG;// bloc collision (^)
 	if (vars->keys->d == 1)
 	{
 		vars->position->pa += RSPEED;
@@ -491,12 +516,15 @@ int	ft_cub3d(t_vars *vars)
 	md = vars->mlx_datas;
 	if (md->img)
 		mlx_destroy_image(md->mlx, md->img);
-	ft_key_input(vars);
+	ft_key_input(vars);//met a jour la position du player en fonction des collisions + ouverture porte
 	md->img = mlx_new_image(md->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	md->addr = mlx_get_data_addr(md->img, &md->bits_per_pixel, \
 		&md->line_length, &md->endian);
-	ft_draw_rays(vars);////////////////////////////////////////ici
-	ft_draw_map(vars);
+	ft_draw_ceilling(vars->context, vars);
+	ft_draw_floor(vars->context, vars);
+	ft_draw_environment(vars);////////////////////////////////////////ici
+	ft_draw_minimap(vars);//affichage mini-map
+	ft_draw_rays_minimap(vars);
 	ft_draw_player(vars);
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);

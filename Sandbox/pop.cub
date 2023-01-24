@@ -1,18 +1,18 @@
 
-C 25,25,25
+C 25,25,50
 
 
-SO ./path_to_the_south_texture
-NO ./path_to_the_north_texture
+SO ./textures/t_gungeon_south.xpm
+NO ./textures/t_gungeon_north.xpm
 
 
-EA ./path_to_the_east_texture
+EA ./textures/t_gungeon_east.xpm
 
 
 
-F 150,150,170
+F 180,150,150
 
-WE ./path_to_the_west_texture
+WE ./textures/t_gungeon_west.xpm
         1111111111111111111111111
         1000000000110000000000001
         1011000001110000000000001
