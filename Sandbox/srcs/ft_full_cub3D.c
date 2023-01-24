@@ -20,6 +20,7 @@
 #define PI 3.1415926535
 #define DOV 64
 #define SCALING 10
+#define COLLISION 20
 
 enum {
 	ON_KEYDOWN = 2,
@@ -38,6 +39,13 @@ typedef struct s_lines {
 	char			type;
 	struct s_lines	*next;
 }					t_lines;
+
+typedef struct s_margin {
+	int	ipx_add_xo;
+	int	ipx_sub_xo;
+	int	ipy_add_yo;
+	int	ipy_sub_yo;
+}		t_margin;
 
 typedef struct s_keys {
 	int	w;
@@ -64,6 +72,7 @@ typedef struct s_rays {
 	float			yo;
 	float			a_tan;
 	float			n_tan;
+	int				wall_type;//ou changer pour path de la texture
 }					t_rays;
 
 typedef struct s_mlx_datas
@@ -166,62 +175,6 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	ft_draw_line(vars, rays, line_start, line_end);//print une colonne de pixel
 }
 
-void	ft_draw_player(t_vars *vars)
-{
-	my_mlx_pixel_put(vars, (vars->position->px / SCALING) - 1, \
-		vars->position->py / SCALING, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, (vars->position->px / SCALING) + 1, \
-		vars->position->py / SCALING, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
-		(vars->position->py / SCALING) - 1, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
-		(vars->position->py / SCALING) + 1, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
-		(vars->position->py / SCALING), 0x00BBCCBB);
-}
-
-void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
-{
-	int	i;
-	int	j;
-
-	j = 0;
-	while (j <= IMG / SCALING)
-	{
-		i = 0;
-		while (i <= IMG / SCALING)
-		{
-			my_mlx_pixel_put(vars, i + (x * IMG) / SCALING, \
-				j + (y * IMG) / SCALING, color);
-			i++;
-		}
-		j++;
-	}
-}
-
-void	ft_draw_minimap(t_vars *vars)
-{
-	int	x;
-	int	y;
-
-	y = 0;
-	while (vars->context->map[y])
-	{
-		x = 0;
-		while (vars->context->map[y][x])
-		{
-			if (vars->context->map[y][x] == '1')
-				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
-			else if (vars->context->map[y][x] == 'C' \
-				|| vars->context->map[y][x] == 'O')
-				ft_draw_square_minimap(vars, y, x, 0x00FF0000);
-			else if (vars->context->map[y][x] == '0')
-				ft_draw_square_minimap(vars, y, x, 0xFF000000);
-			x++;
-		}
-		y++;
-	}
-}
 
 void	ft_deep_of_view_explorer(t_vars *vars)
 {
@@ -337,48 +290,6 @@ void	ft_angle_adjustement(t_rays *rays)
 		rays->ra -= 2 * PI;
 }
 
-void	ft_draw_ceilling(t_context *context, t_vars *vars)
-{
-	int	x;
-	int	y;
-	int	color;
-
-	color = (context->ceiling.r << 16) + (context->ceiling.g << 8) \
-		+ (context->ceiling.b);
-	y = 0;
-	while (y < WINDOW_HEIGHT / 2)
-	{
-		x = 0;
-		while (x < WINDOW_WIDTH)
-		{
-			my_mlx_pixel_put(vars, x, y, color);
-			x++;
-		}
-		y++;
-	}
-}
-
-void	ft_draw_floor(t_context *context, t_vars *vars)
-{
-	int	x;
-	int	color;
-	int	y;
-
-	color = (context->floor.r << 16) + (context->floor.g << 8) \
-		+ (context->floor.b);
-	y = WINDOW_HEIGHT / 2;
-	while (y < WINDOW_HEIGHT)
-	{
-		x = 0;
-		while (x < WINDOW_WIDTH)
-		{
-			my_mlx_pixel_put(vars, x, y, color);
-			x++;
-		}
-		y++;
-	}
-}
-
 void	ft_draw_environment(t_vars *vars)
 {
 	vars->rays->r = 0;
@@ -439,31 +350,86 @@ void	ft_draw_rays_minimap(t_vars *vars)
 	}
 }
 
-void	ft_key_input(t_vars *vars)
+void	ft_draw_player(t_vars *vars)
 {
-	int	xo;
-	int	yo;
-	int	ipx;
-	int	ipy;
-	int	ipx_add_xo;
-	int	ipx_sub_xo;
-	int	ipy_add_yo;
-	int	ipy_sub_yo;
+	my_mlx_pixel_put(vars, (vars->position->px / SCALING) - 1, \
+		vars->position->py / SCALING, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, (vars->position->px / SCALING) + 1, \
+		vars->position->py / SCALING, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
+		(vars->position->py / SCALING) - 1, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
+		(vars->position->py / SCALING) + 1, 0x00BBCCBB);
+	my_mlx_pixel_put(vars, vars->position->px / SCALING, \
+		(vars->position->py / SCALING), 0x00BBCCBB);
+}
 
+void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
+{
+	int	i;
+	int	j;
+
+	j = 0;
+	while (j <= IMG / SCALING)
+	{
+		i = 0;
+		while (i <= IMG / SCALING)
+		{
+			my_mlx_pixel_put(vars, i + (x * IMG) / SCALING, \
+				j + (y * IMG) / SCALING, color);
+			i++;
+		}
+		j++;
+	}
+}
+
+void	ft_draw_minimap(t_vars *vars)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (vars->context->map[y])
+	{
+		x = 0;
+		while (vars->context->map[y][x])
+		{
+			if (vars->context->map[y][x] == '1')
+				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
+			else if (vars->context->map[y][x] == 'C' \
+				|| vars->context->map[y][x] == 'O')
+				ft_draw_square_minimap(vars, y, x, 0x00FF0000);
+			else if (vars->context->map[y][x] == '0')
+				ft_draw_square_minimap(vars, y, x, 0xFF000000);
+			x++;
+		}
+		y++;
+	}
+	ft_draw_player(vars);
+	ft_draw_rays_minimap(vars);
+}
+
+void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
+{
+	int	coeff_x;
+	int	coeff_y;
+
+	coeff_x = 1;
 	if (vars->position->pdx < 0)
-		xo = -20;
-	else
-		xo = 20;
+		coeff_x = - 1;
+	coeff_y = 1;
 	if (vars->position->pdy < 0)
-		yo = -20;
-	else
-		yo = 20;
-	ipx = vars->position->px / IMG;
-	ipx_add_xo = (vars->position->px + xo) / IMG;
-	ipx_sub_xo = (vars->position->px - xo) / IMG;
-	ipy = vars->position->py / IMG;
-	ipy_add_yo = (vars->position->py + yo) / IMG;
-	ipy_sub_yo = (vars->position->py - yo) / IMG;// bloc collision (^)
+		coeff_y = -1;
+	*ipx = vars->position->px / IMG;
+	*ipy = vars->position->py / IMG;
+	margin->ipx_add_xo = (vars->position->px + (COLLISION * coeff_x)) / IMG;
+	margin->ipx_sub_xo = (vars->position->px - (COLLISION * coeff_x)) / IMG;
+	margin->ipy_add_yo = (vars->position->py + (COLLISION * coeff_y)) / IMG;
+	margin->ipy_sub_yo = (vars->position->py - (COLLISION * coeff_y)) / IMG;
+}
+
+void	ft_rotation(t_vars *vars)
+{
 	if (vars->keys->d == 1)
 	{
 		vars->position->pa += RSPEED;
@@ -480,24 +446,43 @@ void	ft_key_input(t_vars *vars)
 		vars->position->pdx = cos(vars->position->pa) * SPEED;
 		vars->position->pdy = sin(vars->position->pa) * SPEED;
 	}
+}
+
+void	ft_foreward_backward(int ipx, int ipy, t_vars *vars, t_margin *margin)
+{
 	if (vars->keys->s == 1)
 	{
-		if (vars->context->map[ipy][ipx_sub_xo] == '0' \
-			|| vars->context->map[ipy][ipx_sub_xo] == 'O')
+		if (vars->context->map[ipy][margin->ipx_sub_xo] == '0' \
+			|| vars->context->map[ipy][margin->ipx_sub_xo] == 'O')
 		vars->position->px -= vars->position->pdx;
-		if (vars->context->map[ipy_sub_yo][ipx] == '0' \
-			|| vars->context->map[ipy_sub_yo][ipx] == 'O')
+		if (vars->context->map[margin->ipy_sub_yo][ipx] == '0' \
+			|| vars->context->map[margin->ipy_sub_yo][ipx] == 'O')
 		vars->position->py -= vars->position->pdy;
 	}
 	if (vars->keys->w == 1)
 	{
-		if (vars->context->map[ipy][ipx_add_xo] == '0' \
-			|| vars->context->map[ipy][ipx_add_xo] == 'O')
+		if (vars->context->map[ipy][margin->ipx_add_xo] == '0' \
+			|| vars->context->map[ipy][margin->ipx_add_xo] == 'O')
 			vars->position->px += vars->position->pdx;
-		if (vars->context->map[ipy_add_yo][ipx] == '0' \
-			|| vars->context->map[ipy_add_yo][ipx] == 'O')
+		if (vars->context->map[margin->ipy_add_yo][ipx] == '0' \
+			|| vars->context->map[margin->ipy_add_yo][ipx] == 'O')
 			vars->position->py += vars->position->pdy;
 	}
+}
+
+void	ft_key_input(t_vars *vars)
+{
+	int	ipx;
+	int	ipy;
+	t_margin	margin;
+
+	ipx = 0;
+	ipy = 0;
+	ft_collision(&ipx, &ipy, vars, &margin);
+	if (vars->keys->a == 1 || vars->keys->d == 1)
+		ft_rotation(vars);
+	if (vars->keys->w == 1 || vars->keys->s == 1)
+		ft_foreward_backward(ipx, ipy, vars, &margin);
 	// if (vars->keys->e == 1)
 	// {
 	// 	if (vars->context->map[ipy_add_yo][ipx_add_xo] == 'C')
@@ -509,6 +494,48 @@ void	ft_key_input(t_vars *vars)
 	// 	mlx_loop_end(vars->mlx_datas->mlx);
 }
 
+void	ft_draw_ceilling(t_context *context, t_vars *vars)
+{
+	int	x;
+	int	y;
+	int	color;
+
+	color = (context->ceiling.r << 16) + (context->ceiling.g << 8) \
+		+ (context->ceiling.b);
+	y = 0;
+	while (y < WINDOW_HEIGHT / 2)
+	{
+		x = 0;
+		while (x < WINDOW_WIDTH)
+		{
+			my_mlx_pixel_put(vars, x, y, color);
+			x++;
+		}
+		y++;
+	}
+}
+
+void	ft_draw_floor(t_context *context, t_vars *vars)
+{
+	int	x;
+	int	color;
+	int	y;
+
+	color = (context->floor.r << 16) + (context->floor.g << 8) \
+		+ (context->floor.b);
+	y = WINDOW_HEIGHT / 2;
+	while (y < WINDOW_HEIGHT)
+	{
+		x = 0;
+		while (x < WINDOW_WIDTH)
+		{
+			my_mlx_pixel_put(vars, x, y, color);
+			x++;
+		}
+		y++;
+	}
+}
+
 int	ft_cub3d(t_vars *vars)
 {
 	t_mlx_datas	*md;
@@ -516,16 +543,14 @@ int	ft_cub3d(t_vars *vars)
 	md = vars->mlx_datas;
 	if (md->img)
 		mlx_destroy_image(md->mlx, md->img);
-	ft_key_input(vars);//met a jour la position du player en fonction des collisions + ouverture porte
 	md->img = mlx_new_image(md->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	md->addr = mlx_get_data_addr(md->img, &md->bits_per_pixel, \
 		&md->line_length, &md->endian);
 	ft_draw_ceilling(vars->context, vars);
 	ft_draw_floor(vars->context, vars);
+	ft_key_input(vars);//met a jour la position du player en fonction des collisions + ouverture porte
 	ft_draw_environment(vars);////////////////////////////////////////ici
-	ft_draw_minimap(vars);//affichage mini-map
-	ft_draw_rays_minimap(vars);
-	ft_draw_player(vars);
+	ft_draw_minimap(vars);
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);
 }
