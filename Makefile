@@ -10,13 +10,8 @@ LIBMLX = mlx/libmlx.a
 
 SRCSDIR = ./srcs/
 
-SRCS = ${SRCSDIR}ft_display.c \
-		${SRCSDIR}ft_keycode_input.c \
-		${SRCSDIR}parsing/ft_orientation.c \
-		${SRCSDIR}ft_3d_display.c \
-		${SRCSDIR}init/ft_init.c \
-		${SRCSDIR}parsing/full_parsing.c \
-		${SRCSDIR}ft_keypress.c \
+SRCS = \
+${SRCSDIR}ft_full_cub3D.c
 
 HEADERDIR = includes/
 

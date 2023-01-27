@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
+/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/21 00:24:31 by alprival         ###   ########.fr       */
+/*   Updated: 2023/01/22 18:59:23 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CUB3D_H
 # define CUB3D_H
-# define WINDOW_WIDTH 1920
-# define WINDOW_HEIGHT 1080
+# define WINDOW_WIDTH 1280
+# define WINDOW_HEIGHT 720
 
 # include <math.h>
 # include "X11/keysym.h"
@@ -23,121 +23,113 @@
 # include "libft.h"
 # include "ft_printf.h"
 
-enum {
-	ON_KEYDOWN = 2,
-	ON_KEYUP = 3,
-	ON_MOUSEDOWN = 4,
-	ON_MOUSEUP = 5,
-	ON_MOUSEMOVE = 6,
-	ON_EXPOSE = 12,
-	ON_DESTROY = 17
-};
+// enum {
+// 	ON_KEYDOWN = 2,
+// 	ON_KEYUP = 3,
+// 	ON_MOUSEDOWN = 4,
+// 	ON_MOUSEUP = 5,
+// 	ON_MOUSEMOVE = 6,
+// 	ON_EXPOSE = 12,
+// 	ON_DESTROY = 17
+// };
 
-#define IMG 64			//size_image
-#define SPEED 5		//speed
-#define RSPEED 0.06 		//rotation speed
-#define DR 0.0174533 	// one degree in radian
-#define PI 3.1415926535
-#define DOF 64
-#define SCALING 10
-#define P2 PI / 2
-#define FLOOR 0xFFFFFF
-#define CEILING 0x000000
-#define P3 3 * PI /2
+// #define IMG 64			//size_image
+// #define SPEED 5		//speed
+// #define RSPEED 0.06 		//rotation speed
+// #define DR 0.0174533 	// one degree in radian
+// #define PI 3.1415926535
+// #define DOF 64
+// #define SCALING 10
+// #define P2 PI / 2
+// #define FLOOR 0xFFFFFF
+// #define CEILING 0x000000
+// #define P3 3 * PI /2
 
-typedef struct	s_data {
-	void	*img_xmp;
-	void	*addr;
-	char	*img;
-	int		width;
-	int		height;
-	int		bits_per_pixel;
-	int		line_length;
-	int		endian;
-}				t_data;
 
-typedef struct s_lines {
-	char			*line;
-	int				index;
-	int				len;
-	char			type;
-	struct s_lines	*next;
-}	t_lines;
+// typedef struct s_lines {
+// 	char			*line;
+// 	int				index;
+// 	int				len;
+// 	char			type;
+// 	struct s_lines	*next;
+// }	t_lines;
 
-typedef struct s_rgb {
-	int	r;
-	int	g;
-	int	b;
-}	t_rgb;
+// typedef struct s_rgb {
+// 	int	r;
+// 	int	g;
+// 	int	b;
+// }	t_rgb;
 
 
 
-typedef struct t_keys {
-	int w;
-	int a;
-	int d;
-	int e;
-	int weapon;
-	int s;
-	int esc;
-}					t_keys;
+// typedef struct t_keys {
+// 	int w;
+// 	int a;
+// 	int d;
+// 	int e;
+// 	int s;
+// 	int esc;
+// }					t_keys;
 
-typedef struct s_rays {
-	int				r;
-	int				mx;
-	int				my;
-	int				dof;
-	int				orientation;
-	float			rx;
-	float			ry;
-	float			ra;
-	float			xo;
-	float			yo;
-	float			hx;
-	float			hy;
-	float			vx;
-	float			vy;
-	float			sx;
-	float			sy;
-	float			aTan;
-	float			distH;
-	unsigned int	color;
-	float			distT;
-	float			distV;
-	float			nTan;
-}					t_rays;
-
-
-typedef struct s_vars {
-	void			*mlx;
-	void			*win;
-	float			py;
-	float			px;
-	float			pdx;
-	float			pdy;
-	float			pa;
-	char			**map;
-	int				map_height;
-	int				map_lenght;
-	t_data			view;
-	t_data			knife;
-	t_keys 			key;
-	t_rays			rays;
-}					t_vars;
-
-typedef struct s_context {
-	char	*path_t_NO;
-	char	*path_t_SO;
-	char	*path_t_WE;
-	char	*path_t_EA;
-	t_rgb	floor;
-	t_rgb	ceiling;
-	char	player_orient;
-	char	**map;
-	t_vars	vars;
-}	t_context;
+// typedef struct s_rays {
+// 	int				r;
+// 	int				mx;
+// 	int				my;
+// 	int				dof;
+// 	int				orientation;
+// 	float			rx;
+// 	float			ry;
+// 	float			ra;
+// 	float			xo;
+// 	float			yo;
+// 	float			hx;
+// 	float			hy;
+// 	float			vx;
+// 	float			vy;
+// 	float			sx;
+// 	float			sy;
+// 	float			aTan;
+// 	float			distH;
+// 	unsigned int	color;
+// 	float			distT;
+// 	float			distV;
+// 	float			nTan;
+// }					t_rays;
 
 
+// typedef struct s_vars {
+// 	void			*mlx;
+// 	void			*win;
+// 	void			*img;
+// 	void			*addr;
+// 	int				bits_per_pixel;
+// 	int				line_length;
+// 	int				endian;
+// 	float			py;
+// 	float			px;
+// 	float			pdx;
+// 	float			pdy;
+// 	float			pa;
+// 	char			**map;
+// 	int				map_height;
+// 	int				map_lenght;
+// 	t_keys			key;
+// 	t_rays			rays;
+// }					t_vars;
+
+// typedef struct s_context {
+// 	char	*path_t_no;
+// 	char	*path_t_so;
+// 	char	*path_t_we;
+// 	char	*path_t_ea;
+// 	t_rgb	floor;
+// 	t_rgb	ceiling;
+// 	char	player_orient;
+// 	char	**map;
+// 	t_vars	vars;
+// }	t_context;
+
+/*
 /////////////////////////
 //	cub3d
 /////////////////////////
@@ -149,10 +141,8 @@ int			ft_display(t_context *context);
 void		ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color);
 void		ft_draw_map(t_vars *vars);
 void		ft_draw_squarre(t_vars *vars, int y, int x, int color);
-void		ft_draw_weapon(t_context *context);
 int			ft_if_player(t_vars *vars, int y, int x);
-void		my_mlx_pixel_put(t_data *vars, int x, int y, int color);
-int			get_color(t_data *vars, int x, int y);
+void		my_mlx_pixel_put(t_vars *vars, int x, int y, int color);
 void		ft_3d_display(t_vars *vars, t_rays *rays);
 void		ft_ang_rays(t_rays *rays);
 void		ft_draw_player(t_vars *vars);
@@ -189,7 +179,7 @@ void		ft_unset_content(t_lines *content);
 t_context	*ft_init_t_context(void);
 t_lines		*ft_get_all_lines(char *filename, int *err_no);
 t_lines		*ft_setup_lst(int size, int fd, int index);
-char		ft_define_line_type(char *str, int	len);
+char		ft_define_line_type(char *str, int len);
 char		ft_type_specifier(char *str, int target_size);
 char		ft_find_valid_nswe(char *str);
 char		ft_find_valid_fc(char *str);
@@ -207,9 +197,10 @@ char		**ft_strsdup(char **src);
 /////////////////////////
 //	INTERACTIONS
 /////////////////////////
-int				ft_keypress(int key, t_vars *vars);
-char			ft_base_key(int *tab, int key);
-int				ft_click_cross(t_vars *vars);
-int				ft_manual_color(t_vars *vars, int key);
+int			ft_keypress(int key, t_vars *vars);
+char		ft_base_key(int *tab, int key);
+int			ft_click_cross(t_vars *vars);
+int			ft_manual_color(t_vars *vars, int key);
+*/
 
 #endif
