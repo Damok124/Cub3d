@@ -1147,8 +1147,7 @@ int	ft_check_format_textures(t_lines *content, int *err_no)
 		{
 			path = ft_strtrim(content->line + 2, " ");
 			if (!ft_check_extension(path, ".xpm") || access(path, R_OK))
-				// (void)err_no;////////////////////////////////to replace when xpm
-				// *err_no = ERR_UNREADABLE_PATH;
+				*err_no = ERR_UNREADABLE_PATH;
 			ft_true_free((void **)&path);
 		}
 		content = content->next;
@@ -1392,15 +1391,19 @@ void	ft_show_content(t_lines *content)
 	}
 }
 
-// void	ft_unset_context(t_context *context)
-// {
-// 	ft_true_free((void **)&context->texture->north);
-// 	ft_true_free((void **)&context->texture->south);
-// 	ft_true_free((void **)&context->texture->west);
-// 	ft_true_free((void **)&context->texture->east);
-// 	ft_full_free((void **)context->map);
-// 	ft_true_free((void **)&context);
-// }
+void	ft_unset_context(t_context *context)
+{
+	ft_true_free((void **)&context->north->path);
+	ft_true_free((void **)&context->south->path);
+	ft_true_free((void **)&context->east->path);
+	ft_true_free((void **)&context->west->path);
+	ft_true_free((void **)&context->north);
+	ft_true_free((void **)&context->south);
+	ft_true_free((void **)&context->east);
+	ft_true_free((void **)&context->west);
+	ft_full_free((void **)context->map);
+	ft_true_free((void **)&context);
+}
 
 t_context	*ft_cub3d_parsing(char **argv, int *err_no)
 {
@@ -1427,7 +1430,7 @@ t_context	*ft_cub3d_parsing(char **argv, int *err_no)
 			// 	ft_unset_context(context);
 		}
 	}
-	// ft_unset_content(content);
+	ft_unset_content(content);
 	return (context);
 }
 
@@ -1474,10 +1477,14 @@ void	ft_print_cub3d_error_1(int err_no)
 
 void	ft_unset_vars(t_vars *vars)
 {
-	// ft_unset_context(vars->context);
+	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->north->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->south->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->east->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->west->tex_img);
 	mlx_destroy_image(vars->mlx_datas->mlx, vars->mlx_datas->img);
 	mlx_destroy_window(vars->mlx_datas->mlx, vars->mlx_datas->win);
 	mlx_destroy_display(vars->mlx_datas->mlx);
+	ft_unset_context(vars->context);
 	ft_true_free((void **)&vars->mlx_datas->mlx);
 	ft_true_free((void **)&vars->keys);
 	ft_true_free((void **)&vars->mlx_datas);
