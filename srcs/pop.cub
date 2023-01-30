@@ -2,17 +2,17 @@
 C 25,25,50
 
 
-SO ./textures/t_gungeon_south.xpm
-NO ./textures/t_gungeon_north.xpm
+SO ../textures/t_gungeon_south.xpm
+NO ../textures/t_gungeon_north.xpm
 
 
-EA ./textures/t_gungeon_east.xpm
+EA ../textures/t_gungeon_east.xpm
 
 
 
 F 180,150,150
 
-WE ./textures/t_gungeon_west.xpm
+WE ../textures/t_gungeon_west.xpm
         1111111111111111111111111
         1000000000110000000000001
         1011000001110000000000001

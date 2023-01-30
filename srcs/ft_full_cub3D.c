@@ -739,13 +739,12 @@ void	ft_show_context(t_context *context)
 
 void	ft_set_texture(t_textures *data, t_mlx_datas *md)
 {
-	int	trash;
+	int		width;
+	int		height;
 
-	trash = 0;
-	data->tex_img = mlx_xpm_file_to_image(md->mlx, data->path, \
-		data->tex_width, data->tex_height);
-	data->tex_addr = mlx_get_data_addr(data->tex_img, &trash, \
-		&trash, &trash);
+	data->tex_img = mlx_xpm_file_to_image(md->mlx, data->path, &width, &height);
+	data->tex_addr = mlx_get_data_addr(data->tex_img, &md->bits_per_pixel, \
+		&width, &md->endian);
 }
 
 void	ft_get_textures_paths(t_context *context, t_lines *content)
