@@ -170,13 +170,17 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 	}
 }
 
-unsigned int	ft_get_color_from_xpm(t_textures *wall, float step)
+unsigned int	ft_get_color_from_xpm(t_textures *wall, float step, int	rank)
 {
-	char	*color;
-	int		y;
-	int		x;
+	//appliquer au calcul de x, le ratio entre la taille du mur, et la longueur de la texture
+	double		coeff;
+	char		*color;
+	int			y;
+	int			x;
 
-	x = 1;
+	coeff = (double)(*wall->tex_width / sizeof(int)) / (double)IMG;
+	// x = ((rank) -(double)((int)(rank / IMG) * IMG));
+	x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
 	y = *(wall->tex_height) * step;
 	color = wall->tex_addr + (y * *(wall->tex_width) \
 		+ x * (wall->bppixels / 8));
@@ -195,28 +199,28 @@ void	ft_draw_line(t_vars *vars, int line_start, int line_end)
 		step = ((float)pixel / (float)(line_end - line_start));
 		if (vars->rays->wall_type == NORTH)
 		{
-			col = ft_get_color_from_xpm(vars->context->north, step);
+			col = ft_get_color_from_xpm(vars->context->north, step, vars->rays->short_x);
 		// 	dst = vars->context->north->tex_addr + (y * *(vars->context->north->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
 			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
 		}
 		else if (vars->rays->wall_type == SOUTH)
 		{
-			col = ft_get_color_from_xpm(vars->context->south, step);
+			col = ft_get_color_from_xpm(vars->context->south, step, vars->rays->short_x);
 		// 	dst = vars->context->south->tex_addr + (y * *(vars->context->south->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
 			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
 		}
 		else if (vars->rays->wall_type == WEST)
 		{
-			col = ft_get_color_from_xpm(vars->context->west, step);
+			col = ft_get_color_from_xpm(vars->context->west, step, (int)vars->rays->short_y);
 		// 	dst = vars->context->west->tex_addr + (y * *(vars->context->west->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
 			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
 		}
 		else if (vars->rays->wall_type == EAST)
 		{
-			col = ft_get_color_from_xpm(vars->context->east, step);
+			col = ft_get_color_from_xpm(vars->context->east, step, (int)vars->rays->short_y);
 		// 	dst = vars->context->east->tex_addr + (y * *(vars->context->east->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
 			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
@@ -501,7 +505,7 @@ int mouse(int x, int y, t_vars *vars)
     (void)y;
     if(x < (WINDOW_WIDTH / 2) - 20)
     {
-        vars->position->view_angle -= RSPEED / 3;
+        vars->position->view_angle -= RSPEED;
         if (vars->position->view_angle < 0)
             vars->position->view_angle += (2 * PI);
         vars->position->pdx=cos(vars->position->view_angle) * SPEED;
@@ -510,7 +514,7 @@ int mouse(int x, int y, t_vars *vars)
     }
     else if (x >  (WINDOW_WIDTH / 2) + 20)
     {
-        vars->position->view_angle += RSPEED / 3;
+        vars->position->view_angle += RSPEED;
         if (vars->position->view_angle > (2 * PI))
             vars->position->view_angle -= (2 * PI);
         vars->position->pdx=cos(vars->position->view_angle) * SPEED;
