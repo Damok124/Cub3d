@@ -56,6 +56,8 @@ typedef struct s_margin {
 }		t_margin;
 
 typedef struct s_keys {
+	int left;
+	int right;
 	int	w;
 	int	a;
 	int	s;
@@ -472,6 +474,7 @@ void	ft_draw_minimap(t_vars *vars)
 	ft_draw_rays_minimap(vars);
 }
 
+
 void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
 {
 	t_player	*pos;
@@ -479,12 +482,12 @@ void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
 	int			coeff_y;
 
 	pos = vars->position;
-	coeff_x = 1;
+	coeff_x = 3;
 	if (pos->pdx < 0)
-		coeff_x = -1;
-	coeff_y = 1;
+		coeff_x = -3;
+	coeff_y = 3;
 	if (pos->pdy < 0)
-		coeff_y = -1;
+		coeff_y = -3;
 	*ipx = pos->player_x / IMG;
 	*ipy = pos->player_y / IMG;
 	margin->ipx_add_xo = (pos->player_x + (COLLISION * coeff_x)) / IMG;
@@ -493,37 +496,127 @@ void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
 	margin->ipy_sub_yo = (pos->player_y - (COLLISION * coeff_y)) / IMG;
 }
 
+int mouse(int x, int y, t_vars *vars)
+{
+    (void)y;
+    if(x < (WINDOW_WIDTH / 2) - 20)
+    {
+        vars->position->view_angle -= RSPEED / 3;
+        if (vars->position->view_angle < 0)
+            vars->position->view_angle += (2 * PI);
+        vars->position->pdx=cos(vars->position->view_angle) * SPEED;
+        vars->position->pdy=sin(vars->position->view_angle) * SPEED;
+        mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    }
+    else if (x >  (WINDOW_WIDTH / 2) + 20)
+    {
+        vars->position->view_angle += RSPEED / 3;
+        if (vars->position->view_angle > (2 * PI))
+            vars->position->view_angle -= (2 * PI);
+        vars->position->pdx=cos(vars->position->view_angle) * SPEED;
+        vars->position->pdy=sin(vars->position->view_angle) * SPEED;
+        mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    }
+    return(1);
+}
+
 void	ft_rotation(t_vars *vars)
 {
-	if (vars->keys->a || vars->keys->d)
+	if (vars->keys->left || vars->keys->right)
 	{
-		if (vars->keys->a == 1)
+		if (vars->keys->left == 1)
 			vars->position->view_angle -= RSPEED;
-		if (vars->keys->d == 1)
+		if (vars->keys->right == 1)
 			vars->position->view_angle += RSPEED;
 		ft_angle_adjustement(&vars->position->view_angle);
 		vars->position->pdx = cos(vars->position->view_angle) * SPEED;
 		vars->position->pdy = sin(vars->position->view_angle) * SPEED;
 	}
 }
+int	ft_map_wall(t_vars *vars)
+{
+	int player_x;
+	int player_y;
+	player_y = (int)vars->position->player_y;
+	player_x = (int)vars->position->player_x;
+	if (ft_strchr("1", vars->context->map[(player_y + 24) / 64][(player_x + 24) / 64])
+		|| ft_strchr("1", vars->context->map[(player_y - 24) / 64][(player_x - 24) / 64])
+		|| ft_strchr("1", vars->context->map[(player_y - 24) / 64][(player_x + 24) / 64])
+		|| ft_strchr("1", vars->context->map[(player_y + 24) / 64][(player_x - 24) / 64]))
+		return(1);
+	return (0);
+}
 
-void	ft_foreward_backward(int ipx, int ipy, t_vars *vars, t_margin *margin)
+void	ft_foreward_backward(t_vars *vars)
 {
 	if (vars->keys->s == 1)
 	{
-		if (ft_strchr("0ONSWE", vars->context->map[ipy][margin->ipx_sub_xo]))
-			vars->position->player_x -= vars->position->pdx;
-		if (ft_strchr("0ONSWE", vars->context->map[margin->ipy_sub_yo][ipx]))
-			vars->position->player_y -= vars->position->pdy;
+		vars->position->player_x -= vars->position->pdx;
+		if(ft_map_wall(vars))
+			vars->position->player_x += vars->position->pdx;
+		vars->position->player_y -= vars->position->pdy;
+		if(ft_map_wall(vars))
+			vars->position->player_y += vars->position->pdy;
 	}
 	if (vars->keys->w == 1)
 	{
-		if (ft_strchr("0ONSWE", vars->context->map[ipy][margin->ipx_add_xo]))
-			vars->position->player_x += vars->position->pdx;
-		if (ft_strchr("0ONSWE", vars->context->map[margin->ipy_add_yo][ipx]))
-			vars->position->player_y += vars->position->pdy;
+		vars->position->player_x += vars->position->pdx;
+		if(ft_map_wall(vars))
+			vars->position->player_x -= vars->position->pdx;
+		vars->position->player_y += vars->position->pdy;
+		if(ft_map_wall(vars))
+			vars->position->player_y -= vars->position->pdy;
 	}
 }
+
+void	ft_left_right(t_vars *vars)
+{
+	if (vars->keys->a == 1)
+	{
+		vars->position->player_x += cos(vars->position->view_angle - M_PI / 2) * SPEED;
+		if(ft_map_wall(vars))
+			vars->position->player_x -= cos(vars->position->view_angle - M_PI / 2) * SPEED;
+		vars->position->player_y += sin(vars->position->view_angle - M_PI / 2) * SPEED;
+		if(ft_map_wall(vars))
+			vars->position->player_y -= sin(vars->position->view_angle - M_PI / 2) * SPEED;
+
+	}
+	if (vars->keys->d == 1)
+	{
+		vars->position->player_x += cos(vars->position->view_angle + M_PI / 2) * SPEED;
+		if(ft_map_wall(vars))
+			vars->position->player_x -= cos(vars->position->view_angle + M_PI / 2) * SPEED;
+		vars->position->player_y += sin(vars->position->view_angle + M_PI / 2) * SPEED;
+		if(ft_map_wall(vars))
+			vars->position->player_y -= sin(vars->position->view_angle + M_PI / 2) * SPEED;
+	}
+}
+
+// void	ft_left_right(int ipx, int ipy, t_vars *vars, t_margin *margin)
+// {
+// 	(void)ipx;
+// 	(void)ipy;
+// 	(void)margin;
+// 	if (vars->keys->a == 1)
+// 	{
+// 		vars->position->player_x += cos(vars->position->view_angle - M_PI / 2) * SPEED;
+// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 			vars->position->player_x -= cos(vars->position->view_angle - M_PI / 2) * SPEED;
+// 		vars->position->player_y += sin(vars->position->view_angle - M_PI / 2) * SPEED;
+// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 			vars->position->player_y -= sin(vars->position->view_angle - M_PI / 2) * SPEED;
+
+// 	}
+// 	if (vars->keys->d == 1)
+// 	{
+// 		vars->position->player_x += cos(vars->position->view_angle + M_PI / 2) * SPEED;
+// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 			vars->position->player_x -= cos(vars->position->view_angle + M_PI / 2) * SPEED;
+// 		vars->position->player_y += sin(vars->position->view_angle + M_PI / 2) * SPEED;
+// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 			vars->position->player_y -= sin(vars->position->view_angle + M_PI / 2) * SPEED;
+// 	}
+// }
 
 void	ft_interactions(t_vars *vars)
 {
@@ -534,10 +627,12 @@ void	ft_interactions(t_vars *vars)
 	ipx = 0;
 	ipy = 0;
 	ft_collision(&ipx, &ipy, vars, &margin);
-	if (vars->keys->a == 1 || vars->keys->d == 1)
+	if (vars->keys->left == 1 || vars->keys->right == 1)
 		ft_rotation(vars);
 	if (vars->keys->w == 1 || vars->keys->s == 1)
-		ft_foreward_backward(ipx, ipy, vars, &margin);
+		ft_foreward_backward(vars);
+	if (vars->keys->a == 1 || vars->keys->d == 1)
+		ft_left_right(vars);
 	// if (vars->keys->e == 1)
 	// {
 	// 	if (vars->context->map[ipy_add_yo][ipx_add_xo] == 'C')
@@ -626,6 +721,10 @@ int	ft_hold_key(int keycode, t_vars *vars)
 {
 	if (keycode == 'w')
 		vars->keys->w = 1;
+	if (keycode == XK_Left)
+		vars->keys->left = 1;
+	if (keycode == XK_Right)
+		vars->keys->right = 1;
 	if (keycode == 'a')
 		vars->keys->a = 1;
 	if (keycode == 's')
@@ -643,6 +742,10 @@ int	ft_release_key(int keycode, t_vars *vars)
 {
 	if (keycode == 'w')
 		vars->keys->w = 0;
+	if (keycode == XK_Left)
+		vars->keys->left = 0;
+	if (keycode == XK_Right)
+		vars->keys->right = 0;
 	if (keycode == 'a')
 		vars->keys->a = 0;
 	if (keycode == 's')
@@ -662,6 +765,8 @@ void	ft_hooks_activation(t_vars *vars)
 	mlx_hook(md->win, ON_DESTROY, DestroyAll, ft_click_cross, md->mlx);
 	mlx_hook(md->win, 2, 1L << 0, ft_hold_key, vars);
 	mlx_hook(md->win, 3, 1L << 1, ft_release_key, vars);
+	mlx_hook(md->win, 6, 1L << 6, mouse, vars);
+	mlx_mouse_hide(md->mlx,md->win);
 	///manque events open/close
 }
 
