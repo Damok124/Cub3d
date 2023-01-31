@@ -170,16 +170,14 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 	}
 }
 
-unsigned int	ft_get_color_from_xpm(t_textures *wall, float step, int	rank)
+unsigned int	ft_get_color_from_xpm(t_textures *wall, float step, float rank)
 {
-	//appliquer au calcul de x, le ratio entre la taille du mur, et la longueur de la texture
-	double		coeff;
-	char		*color;
-	int			y;
-	int			x;
+	float	coeff;
+	char	*color;
+	int		y;
+	int		x;
 
-	coeff = (double)(*wall->tex_width / sizeof(int)) / (double)IMG;
-	// x = ((rank) -(double)((int)(rank / IMG) * IMG));
+	coeff = (float)(*wall->tex_width / sizeof(int)) / (float)IMG;
 	x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
 	y = *(wall->tex_height) * step;
 	color = wall->tex_addr + (y * *(wall->tex_width) \
@@ -704,7 +702,7 @@ int	ft_cub3d(t_vars *vars)
 	ft_draw_floor(vars->context, vars);//done
 	ft_interactions(vars);//reste le mouvement droite gauche
 	ft_draw_environment(vars);////////////////////////////////////////ici
-	ft_draw_minimap(vars);//done?
+	// ft_draw_minimap(vars);//done?
 	// mlx_put_image_to_window(md->mlx, md->win, vars->context->north->tex_img, 50, 150);
 	// mlx_put_image_to_window(md->mlx, md->win, vars->context->south->tex_img, 130, 150);
 	// mlx_put_image_to_window(md->mlx, md->win, vars->context->west->tex_img, 210, 150);

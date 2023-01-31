@@ -2,7 +2,7 @@
 C 25,25,50
 
 
-SO ./textures/t_gungeon_south.xpm
+SO ./textures/disk.xpm
 NO ./textures/baby.xpm
 
 
