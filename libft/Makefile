@@ -6,7 +6,7 @@
 #    By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/07/06 17:12:24 by zharzi            #+#    #+#              #
-#    Updated: 2023/01/20 13:31:08 by zharzi           ###   ########.fr        #
+#    Updated: 2023/01/31 18:14:48 by zharzi           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -106,6 +106,7 @@ $(SRCSDIR)ft_alloc_strs.c \
 $(SRCSDIR)ft_isspace.c \
 $(SRCSDIR)ft_strsdup.c \
 $(SRCSDIR)ft_split_at_index.c \
+$(SRCSDIR)ft_multi_true_free.c \
 $(SRCSDIR)get_next_line.c
 
 HEADERDIR = includes/

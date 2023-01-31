@@ -115,6 +115,8 @@ typedef struct s_textures {
 	char	*tex_addr;
 	int		*tex_height;
 	int		*tex_width;
+	int		bppixels;
+	int		endian;
 }			t_textures;
 
 typedef struct s_context {
@@ -166,50 +168,61 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 	}
 }
 
-// void	ft_get_color_from_xpm(t_vars *vars, int line_start, int line_end)
-// {
-// 	int	ratio;
-// }
+unsigned int	ft_get_color_from_xpm(t_textures *wall, float step)
+{
+	char	*color;
+	int		y;
+	int		x;
+
+	x = 1;
+	y = *(wall->tex_height) * step;
+	color = wall->tex_addr + (y * *(wall->tex_width) \
+		+ x * (wall->bppixels / 8));
+	return (*(unsigned int *)color);
+}
 
 void	ft_draw_line(t_vars *vars, int line_start, int line_end)
 {
-	// char	*dst;
-	int		x;
-	int		y;
+	unsigned int	col;
+	float			step;
+	int				pixel;
 
-	x = 0;
-	y = 0;
-	while (line_start < line_end)
-	{//etudier opportunite d'inserer couleur texture
-		// if (vars->rays->wall_type == NORTH)
-		// {
+	pixel = 0;
+	while ((line_start + pixel) < line_end)
+	{
+		step = ((float)pixel / (float)(line_end - line_start));
+		if (vars->rays->wall_type == NORTH)
+		{
+			col = ft_get_color_from_xpm(vars->context->north, step);
 		// 	dst = vars->context->north->tex_addr + (y * *(vars->context->north->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-
-		// }
-		// else if (vars->rays->wall_type == SOUTH)
-		// {
+			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
+		}
+		else if (vars->rays->wall_type == SOUTH)
+		{
+			col = ft_get_color_from_xpm(vars->context->south, step);
 		// 	dst = vars->context->south->tex_addr + (y * *(vars->context->south->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-		// }
-		// else if (vars->rays->wall_type == WEST)
-		// {
+			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
+		}
+		else if (vars->rays->wall_type == WEST)
+		{
+			col = ft_get_color_from_xpm(vars->context->west, step);
 		// 	dst = vars->context->west->tex_addr + (y * *(vars->context->west->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-		// }
-		// else if (vars->rays->wall_type == EAST)
-		// {
+			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
+		}
+		else if (vars->rays->wall_type == EAST)
+		{
+			col = ft_get_color_from_xpm(vars->context->east, step);
 		// 	dst = vars->context->east->tex_addr + (y * *(vars->context->east->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
 		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-		// }
-		// else
-			my_mlx_pixel_put(vars, vars->rays->r_id, line_start, vars->rays->color);
-		line_start++;
-		x++;
-		y++;
+			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
+		}
+		else
+			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), vars->rays->color);
+		pixel++;
 	}
-		// rays->color += ((1 << 16) + (1 << 8) + 1);
-		// rays->color += ((1 << 16) + 1);
 }
 
 void	ft_3d_display(t_vars *vars, t_rays *rays)
@@ -771,8 +784,8 @@ void	ft_show_context(t_context *context)
 void	ft_set_texture(t_textures *data, t_mlx_datas *md)
 {
 	data->tex_img = mlx_xpm_file_to_image(md->mlx, data->path, data->tex_width, data->tex_height);
-	data->tex_addr = mlx_get_data_addr(data->tex_img, &md->bits_per_pixel, \
-		data->tex_width, &md->endian);
+	data->tex_addr = mlx_get_data_addr(data->tex_img, &data->bppixels, \
+		data->tex_width, &data->endian);
 	printf("path : %s, w:%d, h:%d\n", data->path, *data->tex_width, *data->tex_height);
 }
 
@@ -1030,6 +1043,7 @@ t_textures	*ft_init_t_textures(void)
 	texture->path = NULL;
 	texture->tex_img = NULL;
 	texture->tex_addr = NULL;
+	texture->bppixels = 0;
 	texture->tex_width = (int *)malloc(sizeof(int));
 	if (!texture->tex_width)
 	{
@@ -1039,8 +1053,9 @@ t_textures	*ft_init_t_textures(void)
 	texture->tex_height = (int *)malloc(sizeof(int));
 	if (!texture->tex_height)
 	{
-		ft_true_free((void **)&texture->tex_width);
-		ft_true_free((void **)&texture);
+		ft_multi_true_free((void **)&texture->tex_width, (void **)&texture, NULL, NULL);
+		// ft_true_free((void **)&texture->tex_width);
+		// ft_true_free((void **)&texture);
 		return (NULL);
 	}
 	return (texture);
