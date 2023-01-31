@@ -166,23 +166,47 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 	}
 }
 
-void	ft_draw_line(t_vars *vars, int line_start, int line_end)
+// void	ft_get_color_from_xpm(t_vars *vars, int line_start, int line_end)
+// {
+// 	int	ratio;
+// }
+
+void	ft_print_column(t_vars *vars, int line_start, int line_end)
 {
-	while (line_start < line_end)
-	{//etudier opportunite d'inserer couleur texture
-		if (vars->rays->wall_type == NORTH)
-			;
-		else if (vars->rays->wall_type == SOUTH)
-			;
-		else if (vars->rays->wall_type == WEST)
-			;
-		else if (vars->rays->wall_type == EAST)
-			;
-		my_mlx_pixel_put(vars, vars->rays->r_id, line_start, vars->rays->color);
-		line_start++;
+	int		pixel;
+	// char	*col;
+	// int		x;
+	// int		y;
+
+	// x = 0;
+	// y = 0;
+	pixel = 0;
+	while (pixel + line_start < line_end)//////////////////////////////////ou egal
+	{
+	// 	if (vars->rays->wall_type == NORTH)
+	// 	{
+	// // 		col = vars->context->north->tex_addr + (y * *(vars->context->north->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+	// // 		// *(unsigned int *)col = 0xFF;
+	// 	}
+	// 	else if (vars->rays->wall_type == SOUTH)
+	// 	{
+	// // 		col = vars->context->south->tex_addr + (y * *(vars->context->south->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+	// // 		my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)col);
+	// 	}
+	// 	else if (vars->rays->wall_type == WEST)
+	// 	{
+	// // 		col = vars->context->west->tex_addr + (y * *(vars->context->west->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+	// // 		my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)col);
+	// 	}
+	// 	else if (vars->rays->wall_type == EAST)
+	// 	{
+	// // 		col = vars->context->east->tex_addr + (y * *(vars->context->east->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+	// // 		my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)col);
+	// 	}
+		// else
+			my_mlx_pixel_put(vars, vars->rays->r_id, line_start, 0xFF0000);
+		pixel++;
 	}
-		// rays->color += ((1 << 16) + (1 << 8) + 1);
-		// rays->color += ((1 << 16) + 1);
 }
 
 void	ft_3d_display(t_vars *vars, t_rays *rays)
@@ -200,7 +224,7 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	line_height = ((IMG * (WINDOW_HEIGHT)) / rays->ray_len) * ratio;
 	line_start = ((WINDOW_HEIGHT) / 2) - (line_height / 2);
 	line_end = line_start + line_height;
-	ft_draw_line(vars, line_start, line_end);//print une colonne de pixel
+	ft_print_column(vars, line_start, line_end);//print une colonne de pixel
 }
 
 void	ft_deep_of_view_explorer(t_vars *vars)
@@ -566,6 +590,10 @@ int	ft_cub3d(t_vars *vars)
 	ft_interactions(vars);//reste le mouvement droite gauche
 	ft_draw_environment(vars);////////////////////////////////////////ici
 	ft_draw_minimap(vars);//done?
+	// mlx_put_image_to_window(md->mlx, md->win, vars->context->north->tex_img, 50, 150);
+	// mlx_put_image_to_window(md->mlx, md->win, vars->context->south->tex_img, 130, 150);
+	// mlx_put_image_to_window(md->mlx, md->win, vars->context->west->tex_img, 210, 150);
+	// mlx_put_image_to_window(md->mlx, md->win, vars->context->east->tex_img, 290, 150);
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);
 }
@@ -739,12 +767,10 @@ void	ft_show_context(t_context *context)
 
 void	ft_set_texture(t_textures *data, t_mlx_datas *md)
 {
-	int		width;
-	int		height;
-
-	data->tex_img = mlx_xpm_file_to_image(md->mlx, data->path, &width, &height);
+	data->tex_img = mlx_xpm_file_to_image(md->mlx, data->path, data->tex_width, data->tex_height);
 	data->tex_addr = mlx_get_data_addr(data->tex_img, &md->bits_per_pixel, \
-		&width, &md->endian);
+		data->tex_width, &md->endian);
+	printf("path : %s, w:%d, h:%d\n", data->path, *data->tex_width, *data->tex_height);
 }
 
 void	ft_get_textures_paths(t_context *context, t_lines *content)
@@ -1001,8 +1027,19 @@ t_textures	*ft_init_t_textures(void)
 	texture->path = NULL;
 	texture->tex_img = NULL;
 	texture->tex_addr = NULL;
-	texture->tex_width = NULL;
-	texture->tex_height = NULL;
+	texture->tex_width = (int *)malloc(sizeof(int));
+	if (!texture->tex_width)
+	{
+		ft_true_free((void **)&texture);
+		return (NULL);
+	}
+	texture->tex_height = (int *)malloc(sizeof(int));
+	if (!texture->tex_height)
+	{
+		ft_true_free((void **)&texture->tex_width);
+		ft_true_free((void **)&texture);
+		return (NULL);
+	}
 	return (texture);
 }
 
@@ -1397,6 +1434,14 @@ void	ft_unset_context(t_context *context)
 	ft_true_free((void **)&context->south->path);
 	ft_true_free((void **)&context->east->path);
 	ft_true_free((void **)&context->west->path);
+	ft_true_free((void **)&context->north->tex_width);
+	ft_true_free((void **)&context->south->tex_width);
+	ft_true_free((void **)&context->east->tex_width);
+	ft_true_free((void **)&context->west->tex_width);
+	ft_true_free((void **)&context->north->tex_height);
+	ft_true_free((void **)&context->south->tex_height);
+	ft_true_free((void **)&context->east->tex_height);
+	ft_true_free((void **)&context->west->tex_height);
 	ft_true_free((void **)&context->north);
 	ft_true_free((void **)&context->south);
 	ft_true_free((void **)&context->east);
@@ -1433,7 +1478,6 @@ t_context	*ft_cub3d_parsing(char **argv, int *err_no)
 	ft_unset_content(content);
 	return (context);
 }
-
 
 void	ft_print_cub3d_error_2(int err_no)
 {
