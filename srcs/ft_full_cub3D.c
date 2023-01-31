@@ -171,42 +171,45 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 // 	int	ratio;
 // }
 
-void	ft_print_column(t_vars *vars, int line_start, int line_end)
+void	ft_draw_line(t_vars *vars, int line_start, int line_end)
 {
-	int		pixel;
-	// char	*col;
-	// int		x;
-	// int		y;
+	// char	*dst;
+	int		x;
+	int		y;
 
-	// x = 0;
-	// y = 0;
-	pixel = 0;
-	while (pixel + line_start < line_end)//////////////////////////////////ou egal
-	{
-	// 	if (vars->rays->wall_type == NORTH)
-	// 	{
-	// // 		col = vars->context->north->tex_addr + (y * *(vars->context->north->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-	// // 		// *(unsigned int *)col = 0xFF;
-	// 	}
-	// 	else if (vars->rays->wall_type == SOUTH)
-	// 	{
-	// // 		col = vars->context->south->tex_addr + (y * *(vars->context->south->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-	// // 		my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)col);
-	// 	}
-	// 	else if (vars->rays->wall_type == WEST)
-	// 	{
-	// // 		col = vars->context->west->tex_addr + (y * *(vars->context->west->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-	// // 		my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)col);
-	// 	}
-	// 	else if (vars->rays->wall_type == EAST)
-	// 	{
-	// // 		col = vars->context->east->tex_addr + (y * *(vars->context->east->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-	// // 		my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)col);
-	// 	}
+	x = 0;
+	y = 0;
+	while (line_start < line_end)
+	{//etudier opportunite d'inserer couleur texture
+		// if (vars->rays->wall_type == NORTH)
+		// {
+		// 	dst = vars->context->north->tex_addr + (y * *(vars->context->north->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
+
+		// }
+		// else if (vars->rays->wall_type == SOUTH)
+		// {
+		// 	dst = vars->context->south->tex_addr + (y * *(vars->context->south->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
+		// }
+		// else if (vars->rays->wall_type == WEST)
+		// {
+		// 	dst = vars->context->west->tex_addr + (y * *(vars->context->west->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
+		// }
+		// else if (vars->rays->wall_type == EAST)
+		// {
+		// 	dst = vars->context->east->tex_addr + (y * *(vars->context->east->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
+		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
+		// }
 		// else
-			my_mlx_pixel_put(vars, vars->rays->r_id, line_start, 0xFF0000);
-		pixel++;
+			my_mlx_pixel_put(vars, vars->rays->r_id, line_start, vars->rays->color);
+		line_start++;
+		x++;
+		y++;
 	}
+		// rays->color += ((1 << 16) + (1 << 8) + 1);
+		// rays->color += ((1 << 16) + 1);
 }
 
 void	ft_3d_display(t_vars *vars, t_rays *rays)
@@ -224,7 +227,7 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	line_height = ((IMG * (WINDOW_HEIGHT)) / rays->ray_len) * ratio;
 	line_start = ((WINDOW_HEIGHT) / 2) - (line_height / 2);
 	line_end = line_start + line_height;
-	ft_print_column(vars, line_start, line_end);//print une colonne de pixel
+	ft_draw_line(vars, line_start, line_end);//print une colonne de pixel
 }
 
 void	ft_deep_of_view_explorer(t_vars *vars)
