@@ -25,12 +25,12 @@
 #define EAST 4
 
 #define IMG 64			//size_image
+#define SCALING 2
 #define SPEED 5		//speed
 #define RSPEED 0.06 		//rotation speed
 #define RADIAN 0.0174533 	// one degree in radian
 #define PI 3.1415926535
 #define DOV 64
-#define SCALING 4
 #define COLLISION 20
 
 enum {
@@ -395,9 +395,9 @@ void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
 		ray->short_y = ray->impact_y;
 	}
 	if (pos->player_y > ray->short_y)
-		ray->short_y -= 8;
+		ray->short_y -= IMG / SCALING * 5 / 100;
 	if (pos->player_x > ray->short_x)
-		ray->short_x -= 8;
+		ray->short_x -= IMG / SCALING * 5 / 100;
 	my_mlx_pixel_put(vars, (rays->short_x / SCALING), \
 		(rays->short_y / SCALING), color);
 }
@@ -424,16 +424,32 @@ void	ft_draw_rays_minimap(t_vars *vars)
 
 void	ft_draw_player(t_vars *vars)
 {
-	my_mlx_pixel_put(vars, (vars->position->player_x / SCALING) - 1, \
-		vars->position->player_y / SCALING, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, (vars->position->player_x / SCALING) + 1, \
-		vars->position->player_y / SCALING, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
-		(vars->position->player_y / SCALING) - 1, 0x00BBCCBB);
-	my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
-		(vars->position->player_y / SCALING) + 1, 0x00BBCCBB);
+	int	size;
+	int	cap;
+	int	round;
+
+	size = IMG / SCALING;
+	cap = size / 3;
+	round = 1;
 	my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
 		(vars->position->player_y / SCALING), 0x00BBCCBB);
+	while (cap > 1)
+	{
+		my_mlx_pixel_put(vars, (vars->position->player_x / SCALING) - 1, \
+			vars->position->player_y / SCALING, 0x00BBCCBB);
+		my_mlx_pixel_put(vars, (vars->position->player_x / SCALING) + 1, \
+			vars->position->player_y / SCALING, 0x00BBCCBB);
+		my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
+			(vars->position->player_y / SCALING) - 1, 0x00BBCCBB);
+		my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
+			(vars->position->player_y / SCALING) + 1, 0x00BBCCBB);
+		my_mlx_pixel_put(vars, vars->position->player_x + vars->position->pdx / SCALING, \
+			( vars->position->player_y + vars->position->pdy / SCALING) + 1, 0x00BBCCBB);
+		cap = cap / 2;
+	}
+	(void)size;
+	(void)cap;
+	(void)round;
 }
 
 void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
@@ -442,13 +458,13 @@ void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
 	int	j;
 
 	j = 0;
-	while (j <= IMG / SCALING)
+	while (j < IMG / SCALING)
 	{
 		i = 0;
-		while (i <= IMG / SCALING)
+		while (i < IMG / SCALING)
 		{
-			my_mlx_pixel_put(vars, i + (x * IMG) / SCALING, \
-				j + (y * IMG) / SCALING, color);
+			my_mlx_pixel_put(vars, i + (x * IMG / SCALING), \
+				j + (y * IMG / SCALING), color);
 			i++;
 		}
 		j++;
@@ -469,11 +485,7 @@ void	ft_draw_miniwalls(t_vars *vars)
 			if (vars->context->map[y][x] == '1')
 				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
 			else if (ft_strchr("CO", vars->context->map[y][x]))
-				ft_draw_square_minimap(vars, y, x, 0x00FF0000);//bonus
-			// else if (vars->context->map[y][x] == '0')
-			// 	ft_draw_square_minimap(vars, y, x, 0);
-			// else if (ft_strchr("NSWE", vars->context->map[y][x]))
-			// 	ft_draw_square_minimap(vars, y, x, 0x404040);
+				ft_draw_square_minimap(vars, y, x, 0x00FF0000);
 			x++;
 		}
 		y++;
@@ -491,10 +503,6 @@ void	ft_draw_minispaces(t_vars *vars)
 		x = 0;
 		while (vars->context->map[y][x])
 		{
-			// if (vars->context->map[y][x] == '1')
-			// 	ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
-			// else if (ft_strchr("CO", vars->context->map[y][x]))
-			// 	ft_draw_square_minimap(vars, y, x, 0x00FF0000);//bonus
 			if (vars->context->map[y][x] == '0')
 				ft_draw_square_minimap(vars, y, x, 0);
 			else if (ft_strchr("NSWE", vars->context->map[y][x]))
@@ -507,27 +515,7 @@ void	ft_draw_minispaces(t_vars *vars)
 
 void	ft_draw_minimap(t_vars *vars)
 {
-	// int	x;
-	// int	y;
 
-	// y = 0;
-	// while (vars->context->map[y])
-	// {
-	// 	x = 0;
-	// 	while (vars->context->map[y][x])
-	// 	{
-	// 		if (vars->context->map[y][x] == '1')
-	// 			ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
-	// 		else if (ft_strchr("CO", vars->context->map[y][x]))
-	// 			ft_draw_square_minimap(vars, y, x, 0x00FF0000);//bonus
-	// 		else if (vars->context->map[y][x] == '0')
-	// 			ft_draw_square_minimap(vars, y, x, 0);
-	// 		else if (ft_strchr("NSWE", vars->context->map[y][x]))
-	// 			ft_draw_square_minimap(vars, y, x, 0x404040);
-	// 		x++;
-	// 	}
-	// 	y++;
-	// }
 	ft_draw_miniwalls(vars);
 	ft_draw_rays_minimap(vars);
 	ft_draw_minispaces(vars);
