@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
+/*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/01/22 18:59:23 by zharzi           ###   ########.fr       */
+/*   Updated: 2023/02/01 18:04:44 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,23 +77,23 @@
 // 	int				my;
 // 	int				dof;
 // 	int				orientation;
-// 	float			rx;
-// 	float			ry;
-// 	float			ra;
-// 	float			xo;
-// 	float			yo;
-// 	float			hx;
-// 	float			hy;
-// 	float			vx;
-// 	float			vy;
-// 	float			sx;
-// 	float			sy;
-// 	float			aTan;
-// 	float			distH;
+// 	double			rx;
+// 	double			ry;
+// 	double			ra;
+// 	double			xo;
+// 	double			yo;
+// 	double			hx;
+// 	double			hy;
+// 	double			vx;
+// 	double			vy;
+// 	double			sx;
+// 	double			sy;
+// 	double			aTan;
+// 	double			distH;
 // 	unsigned int	color;
-// 	float			distT;
-// 	float			distV;
-// 	float			nTan;
+// 	double			distT;
+// 	double			distV;
+// 	double			nTan;
 // }					t_rays;
 
 
@@ -105,11 +105,11 @@
 // 	int				bits_per_pixel;
 // 	int				line_length;
 // 	int				endian;
-// 	float			py;
-// 	float			px;
-// 	float			pdx;
-// 	float			pdy;
-// 	float			pa;
+// 	double			py;
+// 	double			px;
+// 	double			pdx;
+// 	double			pdy;
+// 	double			pa;
 // 	char			**map;
 // 	int				map_height;
 // 	int				map_lenght;
@@ -151,14 +151,14 @@ int			button_up(int keycode, t_vars *vars);
 int			button_down(int keycode, t_vars *vars);
 void		ft_init(t_context *context);
 void		ft_draw_rays(t_context *context);
-float		ft_dist(float ax, float ay, float bx, float by);
+double		ft_dist(double ax, double ay, double bx, double by);
 
 
 /////////////////////////
 //	cub3d parsing
 /////////////////////////
 
-float		ft_get_begin_angle(char orientation);
+double		ft_get_begin_angle(char orientation);
 void		ft_pars_pos_player(t_vars *vars, char orientation);
 t_context	*ft_cub3d_parsing(char **argv, int *err_no);
 void		ft_show_content(t_lines *content);
