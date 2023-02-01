@@ -16,6 +16,9 @@
 #define ERR_MALLOC_CONTEXT 14
 #define ERR_BAD_TEXTURE_FILE 15
 
+#define LEFT 1
+#define RIGHT -1
+
 #define NORTH 1
 #define SOUTH 2
 #define WEST 3
@@ -27,7 +30,7 @@
 #define RADIAN 0.0174533 	// one degree in radian
 #define PI 3.1415926535
 #define DOV 64
-#define SCALING 10
+#define SCALING 4
 #define COLLISION 20
 
 enum {
@@ -56,8 +59,8 @@ typedef struct s_margin {
 }		t_margin;
 
 typedef struct s_keys {
-	int left;
-	int right;
+	int	left_arr;
+	int	right_arr;
 	int	w;
 	int	a;
 	int	s;
@@ -82,7 +85,7 @@ typedef struct s_rays {
 	float			yo;
 	float			a_tan;
 	float			n_tan;
-	int				wall_type;//ou changer pour path de la texture
+	int				wall_type;
 }					t_rays;
 
 typedef struct s_mlx_datas
@@ -165,27 +168,38 @@ void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 	dst = vars->mlx_datas->addr + (y * vars->mlx_datas->line_length \
 		+ x * (vars->mlx_datas->bits_per_pixel / 8));
 	if (x >= 0 && y >= 0 && x <= WINDOW_WIDTH && y <= WINDOW_HEIGHT)
-	{
-		*(unsigned int *)dst = color;/////////////////////////////
-	}
+		*(unsigned int *)dst = color;
 }
 
-unsigned int	ft_get_color_from_xpm(t_textures *wall, float step, float rank)
+unsigned int	ft_get_color_from_xpm(t_textures *wall, float step, \
+	float rank, int read_from)
 {
 	float	coeff;
 	char	*color;
 	int		y;
 	int		x;
 
-	coeff = (float)(*wall->tex_width / sizeof(int)) / (float)IMG;
-	x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
-	y = *(wall->tex_height) * step;
-	color = wall->tex_addr + (y * *(wall->tex_width) \
-		+ x * (wall->bppixels / 8));
+	if (read_from == RIGHT)
+	{
+		coeff = (float)(*wall->tex_width / sizeof(int)) / (float)IMG;
+		x = (*wall->tex_width / sizeof(int)) - \
+			((int)(rank * coeff) % (*wall->tex_width / sizeof(int)));
+		y = *(wall->tex_height) * step;
+		color = wall->tex_addr + (y * *(wall->tex_width) \
+			+ x * (wall->bppixels / 8));
+	}
+	else
+	{
+		coeff = (float)(*wall->tex_width / sizeof(int)) / (float)IMG;
+		x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
+		y = *(wall->tex_height) * step;
+		color = wall->tex_addr + (y * *(wall->tex_width) \
+			+ x * (wall->bppixels / 8));
+	}
 	return (*(unsigned int *)color);
 }
 
-void	ft_draw_line(t_vars *vars, int line_start, int line_end)
+void	ft_print_column(t_vars *vars, int line_start, int line_end)
 {
 	unsigned int	col;
 	float			step;
@@ -196,35 +210,18 @@ void	ft_draw_line(t_vars *vars, int line_start, int line_end)
 	{
 		step = ((float)pixel / (float)(line_end - line_start));
 		if (vars->rays->wall_type == NORTH)
-		{
-			col = ft_get_color_from_xpm(vars->context->north, step, vars->rays->short_x);
-		// 	dst = vars->context->north->tex_addr + (y * *(vars->context->north->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
-		}
+		col = ft_get_color_from_xpm(vars->context->north, step, \
+			vars->rays->short_x, LEFT);
 		else if (vars->rays->wall_type == SOUTH)
-		{
-			col = ft_get_color_from_xpm(vars->context->south, step, vars->rays->short_x);
-		// 	dst = vars->context->south->tex_addr + (y * *(vars->context->south->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
-		}
+		col = ft_get_color_from_xpm(vars->context->south, step, \
+			vars->rays->short_x, RIGHT);
 		else if (vars->rays->wall_type == WEST)
-		{
-			col = ft_get_color_from_xpm(vars->context->west, step, (int)vars->rays->short_y);
-		// 	dst = vars->context->west->tex_addr + (y * *(vars->context->west->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
-		}
+		col = ft_get_color_from_xpm(vars->context->west, step, \
+			vars->rays->short_y, RIGHT);
 		else if (vars->rays->wall_type == EAST)
-		{
-			col = ft_get_color_from_xpm(vars->context->east, step, (int)vars->rays->short_y);
-		// 	dst = vars->context->east->tex_addr + (y * *(vars->context->east->tex_height) + x * (vars->mlx_datas->bits_per_pixel / 8));
-		// 	my_mlx_pixel_put(vars, vars->rays->r_id, line_start, *(unsigned int *)dst);
-			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
-		}
-		else
-			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), vars->rays->color);
+		col = ft_get_color_from_xpm(vars->context->east, step, \
+			vars->rays->short_y, LEFT);
+		my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
 		pixel++;
 	}
 }
@@ -240,11 +237,11 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	ratio = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
 	ca = vars->position->view_angle - rays->r_angle;
 	ft_angle_adjustement(&ca);
-	rays->ray_len = rays->ray_len * cos(ca);//calcul de la taille du rayon
+	rays->ray_len *= cos(ca);//calcul de la taille du rayon
 	line_height = ((IMG * (WINDOW_HEIGHT)) / rays->ray_len) * ratio;
 	line_start = ((WINDOW_HEIGHT) / 2) - (line_height / 2);
 	line_end = line_start + line_height;
-	ft_draw_line(vars, line_start, line_end);//print une colonne de pixel
+	ft_print_column(vars, line_start, line_end);
 }
 
 void	ft_deep_of_view_explorer(t_vars *vars)
@@ -281,13 +278,13 @@ void	ft_parallel_axis(t_vars *vars)
 
 void	ft_h_not_parallel_axis(t_vars *vars, int coeff)
 {
-	float	correction;
+	float	corr;
 
 	if (coeff > 0)
-		correction = IMG;
+		corr = IMG;
 	else
-		correction = -0.0001;
-	vars->rays->impact_y = (((int)vars->position->player_y >> 6) << 6) + correction;
+		corr = -0.0001;
+	vars->rays->impact_y = (((int)vars->position->player_y >> 6) << 6) + corr;
 	vars->rays->impact_x = (vars->position->player_y - vars->rays->impact_y) \
 		* vars->rays->a_tan + vars->position->player_x;
 	vars->rays->yo = IMG * coeff;
@@ -296,13 +293,13 @@ void	ft_h_not_parallel_axis(t_vars *vars, int coeff)
 
 void	ft_v_not_parallel_axis(t_vars *vars, int coeff)
 {
-	float	correction;
+	float	corr;
 
 	if (coeff > 0)
-		correction = IMG;
+		corr = IMG;
 	else
-		correction = -0.0001;
-	vars->rays->impact_x = (((int)vars->position->player_x >> 6) << 6) + correction;
+		corr = -0.0001;
+	vars->rays->impact_x = (((int)vars->position->player_x >> 6) << 6) + corr;
 	vars->rays->impact_y = (vars->position->player_x - vars->rays->impact_x) \
 		* vars->rays->n_tan + vars->position->player_y;
 	vars->rays->xo = IMG * coeff;
@@ -323,40 +320,44 @@ void	ft_horizontal_axis_intersection(t_vars *vars)
 
 void	ft_vertical_axis_intersection(t_vars *vars)
 {
+	float	angle;
+
+	angle = vars->rays->r_angle;
 	vars->rays->dov = 0;
-	if (vars->rays->r_angle == (PI / 2) || vars->rays->r_angle == (3 * PI / 2))
+	if (angle == (PI / 2) || angle == (3 * PI / 2))
 		ft_parallel_axis(vars);
-	else if (vars->rays->r_angle > (PI / 2) && vars->rays->r_angle < (3 * PI / 2))
+	else if (angle > (PI / 2) && angle < (3 * PI / 2))
 		ft_v_not_parallel_axis(vars, -1);
-	else if (vars->rays->r_angle < (PI / 2) || vars->rays->r_angle > (3 * PI / 2))
+	else if (angle < (PI / 2) || angle > (3 * PI / 2))
 		ft_v_not_parallel_axis(vars, 1);
 	ft_deep_of_view_explorer(vars);
 }
 
 void	ft_wall_identification(t_player *position, t_rays *rays)
 {
-	if (ft_distance(position->player_x, position->player_y, rays->impact_x, rays->impact_y) \
-		> ft_distance(position->player_x, position->player_y, rays->short_x, rays->short_y))
+	float	px;
+	float	py;
+
+	px = position->player_x;
+	py = position->player_y;
+	if (ft_distance(px, py, rays->impact_x, rays->impact_y) \
+		> ft_distance(px, py, rays->short_x, rays->short_y))
 	{
-		if (rays->short_y < position->player_y)
+		if (rays->short_y < py)
 			rays->wall_type = NORTH;
-			// rays->color = 0x00FF0000;//changer par fonction texture NORD
 		else
 			rays->wall_type = SOUTH;
-			// rays->color = 0x000000FF;//changer par fonction texture SUD
 	}
 	else
 	{
 		rays->short_x = rays->impact_x;
 		rays->short_y = rays->impact_y;
-		if (rays->short_x > position->player_x)
+		if (rays->short_x > px)
 			rays->wall_type = EAST;
-			// rays->color = 0xf4c430;//changer par fonction texture EST// ou code des murs pour print ulterieur
 		else
 			rays->wall_type = WEST;
-			// rays->color = 0x0000FF00;//changer par fonction texture OUEST
 	}
-	rays->ray_len = ft_distance(position->player_x, position->player_y, rays->short_x, rays->short_y);
+	rays->ray_len = ft_distance(px, py, rays->short_x, rays->short_y);
 }
 
 void	ft_draw_environment(t_vars *vars)
@@ -387,13 +388,18 @@ void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
 
 	pos = vars->position;
 	ray = vars->rays;
-	if (ft_distance(pos->player_x, pos->player_y, ray->impact_x, ray->impact_y) \
+	if (ft_distance(pos->player_x, pos->player_y, ray->impact_x, ray->impact_y)
 		< ft_distance(pos->player_x, pos->player_y, ray->short_x, ray->short_y))
 	{
 		ray->short_x = ray->impact_x;
 		ray->short_y = ray->impact_y;
 	}
-	my_mlx_pixel_put(vars, rays->short_x / SCALING, (rays->short_y / SCALING), color);
+	if (pos->player_y > ray->short_y)
+		ray->short_y -= 8;
+	if (pos->player_x > ray->short_x)
+		ray->short_x -= 8;
+	my_mlx_pixel_put(vars, (rays->short_x / SCALING), \
+		(rays->short_y / SCALING), color);
 }
 
 void	ft_draw_rays_minimap(t_vars *vars)
@@ -409,7 +415,7 @@ void	ft_draw_rays_minimap(t_vars *vars)
 		vars->rays->short_x = vars->rays->impact_x;
 		vars->rays->short_y = vars->rays->impact_y;
 		ft_vertical_axis_intersection(vars);
-		ft_draw_ray_hit(vars,vars->rays, 0x00FF00);
+		ft_draw_ray_hit(vars, vars->rays, 0xD0FF00);
 		ft_angle_adjustement(&vars->rays->r_angle);
 		vars->rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
 		vars->rays->r_id++;
@@ -449,7 +455,7 @@ void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
 	}
 }
 
-void	ft_draw_minimap(t_vars *vars)
+void	ft_draw_miniwalls(t_vars *vars)
 {
 	int	x;
 	int	y;
@@ -464,7 +470,32 @@ void	ft_draw_minimap(t_vars *vars)
 				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
 			else if (ft_strchr("CO", vars->context->map[y][x]))
 				ft_draw_square_minimap(vars, y, x, 0x00FF0000);//bonus
-			else if (vars->context->map[y][x] == '0')
+			// else if (vars->context->map[y][x] == '0')
+			// 	ft_draw_square_minimap(vars, y, x, 0);
+			// else if (ft_strchr("NSWE", vars->context->map[y][x]))
+			// 	ft_draw_square_minimap(vars, y, x, 0x404040);
+			x++;
+		}
+		y++;
+	}
+}
+
+void	ft_draw_minispaces(t_vars *vars)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (vars->context->map[y])
+	{
+		x = 0;
+		while (vars->context->map[y][x])
+		{
+			// if (vars->context->map[y][x] == '1')
+			// 	ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
+			// else if (ft_strchr("CO", vars->context->map[y][x]))
+			// 	ft_draw_square_minimap(vars, y, x, 0x00FF0000);//bonus
+			if (vars->context->map[y][x] == '0')
 				ft_draw_square_minimap(vars, y, x, 0);
 			else if (ft_strchr("NSWE", vars->context->map[y][x]))
 				ft_draw_square_minimap(vars, y, x, 0x404040);
@@ -472,10 +503,36 @@ void	ft_draw_minimap(t_vars *vars)
 		}
 		y++;
 	}
-	ft_draw_player(vars);
-	ft_draw_rays_minimap(vars);
 }
 
+void	ft_draw_minimap(t_vars *vars)
+{
+	// int	x;
+	// int	y;
+
+	// y = 0;
+	// while (vars->context->map[y])
+	// {
+	// 	x = 0;
+	// 	while (vars->context->map[y][x])
+	// 	{
+	// 		if (vars->context->map[y][x] == '1')
+	// 			ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
+	// 		else if (ft_strchr("CO", vars->context->map[y][x]))
+	// 			ft_draw_square_minimap(vars, y, x, 0x00FF0000);//bonus
+	// 		else if (vars->context->map[y][x] == '0')
+	// 			ft_draw_square_minimap(vars, y, x, 0);
+	// 		else if (ft_strchr("NSWE", vars->context->map[y][x]))
+	// 			ft_draw_square_minimap(vars, y, x, 0x404040);
+	// 		x++;
+	// 	}
+	// 	y++;
+	// }
+	ft_draw_miniwalls(vars);
+	ft_draw_rays_minimap(vars);
+	ft_draw_minispaces(vars);
+	ft_draw_player(vars);
+}
 
 void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
 {
@@ -498,54 +555,60 @@ void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
 	margin->ipy_sub_yo = (pos->player_y - (COLLISION * coeff_y)) / IMG;
 }
 
-int mouse(int x, int y, t_vars *vars)
+int ft_mouse_interactions(int x, int y, t_vars *vars)
 {
-    (void)y;
-    if(x < (WINDOW_WIDTH / 2) - 20)
-    {
-        vars->position->view_angle -= RSPEED;
-        if (vars->position->view_angle < 0)
-            vars->position->view_angle += (2 * PI);
-        vars->position->pdx=cos(vars->position->view_angle) * SPEED;
-        vars->position->pdy=sin(vars->position->view_angle) * SPEED;
-        mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-    }
-    else if (x >  (WINDOW_WIDTH / 2) + 20)
-    {
-        vars->position->view_angle += RSPEED;
-        if (vars->position->view_angle > (2 * PI))
-            vars->position->view_angle -= (2 * PI);
-        vars->position->pdx=cos(vars->position->view_angle) * SPEED;
-        vars->position->pdy=sin(vars->position->view_angle) * SPEED;
-        mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-    }
-    return(1);
+	(void)y;
+	if (x < (WINDOW_WIDTH / 2) - 20)
+	{
+		vars->position->view_angle -= RSPEED;
+		if (vars->position->view_angle < 0)
+			vars->position->view_angle += (2 * PI);
+		vars->position->pdx = cos(vars->position->view_angle) * SPEED;
+		vars->position->pdy = sin(vars->position->view_angle) * SPEED;
+		mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, \
+			WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+	}
+	else if (x > (WINDOW_WIDTH / 2) + 20)
+	{
+		vars->position->view_angle += RSPEED;
+		if (vars->position->view_angle > (2 * PI))
+			vars->position->view_angle -= (2 * PI);
+		vars->position->pdx = cos(vars->position->view_angle) * SPEED;
+		vars->position->pdy = sin(vars->position->view_angle) * SPEED;
+		mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, \
+			WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+	}
+	return (1);
 }
 
 void	ft_rotation(t_vars *vars)
 {
-	if (vars->keys->left || vars->keys->right)
+	if (vars->keys->left_arr || vars->keys->right_arr)
 	{
-		if (vars->keys->left == 1)
+		if (vars->keys->left_arr == 1)
 			vars->position->view_angle -= RSPEED;
-		if (vars->keys->right == 1)
+		if (vars->keys->right_arr == 1)
 			vars->position->view_angle += RSPEED;
 		ft_angle_adjustement(&vars->position->view_angle);
 		vars->position->pdx = cos(vars->position->view_angle) * SPEED;
 		vars->position->pdy = sin(vars->position->view_angle) * SPEED;
 	}
 }
+
 int	ft_map_wall(t_vars *vars)
 {
-	int player_x;
-	int player_y;
+	int		player_x;
+	int		player_y;
+	char	**map;
+
+	map = vars->context->map;
 	player_y = (int)vars->position->player_y;
 	player_x = (int)vars->position->player_x;
-	if (ft_strchr("1", vars->context->map[(player_y + 24) / 64][(player_x + 24) / 64])
-		|| ft_strchr("1", vars->context->map[(player_y - 24) / 64][(player_x - 24) / 64])
-		|| ft_strchr("1", vars->context->map[(player_y - 24) / 64][(player_x + 24) / 64])
-		|| ft_strchr("1", vars->context->map[(player_y + 24) / 64][(player_x - 24) / 64]))
-		return(1);
+	if (ft_strchr("1", map[(player_y + 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1", map[(player_y - 22) / 64][(player_x - 22) / 64])
+		|| ft_strchr("1", map[(player_y - 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1", map[(player_y + 22) / 64][(player_x - 22) / 64]))
+		return (1);
 	return (0);
 }
 
@@ -554,43 +617,45 @@ void	ft_foreward_backward(t_vars *vars)
 	if (vars->keys->s == 1)
 	{
 		vars->position->player_x -= vars->position->pdx;
-		if(ft_map_wall(vars))
+		if (ft_map_wall(vars))
 			vars->position->player_x += vars->position->pdx;
 		vars->position->player_y -= vars->position->pdy;
-		if(ft_map_wall(vars))
+		if (ft_map_wall(vars))
 			vars->position->player_y += vars->position->pdy;
 	}
 	if (vars->keys->w == 1)
 	{
 		vars->position->player_x += vars->position->pdx;
-		if(ft_map_wall(vars))
+		if (ft_map_wall(vars))
 			vars->position->player_x -= vars->position->pdx;
 		vars->position->player_y += vars->position->pdy;
-		if(ft_map_wall(vars))
+		if (ft_map_wall(vars))
 			vars->position->player_y -= vars->position->pdy;
 	}
 }
 
 void	ft_left_right(t_vars *vars)
 {
+	float	angle;
+
+	angle = vars->position->view_angle;
 	if (vars->keys->a == 1)
 	{
-		vars->position->player_x += cos(vars->position->view_angle - M_PI / 2) * SPEED;
-		if(ft_map_wall(vars))
-			vars->position->player_x -= cos(vars->position->view_angle - M_PI / 2) * SPEED;
-		vars->position->player_y += sin(vars->position->view_angle - M_PI / 2) * SPEED;
-		if(ft_map_wall(vars))
-			vars->position->player_y -= sin(vars->position->view_angle - M_PI / 2) * SPEED;
-
+		vars->position->player_x += cos(angle - M_PI / 2) * SPEED;
+		if (ft_map_wall(vars))
+			vars->position->player_x -= cos(angle - M_PI / 2) * SPEED;
+		vars->position->player_y += sin(angle - M_PI / 2) * SPEED;
+		if (ft_map_wall(vars))
+			vars->position->player_y -= sin(angle - M_PI / 2) * SPEED;
 	}
 	if (vars->keys->d == 1)
 	{
-		vars->position->player_x += cos(vars->position->view_angle + M_PI / 2) * SPEED;
-		if(ft_map_wall(vars))
-			vars->position->player_x -= cos(vars->position->view_angle + M_PI / 2) * SPEED;
-		vars->position->player_y += sin(vars->position->view_angle + M_PI / 2) * SPEED;
-		if(ft_map_wall(vars))
-			vars->position->player_y -= sin(vars->position->view_angle + M_PI / 2) * SPEED;
+		vars->position->player_x += cos(angle + M_PI / 2) * SPEED;
+		if (ft_map_wall(vars))
+			vars->position->player_x -= cos(angle + M_PI / 2) * SPEED;
+		vars->position->player_y += sin(angle + M_PI / 2) * SPEED;
+		if (ft_map_wall(vars))
+			vars->position->player_y -= sin(angle + M_PI / 2) * SPEED;
 	}
 }
 
@@ -602,34 +667,34 @@ void	ft_left_right(t_vars *vars)
 // 	if (vars->keys->a == 1)
 // 	{
 // 		vars->position->player_x += cos(vars->position->view_angle - M_PI / 2) * SPEED;
-// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
 // 			vars->position->player_x -= cos(vars->position->view_angle - M_PI / 2) * SPEED;
 // 		vars->position->player_y += sin(vars->position->view_angle - M_PI / 2) * SPEED;
-// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
 // 			vars->position->player_y -= sin(vars->position->view_angle - M_PI / 2) * SPEED;
 
 // 	}
 // 	if (vars->keys->d == 1)
 // 	{
 // 		vars->position->player_x += cos(vars->position->view_angle + M_PI / 2) * SPEED;
-// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
 // 			vars->position->player_x -= cos(vars->position->view_angle + M_PI / 2) * SPEED;
 // 		vars->position->player_y += sin(vars->position->view_angle + M_PI / 2) * SPEED;
-// 		if(ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
+// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
 // 			vars->position->player_y -= sin(vars->position->view_angle + M_PI / 2) * SPEED;
 // 	}
 // }
 
-void	ft_interactions(t_vars *vars)
+void	ft_keyboard_interactions(t_vars *vars)
 {
-	int	ipx;
-	int	ipy;
+	int			ipx;
+	int			ipy;
 	t_margin	margin;
 
 	ipx = 0;
 	ipy = 0;
 	ft_collision(&ipx, &ipy, vars, &margin);
-	if (vars->keys->left == 1 || vars->keys->right == 1)
+	if (vars->keys->left_arr == 1 || vars->keys->right_arr == 1)
 		ft_rotation(vars);
 	if (vars->keys->w == 1 || vars->keys->s == 1)
 		ft_foreward_backward(vars);
@@ -700,13 +765,9 @@ int	ft_cub3d(t_vars *vars)
 		&md->line_length, &md->endian);
 	ft_draw_ceilling(vars->context, vars);//done
 	ft_draw_floor(vars->context, vars);//done
-	ft_interactions(vars);//reste le mouvement droite gauche
-	ft_draw_environment(vars);////////////////////////////////////////ici
-	// ft_draw_minimap(vars);//done?
-	// mlx_put_image_to_window(md->mlx, md->win, vars->context->north->tex_img, 50, 150);
-	// mlx_put_image_to_window(md->mlx, md->win, vars->context->south->tex_img, 130, 150);
-	// mlx_put_image_to_window(md->mlx, md->win, vars->context->west->tex_img, 210, 150);
-	// mlx_put_image_to_window(md->mlx, md->win, vars->context->east->tex_img, 290, 150);
+	ft_keyboard_interactions(vars);//done
+	ft_draw_environment(vars);//done
+	ft_draw_minimap(vars);//done?
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);
 }
@@ -724,9 +785,9 @@ int	ft_hold_key(int keycode, t_vars *vars)
 	if (keycode == 'w')
 		vars->keys->w = 1;
 	if (keycode == XK_Left)
-		vars->keys->left = 1;
+		vars->keys->left_arr = 1;
 	if (keycode == XK_Right)
-		vars->keys->right = 1;
+		vars->keys->right_arr = 1;
 	if (keycode == 'a')
 		vars->keys->a = 1;
 	if (keycode == 's')
@@ -745,9 +806,9 @@ int	ft_release_key(int keycode, t_vars *vars)
 	if (keycode == 'w')
 		vars->keys->w = 0;
 	if (keycode == XK_Left)
-		vars->keys->left = 0;
+		vars->keys->left_arr = 0;
 	if (keycode == XK_Right)
-		vars->keys->right = 0;
+		vars->keys->right_arr = 0;
 	if (keycode == 'a')
 		vars->keys->a = 0;
 	if (keycode == 's')
@@ -767,8 +828,8 @@ void	ft_hooks_activation(t_vars *vars)
 	mlx_hook(md->win, ON_DESTROY, DestroyAll, ft_click_cross, md->mlx);
 	mlx_hook(md->win, 2, 1L << 0, ft_hold_key, vars);
 	mlx_hook(md->win, 3, 1L << 1, ft_release_key, vars);
-	mlx_hook(md->win, 6, 1L << 6, mouse, vars);
-	mlx_mouse_hide(md->mlx,md->win);
+	mlx_hook(md->win, 6, 1L << 6, ft_mouse_interactions, vars);
+	mlx_mouse_hide(md->mlx, md->win);
 	///manque events open/close
 }
 
@@ -783,18 +844,18 @@ int	ft_if_player_here(t_vars *vars, int y, int x)
 
 float	ft_get_first_angle(char orientation)
 {
-	float	ret;
+	float	axis;
 
-	ret = 0;
+	axis = 0;
 	if (orientation == 'E')
-		ret = 0;
+		axis = 0;
 	else if (orientation == 'N')
-		ret = PI / 2;
+		axis = PI / 2;
 	else if (orientation == 'W')
-		ret = PI;
+		axis = PI;
 	else if (orientation == 'S')
-		ret = 3 * PI / 2;
-	return (ret);
+		axis = 3 * PI / 2;
+	return (axis);
 }
 
 t_player	*ft_get_player_position(t_vars *vars, char orientation)
@@ -1160,9 +1221,8 @@ t_textures	*ft_init_t_textures(void)
 	texture->tex_height = (int *)malloc(sizeof(int));
 	if (!texture->tex_height)
 	{
-		ft_multi_true_free((void **)&texture->tex_width, (void **)&texture, NULL, NULL);
-		// ft_true_free((void **)&texture->tex_width);
-		// ft_true_free((void **)&texture);
+		ft_multi_true_free((void **)&texture->tex_width, (void **)&texture, \
+			NULL, NULL);
 		return (NULL);
 	}
 	return (texture);
