@@ -853,7 +853,7 @@ void	ft_hooks_activation(t_vars *vars)
 	mlx_hook(md->win, 2, 1L << 0, ft_hold_key, vars);
 	mlx_hook(md->win, 3, 1L << 1, ft_release_key, vars);
 	mlx_hook(md->win, 6, 1L << 6, ft_mouse_interactions, vars);
-	// mlx_mouse_hide(md->mlx, md->win);
+	mlx_mouse_hide(md->mlx, md->win);/////////////////////////////////////leak a mort
 	///manque events open/close
 }
 
@@ -921,6 +921,7 @@ t_keys	*ft_init_keys(void)
 	keys->a = 0;
 	keys->s = 0;
 	keys->d = 0;
+	keys->e = 0;
 	keys->left_arr = 0;
 	keys->right_arr = 0;
 	return (keys);
@@ -1753,7 +1754,7 @@ void	ft_print_cub3d_error_1(int err_no)
 
 void	ft_unset_vars(t_vars *vars)
 {
-	mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
+	// mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
 
 	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->north->tex_img);
 	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->south->tex_img);
