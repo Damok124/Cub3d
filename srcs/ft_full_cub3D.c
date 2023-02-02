@@ -25,7 +25,7 @@
 #define EAST 4
 
 #define IMG 64			//size_image
-#define SCALING 2
+#define SCALING 4
 #define SPEED 5		//speed
 #define RSPEED 0.06 		//rotation speed
 #define RADIAN 0.0174533 	// one degree in radian
@@ -108,6 +108,17 @@ typedef struct s_player
 	float		view_angle;//direction du champs de vision
 }				t_player;
 
+typedef struct s_minimap
+{
+	void	*img;
+	void	*addr;
+	int		width;
+	int		height;
+	int		bits_per_pixel;
+	int		line_length;
+	int		endian;
+}	t_minimap;
+
 typedef struct s_rgb {
 	int	red;
 	int	green;
@@ -143,6 +154,7 @@ typedef struct s_vars {
 	t_player	*position;
 	t_keys		*keys;
 	t_rays		*rays;
+	t_minimap	*minimap;
 }				t_vars;
 
 void	ft_angle_adjustement(float *angle)
@@ -422,34 +434,35 @@ void	ft_draw_rays_minimap(t_vars *vars)
 	}
 }
 
+void	ft_put_pixel_around(t_vars *vars, int size, unsigned int color)
+{
+	int	init_x;
+	int	init_y;
+	int	i;
+	int	j;
+
+	init_x = vars->position->player_x / SCALING - (size / 2);
+	init_y = vars->position->player_y / SCALING - (size / 2);
+	j = -1;
+	i = -1;
+	while (++j < size)
+	{
+		while (++i < size)
+			my_mlx_pixel_put(vars, init_x + i, init_y + j, color);
+		i = -1;
+	}
+}
+
 void	ft_draw_player(t_vars *vars)
 {
-	int	size;
-	int	cap;
-	int	round;
+	int				size;
+	unsigned int	color;
 
-	size = IMG / SCALING;
-	cap = size / 3;
-	round = 1;
-	my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
-		(vars->position->player_y / SCALING), 0x00BBCCBB);
-	while (cap > 1)
-	{
-		my_mlx_pixel_put(vars, (vars->position->player_x / SCALING) - 1, \
-			vars->position->player_y / SCALING, 0x00BBCCBB);
-		my_mlx_pixel_put(vars, (vars->position->player_x / SCALING) + 1, \
-			vars->position->player_y / SCALING, 0x00BBCCBB);
-		my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
-			(vars->position->player_y / SCALING) - 1, 0x00BBCCBB);
-		my_mlx_pixel_put(vars, vars->position->player_x / SCALING, \
-			(vars->position->player_y / SCALING) + 1, 0x00BBCCBB);
-		my_mlx_pixel_put(vars, vars->position->player_x + vars->position->pdx / SCALING, \
-			( vars->position->player_y + vars->position->pdy / SCALING) + 1, 0x00BBCCBB);
-		cap = cap / 2;
-	}
-	(void)size;
-	(void)cap;
-	(void)round;
+	size = IMG / SCALING / 4;
+	color = 0x00BBCCBB;
+	if (!size)
+		size = 1;
+	ft_put_pixel_around(vars, size, color);
 }
 
 void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
@@ -515,11 +528,16 @@ void	ft_draw_minispaces(t_vars *vars)
 
 void	ft_draw_minimap(t_vars *vars)
 {
-
+	if (vars->minimap->img)
+		mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
+	vars->minimap->img = mlx_new_image(vars->mlx_datas->mlx, vars->minimap->width, vars->minimap->height);
+	vars->minimap->addr = mlx_get_data_addr(vars->minimap->img, &vars->minimap->bits_per_pixel, \
+		&vars->minimap->line_length, &vars->minimap->endian);
 	ft_draw_miniwalls(vars);
 	ft_draw_rays_minimap(vars);
 	ft_draw_minispaces(vars);
 	ft_draw_player(vars);
+
 }
 
 void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
@@ -817,7 +835,7 @@ void	ft_hooks_activation(t_vars *vars)
 	mlx_hook(md->win, 2, 1L << 0, ft_hold_key, vars);
 	mlx_hook(md->win, 3, 1L << 1, ft_release_key, vars);
 	mlx_hook(md->win, 6, 1L << 6, ft_mouse_interactions, vars);
-	mlx_mouse_hide(md->mlx, md->win);
+	// mlx_mouse_hide(md->mlx, md->win);
 	///manque events open/close
 }
 
@@ -885,31 +903,53 @@ t_keys	*ft_init_keys(void)
 	keys->a = 0;
 	keys->s = 0;
 	keys->d = 0;
+	keys->left_arr = 0;
+	keys->right_arr = 0;
 	return (keys);
+}
+
+void	ft_set_minimap(t_vars *vars)
+{
+	vars->minimap->width = vars->context->map_length * IMG / SCALING;
+	vars->minimap->height = vars->context->map_height * IMG / SCALING;
+}
+
+t_minimap	*ft_init_minimap(void)
+{
+	t_minimap	*mini;
+
+	mini = (t_minimap *)malloc(sizeof(t_minimap));
+	if (!mini)
+		return (NULL);
+	mini->img = NULL;
+	mini->addr = NULL;
+	mini->bits_per_pixel = 0;
+	mini->endian = 0;
+	mini->height = 0;
+	mini->line_length = 0;
+	mini->width = 0;
+	return (mini);
 }
 
 t_vars	*ft_init_vars(t_context *context)
 {
 	t_vars		*vars;
-	t_mlx_datas	*m_datas;
-	t_rays		*rays;
 
 	vars = NULL;
-	m_datas = (t_mlx_datas *)malloc(sizeof(t_mlx_datas));
-	if (!m_datas)
-		return (NULL);
-	rays = (t_rays *)malloc(sizeof(t_rays));
-	if (!rays)
-		return (NULL);
 	if (context)
 	{
 		vars = (t_vars *)malloc(sizeof(t_vars));
 		if (!vars)
 			return (NULL);
-		vars->mlx_datas = m_datas;
-		vars->rays = rays;
+		vars->mlx_datas = (t_mlx_datas *)malloc(sizeof(t_mlx_datas));
+		if (!vars->mlx_datas)
+			return (NULL);
+		vars->rays = (t_rays *)malloc(sizeof(t_rays));
+		if (!vars->rays)
+			return (NULL);
 		vars->context = context;
 		vars->keys = ft_init_keys();
+		vars->minimap = ft_init_minimap();
 		vars->position = ft_get_player_position(vars, context->orientation);
 	}
 	return (vars);
@@ -990,6 +1030,7 @@ t_vars	*ft_get_vars(t_context *context, int *err_no)
 		md->addr = mlx_get_data_addr(md->img, &md->bits_per_pixel, \
 			&md->line_length, &md->endian);
 		ft_get_full_textures(vars->context, vars->mlx_datas, err_no);
+		ft_set_minimap(vars);
 		////////////////////////////////////////////////////////////////tester erreurs
 	}
 	return (vars);
@@ -1694,6 +1735,8 @@ void	ft_print_cub3d_error_1(int err_no)
 
 void	ft_unset_vars(t_vars *vars)
 {
+	mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
+
 	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->north->tex_img);
 	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->south->tex_img);
 	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->east->tex_img);
@@ -1702,6 +1745,7 @@ void	ft_unset_vars(t_vars *vars)
 	mlx_destroy_window(vars->mlx_datas->mlx, vars->mlx_datas->win);
 	mlx_destroy_display(vars->mlx_datas->mlx);
 	ft_unset_context(vars->context);
+	ft_true_free((void **)&vars->minimap);
 	ft_true_free((void **)&vars->mlx_datas->mlx);
 	ft_true_free((void **)&vars->keys);
 	ft_true_free((void **)&vars->mlx_datas);
