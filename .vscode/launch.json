@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "/nfs/homes/alprival/Cube3d/cub3D",
-			"args": ["pop.cub"],
+			"args": ["/nfs/homes/alprival/Cube3d/pop.cub"],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",
 			"environment": [],
