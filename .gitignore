@@ -43,5 +43,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-/textures/*
+textures/*
 cub3D
