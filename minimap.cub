@@ -1,0 +1,20 @@
+
+C 25,25,50
+
+
+SO ./textures/disk.xpm
+NO ./textures/flame1.xpm
+
+
+EA ./textures/t_gungeon_east.xpm
+
+
+
+F 130,100,70
+
+WE ./textures/t_gungeon_west.xpm
+11111
+10001
+10N01
+10001
+11111

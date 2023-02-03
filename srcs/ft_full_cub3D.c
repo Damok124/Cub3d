@@ -19,6 +19,9 @@
 #define LEFT 1
 #define RIGHT -1
 
+#define X 0
+#define Y 1
+
 #define NORTH 1
 #define SOUTH 2
 #define WEST 3
@@ -26,6 +29,7 @@
 
 #define IMG 64			//size_image
 #define SCALING 4
+#define MINIZONE 9
 #define SPEED 5		//speed
 #define RSPEED 0.06 		//rotation speed
 #define RADIAN 0.0174533 	// one degree in radian
@@ -174,7 +178,7 @@ double	ft_distance(double ax, double ay, double bx, double by)
 	return (ret);
 }
 
-void	my_mlx_pixel_put(t_vars *vars, int x, int y, int color)
+void	ft_mlx_pixel_put(t_vars *vars, int x, int y, int color)
 {
 	char	*dst;
 
@@ -235,7 +239,7 @@ void	ft_print_column(t_vars *vars, int line_start, int line_end)
 		col = ft_get_color_from_xpm(vars->context->east, step, \
 			vars->rays->short_y, LEFT);
 		if(col != 0xff00ff)
-			my_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
+			ft_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
 		pixel++;
 	}
 }
@@ -386,6 +390,16 @@ void	ft_wall_identification(t_player *position, t_rays *rays)
 	rays->ray_len = ft_distance(px, py, rays->short_x, rays->short_y);
 }
 
+void	ft_minimap_pixel_put(t_minimap *minimap, int x, int y, int color)//done
+{
+	char	*dst;
+
+	dst = minimap->addr + (y * (minimap->line_length) \
+		+ x * (minimap->bits_per_pixel / 8));
+	if (x >= 0 && y >= 0 && x < minimap->width && y < minimap->height)
+		*(unsigned int *)dst = color;
+}
+
 void	ft_draw_environment(t_vars *vars)
 {
 	vars->rays->r_id = 0;
@@ -421,20 +435,20 @@ void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
 		ray->short_y = ray->impact_y;
 	}
 	if (pos->player_y > ray->short_y)
-		ray->short_y -= IMG / SCALING * 5 / 100;
+		ray->short_y -= IMG * 5 / 100;
 	if (pos->player_x > ray->short_x)
-		ray->short_x -= IMG / SCALING * 5 / 100;
-	my_mlx_pixel_put(vars, (rays->short_x / SCALING), \
-		(rays->short_y / SCALING), color);
+		ray->short_x -= IMG * 5 / 100;
+	ft_minimap_pixel_put(vars->minimap, (rays->short_x / SCALING), \
+		(rays->short_y /SCALING), color);
 }
 
 void	ft_draw_rays_minimap(t_vars *vars)
 {
 	vars->rays->r_id = 0;
 	vars->rays->r_angle = vars->position->view_angle - (RADIAN * 30);
-	ft_angle_adjustement(&vars->rays->r_angle);
 	while (vars->rays->r_id < WINDOW_WIDTH)
 	{
+		ft_angle_adjustement(&vars->rays->r_angle);
 		vars->rays->a_tan = -1 / tan(vars->rays->r_angle);
 		vars->rays->n_tan = -tan(vars->rays->r_angle);
 		ft_horizontal_axis_intersection(vars);
@@ -442,7 +456,7 @@ void	ft_draw_rays_minimap(t_vars *vars)
 		vars->rays->short_y = vars->rays->impact_y;
 		ft_vertical_axis_intersection(vars);
 		ft_draw_ray_hit(vars, vars->rays, 0xD0FF00);
-		ft_angle_adjustement(&vars->rays->r_angle);
+		// ft_angle_adjustement(&vars->rays->r_angle);
 		vars->rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
 		vars->rays->r_id++;
 	}
@@ -462,7 +476,7 @@ void	ft_put_pixel_around(t_vars *vars, int size, unsigned int color)
 	while (++j < size)
 	{
 		while (++i < size)
-			my_mlx_pixel_put(vars, init_x + i, init_y + j, color);
+			ft_minimap_pixel_put(vars->minimap, init_x + i, init_y + j, color);
 		i = -1;
 	}
 }
@@ -479,7 +493,7 @@ void	ft_draw_player(t_vars *vars)
 	ft_put_pixel_around(vars, size, color);
 }
 
-void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
+void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)//done
 {
 	int	i;
 	int	j;
@@ -490,32 +504,11 @@ void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
 		i = 0;
 		while (i < IMG / SCALING)
 		{
-			my_mlx_pixel_put(vars, i + (x * IMG / SCALING), \
+			ft_minimap_pixel_put(vars->minimap, i + (x * IMG / SCALING), \
 				j + (y * IMG / SCALING), color);
 			i++;
 		}
 		j++;
-	}
-}
-
-void	ft_draw_miniwalls(t_vars *vars)
-{
-	int	x;
-	int	y;
-
-	y = 0;
-	while (vars->context->map[y])
-	{
-		x = 0;
-		while (vars->context->map[y][x])
-		{
-			if (vars->context->map[y][x] == '1')
-				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
-			else if (ft_strchr("CO", vars->context->map[y][x]))
-				ft_draw_square_minimap(vars, y, x, 0x00FF0000);
-			x++;
-		}
-		y++;
 	}
 }
 
@@ -540,18 +533,124 @@ void	ft_draw_minispaces(t_vars *vars)
 	}
 }
 
+// unsigned int	ft_get_color_from_minimap(t_minimap *mini, double step, \
+// 	double rank)
+// {
+// 	double	coeff;
+// 	char	*color;
+// 	int		y;
+// 	int		x;
+
+// 		coeff = (double)(*mini->line_length / sizeof(int)) / (double)IMG;
+// 		x = (*wall->tex_width / sizeof(int)) - \
+// 			((int)(rank * coeff) % (*wall->tex_width / sizeof(int)));
+// 		y = *(wall->tex_height) * step;
+// 		color = wall->tex_addr + (y * *(wall->tex_width) \
+// 			+ x * (wall->bppixels / 8));
+// 	return (*(unsigned int *)color);
+// }
+
+void	ft_put_minimap_on_display(t_vars *vars)
+{
+	char	*col;
+	int		start[2];
+	int		target[2];
+	int		i;
+	int		j;
+
+	start[X] = ((vars->position->player_x) - ((MINIZONE * IMG / 2))) / SCALING;
+	start[Y] = ((vars->position->player_y) - ((MINIZONE * IMG / 2))) / SCALING;
+	target[X] = ((vars->position->player_x) + ((MINIZONE * IMG / 2))) / SCALING;
+	target[Y] = ((vars->position->player_y) + ((MINIZONE * IMG / 2))) / SCALING;
+	i = 0;
+	while (start[X] + i < target[X])
+	{
+		j = 0;
+		while (start[Y] + j < target[Y])
+		{
+			if ((start[X] + i) >= 0 && start[Y] + j >= 0 && start[X] + i <= vars->minimap->width && start[Y] + j <= vars->minimap->height)
+			{
+				col = vars->minimap->addr + ((start[Y] + j) * (vars->minimap->line_length)) + ((start[X] + i) * (vars->minimap->bits_per_pixel / 8));
+				// printf("vars->position->player_x %f\n", vars->position->player_x);
+				// printf("vars->position->player_y %f\n", vars->position->player_y);
+				ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), *(unsigned int *)col);
+			}
+			else
+				ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), 0);
+			j++;
+		}
+		i++;
+	}
+
+	// char	*col;
+	// int		start[2];
+	// int		target[2];
+	// int		i;
+	// int		j;
+
+	// start[X] = (vars->position->player_x) - ((MINIZONE * IMG / 2));
+	// start[Y] = (vars->position->player_y) - ((MINIZONE * IMG / 2));
+	// target[X] = (vars->position->player_x) + ((MINIZONE * IMG / 2));
+	// target[Y] = (vars->position->player_y) + ((MINIZONE * IMG / 2));
+	// i = 0;
+	// while (start[X] + i < target[X])
+	// {
+	// 	j = 0;
+	// 	while (start[Y] + j < target[Y])
+	// 	{
+	// 		if ((start[X] + i) >= 0 && start[Y] + j >= 0 && start[X] + i <= vars->minimap->width && start[Y] + j <= vars->minimap->height)
+	// 		{
+	// 			// printf("vars->position->player_x %f\n", vars->position->player_x);
+	// 			// printf("vars->position->player_y %f\n", vars->position->player_y);
+	// 			col = vars->minimap->addr + ((start[Y] + j) * (vars->minimap->line_length / sizeof(int)) + (start[X] + i) * (vars->minimap->bits_per_pixel / 32));
+	// 			ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), *(unsigned int *)col);
+	// 		}
+	// 		else
+	// 			ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), 0);
+	// 		j++;
+	// 	}
+	// 	i++;
+	// }
+}
+
+void	ft_draw_miniwalls(t_vars *vars)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (vars->context->map[y])
+	{
+		x = 0;
+		while (vars->context->map[y][x])
+		{
+			if (ft_strchr("1A", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
+			else if (ft_strchr("C", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, 0x00FF0000);
+			else if (ft_strchr("O", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, 0xFF);
+			x++;
+		}
+		y++;
+	}
+}
+
 void	ft_draw_minimap(t_vars *vars)
 {
 	if (vars->minimap->img)
-		mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
-	vars->minimap->img = mlx_new_image(vars->mlx_datas->mlx, vars->minimap->width, vars->minimap->height);
-	vars->minimap->addr = mlx_get_data_addr(vars->minimap->img, &vars->minimap->bits_per_pixel, \
-		&vars->minimap->line_length, &vars->minimap->endian);
-	ft_draw_miniwalls(vars);
-	ft_draw_rays_minimap(vars);
-	ft_draw_minispaces(vars);
-	ft_draw_player(vars);
+		mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);//done
+	vars->minimap->img = mlx_new_image(vars->mlx_datas->mlx, \
+		vars->minimap->width, vars->minimap->height);//done
+	vars->minimap->addr = mlx_get_data_addr(vars->minimap->img, \
+		&vars->minimap->bits_per_pixel, &vars->minimap->line_length, \
+		&vars->minimap->endian);//done
+	ft_draw_miniwalls(vars);//done
+	ft_draw_rays_minimap(vars);//done
+	ft_draw_minispaces(vars);//done
+	ft_draw_player(vars);//done
 
+	ft_put_minimap_on_display(vars);
 }
 
 void	ft_collision(int *ipx, int *ipy, t_vars *vars, t_margin *margin)
@@ -749,7 +848,7 @@ void	ft_draw_ceilling(t_context *context, t_vars *vars)
 		x = 0;
 		while (x < WINDOW_WIDTH)
 		{
-			my_mlx_pixel_put(vars, x, y, color);
+			ft_mlx_pixel_put(vars, x, y, color);
 			x++;
 		}
 		y++;
@@ -770,7 +869,7 @@ void	ft_draw_floor(t_context *context, t_vars *vars)
 		x = 0;
 		while (x < WINDOW_WIDTH)
 		{
-			my_mlx_pixel_put(vars, x, y, color);
+			ft_mlx_pixel_put(vars, x, y, color);
 			x++;
 		}
 		y++;
@@ -791,7 +890,7 @@ int	ft_cub3d(t_vars *vars)
 	ft_draw_floor(vars->context, vars);//done
 	ft_keyboard_interactions(vars);//done
 	ft_draw_environment(vars);//done
-	// ft_draw_minimap(vars);//done?
+	ft_draw_minimap(vars);//done?
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);
 }
@@ -899,7 +998,7 @@ t_player	*ft_get_player_position(t_vars *vars, char orientation)
 		{
 			if (ft_if_player_here(vars, y, x))
 			{
-				position->view_angle = ft_get_first_angle(orientation);
+				position->view_angle = ft_get_first_angle(orientation);//////////////////////////look HERE
 				position->pdx = cos(position->view_angle) * 5;
 				position->pdy = sin(position->view_angle) * 5;
 				position->player_x = x * IMG + (IMG / 2);
@@ -929,8 +1028,10 @@ t_keys	*ft_init_keys(void)
 
 void	ft_set_minimap(t_vars *vars)
 {
-	vars->minimap->width = vars->context->map_length * IMG / SCALING;
-	vars->minimap->height = vars->context->map_height * IMG / SCALING;
+	vars->minimap->width = vars->context->map_length * IMG;
+	vars->minimap->height = vars->context->map_height * IMG;
+	printf("vars->minimap->width %d\n", vars->minimap->width);
+	printf("vars->minimap->height %d\n", vars->minimap->height);
 }
 
 t_minimap	*ft_init_minimap(void)
