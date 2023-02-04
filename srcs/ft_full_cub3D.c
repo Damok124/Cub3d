@@ -16,6 +16,15 @@
 #define ERR_MALLOC_CONTEXT 14
 #define ERR_BAD_TEXTURE_FILE 15
 
+#define PLAYER_COLOR 0x20FF15
+#define RAY_COLOR 0xFFDF00
+#define SPACE_COLOR 0x302010
+#define START_COLOR 0x504030
+#define WALL_COLOR 0xA090A0
+#define CLOSE_COLOR 0xC01030
+#define OPEN_COLOR 0x3050C0
+#define EXT_COLOR 0
+
 #define LEFT 1
 #define RIGHT -1
 
@@ -30,7 +39,7 @@
 #define DOOR 6
 #define ANIMATION 7
 
-#define IMG 64			//size_image
+#define SQ_SIZE 64			//size_image
 #define SCALING 4
 #define MINIZONE 9
 #define SPEED 5		//speed
@@ -57,6 +66,15 @@ typedef struct s_lines {
 	char			type;
 	struct s_lines	*next;
 }					t_lines;
+
+typedef struct s_minitools {
+	int	i;
+	int	j;
+	int	start_x;
+	int	start_y;
+	int	target_x;
+	int	target_y;
+}		t_minitools;
 
 typedef struct s_margin {
 	int	ipx_add_xo;
@@ -85,7 +103,7 @@ typedef struct s_rays {
 	int				dov;//deep of view
 	int				tmp_rx;//variable temporaire de x
 	int				tmp_ry;//variable temporaire de y
-		double			impact_x;//point d'impact x
+	double			impact_x;//point d'impact x
 	double			impact_y;//point d'impact y
 	double			r_angle;//angle du rayon
 	double			xo;
@@ -204,7 +222,7 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 
 	if (read_from == RIGHT)
 	{
-		coeff = (double)(*wall->tex_width / sizeof(int)) / (double)IMG;
+		coeff = (double)(*wall->tex_width / sizeof(int)) / (double)SQ_SIZE;
 		x = (*wall->tex_width / sizeof(int)) - \
 			((int)(rank * coeff) % (*wall->tex_width / sizeof(int)));
 		y = *(wall->tex_height) * step;
@@ -213,7 +231,7 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 	}
 	else
 	{
-		coeff = (double)(*wall->tex_width / sizeof(int)) / (double)IMG;
+		coeff = (double)(*wall->tex_width / sizeof(int)) / (double)SQ_SIZE;
 		x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
 		y = *(wall->tex_height) * step;
 		color = wall->tex_addr + (y * *(wall->tex_width) \
@@ -224,7 +242,6 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 
 void	ft_get_wall_color(t_textures *texture,t_vars *vars, double step, unsigned int *col)
 {
-
 	if (vars->rays->wall_direction == NORTH)
 	*col = ft_get_color_from_xpm(texture, step, \
 		vars->rays->short_x, LEFT);
@@ -242,17 +259,18 @@ void	ft_get_wall_color(t_textures *texture,t_vars *vars, double step, unsigned i
 void	ft_print_type(double step, unsigned int *col, t_vars *vars)
 {
 	if (vars->rays->wall_type == DOOR)
-		ft_get_wall_color(vars->context->door, vars, step ,col);
+		ft_get_wall_color(vars->context->door, vars, step, col);
 	else if (vars->rays->wall_type == ANIMATION)
-		ft_get_wall_color(vars->context->animated[vars->context->frames], vars, step ,col);
+		ft_get_wall_color(vars->context->animated[vars->context->frames], \
+			vars, step, col);
 	else if (vars->rays->wall_direction == NORTH)
-		ft_get_wall_color(vars->context->north, vars, step ,col);
+		ft_get_wall_color(vars->context->north, vars, step, col);
 	else if (vars->rays->wall_direction == SOUTH)
-		ft_get_wall_color(vars->context->south, vars, step ,col);
+		ft_get_wall_color(vars->context->south, vars, step, col);
 	else if (vars->rays->wall_direction == WEST)
-		ft_get_wall_color(vars->context->west, vars, step ,col);
+		ft_get_wall_color(vars->context->west, vars, step, col);
 	else if (vars->rays->wall_direction == EAST)
-		ft_get_wall_color(vars->context->east, vars, step ,col);
+		ft_get_wall_color(vars->context->east, vars, step, col);
 }
 
 void	ft_print_column(t_vars *vars, int line_start, int line_end)
@@ -265,7 +283,7 @@ void	ft_print_column(t_vars *vars, int line_start, int line_end)
 	while ((line_start + pixel) < line_end)
 	{
 		step = ((double)pixel / (double)(line_end - line_start));
-			ft_print_type(step, &col, vars);
+		ft_print_type(step, &col, vars);
 		if (col != 0xff00ff)
 			ft_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
 		pixel++;
@@ -277,13 +295,14 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	double	line_height;
 	double	line_start;
 	double	line_end;
-	double	ca;//maybe fisheye
 	double	ratio;
+	double	ca;
+
 	ratio = (double)WINDOW_WIDTH / (double)WINDOW_HEIGHT;
-	ca = vars->position->view_angle - rays->r_angle;
+	ca = vars->position->view_angle - rays->r_angle;//fisheye????
 	ft_angle_adjustement(&ca);
 	rays->ray_len *= cos(ca);//calcul de la taille du rayon
-	line_height = ((IMG * (WINDOW_HEIGHT)) / rays->ray_len) * ratio;
+	line_height = ((SQ_SIZE * (WINDOW_HEIGHT)) / rays->ray_len) * ratio;
 	line_start = ((WINDOW_HEIGHT) / 2) - (line_height / 2);
 	line_end = line_start + line_height;
 	ft_print_column(vars, line_start, line_end);
@@ -326,13 +345,13 @@ void	ft_h_not_parallel_axis(t_vars *vars, int coeff)
 	double	corr;
 
 	if (coeff > 0)
-		corr = IMG;
+		corr = SQ_SIZE;
 	else
 		corr = -0.0001;
 	vars->rays->impact_y = (((int)vars->position->player_y >> 6) << 6) + corr;
 	vars->rays->impact_x = (vars->position->player_y - vars->rays->impact_y) \
 		* vars->rays->a_tan + vars->position->player_x;
-	vars->rays->yo = IMG * coeff;
+	vars->rays->yo = SQ_SIZE * coeff;
 	vars->rays->xo = -vars->rays->yo * vars->rays->a_tan;
 }
 
@@ -341,20 +360,21 @@ void	ft_v_not_parallel_axis(t_vars *vars, int coeff)
 	double	corr;
 
 	if (coeff > 0)
-		corr = IMG;
+		corr = SQ_SIZE;
 	else
 		corr = -0.0001;
 	vars->rays->impact_x = (((int)vars->position->player_x >> 6) << 6) + corr;
 	vars->rays->impact_y = (vars->position->player_x - vars->rays->impact_x) \
 		* vars->rays->n_tan + vars->position->player_y;
-	vars->rays->xo = IMG * coeff;
+	vars->rays->xo = SQ_SIZE * coeff;
 	vars->rays->yo = -vars->rays->xo * vars->rays->n_tan;
 }
 
 void	ft_horizontal_axis_intersection(t_vars *vars)
 {
+	int	dov;
+
 	vars->rays->dov = 0;
-	int dov;
 	if (vars->context->map_height < vars->context->map_length)
 		dov = vars->context->map_length;
 	else
@@ -372,7 +392,7 @@ void	ft_horizontal_axis_intersection(t_vars *vars)
 void	ft_vertical_axis_intersection(t_vars *vars)
 {
 	double	angle;
-	int dov;
+	int		dov;
 
 	if (vars->context->map_height < vars->context->map_length)
 		dov = vars->context->map_length;
@@ -427,15 +447,14 @@ void	ft_minimap_pixel_put(t_minimap *minimap, int x, int y, int color)//done
 		*(unsigned int *)dst = color;
 }
 
-void	ft_if_door(t_vars *vars)
+void	ft_confirm_wall_type(t_rays *r, char **map, int x, int y)
 {
-
-	if (vars->context->map[(int)vars->rays->short_y / IMG][(int)vars->rays->short_x / IMG] == 'C')
-		vars->rays->wall_type = DOOR;
-	else if (vars->context->map[(int)vars->rays->short_y / IMG][(int)vars->rays->short_x / IMG] == 'A')
-		vars->rays->wall_type = ANIMATION;
+	if (map[y / SQ_SIZE][x / SQ_SIZE] == 'C')
+		r->wall_type = DOOR;
+	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'A')
+		r->wall_type = ANIMATION;
 	else
-		vars->rays->wall_type = WALL;
+		r->wall_type = WALL;
 }
 
 void	ft_animate_frames(t_vars *vars)
@@ -455,6 +474,7 @@ void	ft_animate_frames(t_vars *vars)
 			j = 1;
 	}
 }
+
 void	ft_draw_environment(t_vars *vars)
 {
 	vars->rays->r_id = 0;
@@ -469,34 +489,49 @@ void	ft_draw_environment(t_vars *vars)
 		vars->rays->short_x = vars->rays->impact_x;
 		vars->rays->short_y = vars->rays->impact_y;
 		ft_vertical_axis_intersection(vars);
-		ft_wall_identification(vars->position, vars->rays);//done
-		ft_if_door(vars);
+		ft_wall_identification(vars->position, vars->rays);
+		ft_confirm_wall_type(vars->rays, vars->context->map, \
+			(int)vars->rays->short_x, (int)vars->rays->short_y);
 		ft_3d_display(vars, vars->rays);
-		ft_angle_adjustement(&vars->rays->r_angle);//done
+		ft_angle_adjustement(&vars->rays->r_angle);
 		vars->rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
 		vars->rays->r_id++;
 	}
 }
 
-void	ft_draw_ray_hit(t_vars *vars, t_rays *rays, unsigned int color)
+void	ft_pixel_around_impacts(t_vars *vars, int size, unsigned int color)
+{
+	int	init_x;
+	int	init_y;
+	int	i;
+	int	j;
+
+	init_x = vars->rays->short_x / SCALING - (size / 2);
+	init_y = vars->rays->short_y / SCALING - (size / 2);
+	j = -1;
+	i = -1;
+	while (++j < size)
+	{
+		while (++i < size)
+			ft_minimap_pixel_put(vars->minimap, init_x + i, init_y + j, color);
+		i = -1;
+	}
+}
+
+void	ft_draw_ray_hit(t_vars *vars, unsigned int color)
 {
 	t_player	*pos;
-	t_rays		*ray;
+	t_rays		*r;
 
 	pos = vars->position;
-	ray = vars->rays;
-	if (ft_distance(pos->player_x, pos->player_y, ray->impact_x, ray->impact_y)
-		< ft_distance(pos->player_x, pos->player_y, ray->short_x, ray->short_y))
+	r = vars->rays;
+	if (ft_distance(pos->player_x, pos->player_y, r->impact_x, r->impact_y)
+		< ft_distance(pos->player_x, pos->player_y, r->short_x, r->short_y))
 	{
-		ray->short_x = ray->impact_x;
-		ray->short_y = ray->impact_y;
+		r->short_x = r->impact_x;
+		r->short_y = r->impact_y;
 	}
-	if (pos->player_y > ray->short_y)
-		ray->short_y -= IMG * 5 / 100;
-	if (pos->player_x > ray->short_x)
-		ray->short_x -= IMG * 5 / 100;
-	ft_minimap_pixel_put(vars->minimap, (rays->short_x / SCALING), \
-		(rays->short_y /SCALING), color);
+	ft_pixel_around_impacts(vars, 3, color);
 }
 
 void	ft_draw_rays_minimap(t_vars *vars)
@@ -512,8 +547,7 @@ void	ft_draw_rays_minimap(t_vars *vars)
 		vars->rays->short_x = vars->rays->impact_x;
 		vars->rays->short_y = vars->rays->impact_y;
 		ft_vertical_axis_intersection(vars);
-		ft_draw_ray_hit(vars, vars->rays, 0xD0FF00);
-		// ft_angle_adjustement(&vars->rays->r_angle);
+		ft_draw_ray_hit(vars, RAY_COLOR);
 		vars->rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
 		vars->rays->r_id++;
 	}
@@ -543,8 +577,8 @@ void	ft_draw_player(t_vars *vars)
 	int				size;
 	unsigned int	color;
 
-	size = IMG / SCALING / 4;
-	color = 0x00BBCCBB;
+	size = SQ_SIZE / SCALING / 4;
+	color = PLAYER_COLOR;
 	if (!size)
 		size = 1;
 	ft_put_pixel_around(vars, size, color);
@@ -556,13 +590,13 @@ void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)//done
 	int	j;
 
 	j = 0;
-	while (j < IMG / SCALING)
+	while (j < SQ_SIZE / SCALING)
 	{
 		i = 0;
-		while (i < IMG / SCALING)
+		while (i < SQ_SIZE / SCALING)
 		{
-			ft_minimap_pixel_put(vars->minimap, i + (x * IMG / SCALING), \
-				j + (y * IMG / SCALING), color);
+			ft_minimap_pixel_put(vars->minimap, i + (x * SQ_SIZE / SCALING), \
+				j + (y * SQ_SIZE / SCALING), color);
 			i++;
 		}
 		j++;
@@ -581,93 +615,52 @@ void	ft_draw_minispaces(t_vars *vars)
 		while (vars->context->map[y][x])
 		{
 			if (vars->context->map[y][x] == '0')
-				ft_draw_square_minimap(vars, y, x, 0);
+				ft_draw_square_minimap(vars, y, x, SPACE_COLOR);
 			else if (ft_strchr("NSWE", vars->context->map[y][x]))
-				ft_draw_square_minimap(vars, y, x, 0x404040);
+				ft_draw_square_minimap(vars, y, x, START_COLOR);
+			else if (ft_strchr("O", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, OPEN_COLOR);
 			x++;
 		}
 		y++;
 	}
 }
 
-// unsigned int	ft_get_color_from_minimap(t_minimap *mini, double step, \
-// 	double rank)
-// {
-// 	double	coeff;
-// 	char	*color;
-// 	int		y;
-// 	int		x;
-
-// 		coeff = (double)(*mini->line_length / sizeof(int)) / (double)IMG;
-// 		x = (*wall->tex_width / sizeof(int)) - \
-// 			((int)(rank * coeff) % (*wall->tex_width / sizeof(int)));
-// 		y = *(wall->tex_height) * step;
-// 		color = wall->tex_addr + (y * *(wall->tex_width) \
-// 			+ x * (wall->bppixels / 8));
-// 	return (*(unsigned int *)color);
-// }
-
-void	ft_put_minimap_on_display(t_vars *vars)
+void	ft_init_minitools(t_minitools *tools, t_player *pos)
 {
-	char	*col;
-	int		start[2];
-	int		target[2];
-	int		i;
-	int		j;
+	tools->start_x = ((pos->player_x) - ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+	tools->start_y = ((pos->player_y) - ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+	tools->target_x = ((pos->player_x) + ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+	tools->target_y = ((pos->player_y) + ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+}
 
-	start[X] = ((vars->position->player_x) - ((MINIZONE * IMG / 2))) / SCALING;
-	start[Y] = ((vars->position->player_y) - ((MINIZONE * IMG / 2))) / SCALING;
-	target[X] = ((vars->position->player_x) + ((MINIZONE * IMG / 2))) / SCALING;
-	target[Y] = ((vars->position->player_y) + ((MINIZONE * IMG / 2))) / SCALING;
-	i = 0;
-	while (start[X] + i < target[X])
+void	ft_put_minimap_on_display(t_vars *vars, t_player *pos, t_minimap *mini)
+{
+	t_minitools	t;
+	char		*col;
+
+	t.i = 0;
+	ft_init_minitools(&t, pos);
+	while (t.start_x + t.i < t.target_x)
 	{
-		j = 0;
-		while (start[Y] + j < target[Y])
+		t.j = 0;
+		while (t.start_y + t.j < t.target_y)
 		{
-			if ((start[X] + i) >= 0 && start[Y] + j >= 0 && start[X] + i <= vars->minimap->width && start[Y] + j <= vars->minimap->height)
+			if ((t.start_x + t.i) >= 0 && t.start_y + t.j >= 0 && t.start_x \
+				+ t.i <= mini->width && t.start_y + t.j <= mini->height)
 			{
-				col = vars->minimap->addr + ((start[Y] + j) * (vars->minimap->line_length)) + ((start[X] + i) * (vars->minimap->bits_per_pixel / 8));
-				// printf("vars->position->player_x %f\n", vars->position->player_x);
-				// printf("vars->position->player_y %f\n", vars->position->player_y);
-				ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), *(unsigned int *)col);
+				col = mini->addr + ((t.start_y + t.j) * (mini->line_length)) \
+					+ ((t.start_x + t.i) * (mini->bits_per_pixel / 8));
+				ft_mlx_pixel_put(vars, t.i + (SQ_SIZE / SCALING), \
+					t.j + (SQ_SIZE / SCALING), *(unsigned int *)col);
 			}
 			else
-				ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), 0);
-			j++;
+				ft_mlx_pixel_put(vars, t.i + (SQ_SIZE / SCALING), \
+					t.j + (SQ_SIZE / SCALING), EXT_COLOR);
+			t.j++;
 		}
-		i++;
+		t.i++;
 	}
-
-	// char	*col;
-	// int		start[2];
-	// int		target[2];
-	// int		i;
-	// int		j;
-
-	// start[X] = (vars->position->player_x) - ((MINIZONE * IMG / 2));
-	// start[Y] = (vars->position->player_y) - ((MINIZONE * IMG / 2));
-	// target[X] = (vars->position->player_x) + ((MINIZONE * IMG / 2));
-	// target[Y] = (vars->position->player_y) + ((MINIZONE * IMG / 2));
-	// i = 0;
-	// while (start[X] + i < target[X])
-	// {
-	// 	j = 0;
-	// 	while (start[Y] + j < target[Y])
-	// 	{
-	// 		if ((start[X] + i) >= 0 && start[Y] + j >= 0 && start[X] + i <= vars->minimap->width && start[Y] + j <= vars->minimap->height)
-	// 		{
-	// 			// printf("vars->position->player_x %f\n", vars->position->player_x);
-	// 			// printf("vars->position->player_y %f\n", vars->position->player_y);
-	// 			col = vars->minimap->addr + ((start[Y] + j) * (vars->minimap->line_length / sizeof(int)) + (start[X] + i) * (vars->minimap->bits_per_pixel / 32));
-	// 			ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), *(unsigned int *)col);
-	// 		}
-	// 		else
-	// 			ft_mlx_pixel_put(vars, i + (IMG / SCALING), j + (IMG / SCALING), 0);
-	// 		j++;
-	// 	}
-	// 	i++;
-	// }
 }
 
 void	ft_draw_miniwalls(t_vars *vars)
@@ -682,11 +675,9 @@ void	ft_draw_miniwalls(t_vars *vars)
 		while (vars->context->map[y][x])
 		{
 			if (ft_strchr("1A", vars->context->map[y][x]))
-				ft_draw_square_minimap(vars, y, x, 0xAAAAAA);
+				ft_draw_square_minimap(vars, y, x, WALL_COLOR);
 			else if (ft_strchr("C", vars->context->map[y][x]))
-				ft_draw_square_minimap(vars, y, x, 0x00FF0000);
-			else if (ft_strchr("O", vars->context->map[y][x]))
-				ft_draw_square_minimap(vars, y, x, 0xFF);
+				ft_draw_square_minimap(vars, y, x, CLOSE_COLOR);
 			x++;
 		}
 		y++;
@@ -696,19 +687,19 @@ void	ft_draw_miniwalls(t_vars *vars)
 void	ft_draw_minimap(t_vars *vars)
 {
 	if (vars->minimap->img)
-		mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);//done
+		mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
 	vars->minimap->img = mlx_new_image(vars->mlx_datas->mlx, \
-		vars->minimap->width, vars->minimap->height);//done
+		vars->minimap->width, vars->minimap->height);
 	vars->minimap->addr = mlx_get_data_addr(vars->minimap->img, \
 		&vars->minimap->bits_per_pixel, &vars->minimap->line_length, \
-		&vars->minimap->endian);//done
-	ft_draw_miniwalls(vars);//done
-	ft_draw_rays_minimap(vars);//done
-	ft_draw_minispaces(vars);//done
-	ft_draw_player(vars);//done
-
-	ft_put_minimap_on_display(vars);
+		&vars->minimap->endian);
+	ft_draw_miniwalls(vars);
+	ft_draw_rays_minimap(vars);
+	ft_draw_minispaces(vars);
+	ft_draw_player(vars);
+	ft_put_minimap_on_display(vars, vars->position, vars->minimap);
 }
+
 int ft_mouse_interactions(int x, int y, t_vars *vars)
 {
 	(void)y;
@@ -813,32 +804,6 @@ void	ft_left_right(t_vars *vars)
 	}
 }
 
-// void	ft_left_right(int ipx, int ipy, t_vars *vars, t_margin *margin)
-// {
-// 	(void)ipx;
-// 	(void)ipy;
-// 	(void)margin;
-// 	if (vars->keys->a == 1)
-// 	{
-// 		vars->position->player_x += cos(vars->position->view_angle - M_PI / 2) * SPEED;
-// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
-// 			vars->position->player_x -= cos(vars->position->view_angle - M_PI / 2) * SPEED;
-// 		vars->position->player_y += sin(vars->position->view_angle - M_PI / 2) * SPEED;
-// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
-// 			vars->position->player_y -= sin(vars->position->view_angle - M_PI / 2) * SPEED;
-
-// 	}
-// 	if (vars->keys->d == 1)
-// 	{
-// 		vars->position->player_x += cos(vars->position->view_angle + M_PI / 2) * SPEED;
-// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
-// 			vars->position->player_x -= cos(vars->position->view_angle + M_PI / 2) * SPEED;
-// 		vars->position->player_y += sin(vars->position->view_angle + M_PI / 2) * SPEED;
-// 		if (ft_strchr("1", vars->context->map[(int)vars->position->player_y / 64][(int)vars->position->player_x / 64]))
-// 			vars->position->player_y -= sin(vars->position->view_angle + M_PI / 2) * SPEED;
-// 	}
-// }
-
 void	ft_collision(t_vars *vars, t_margin *margin, int i)
 {
 	t_player	*pos;
@@ -852,68 +817,39 @@ void	ft_collision(t_vars *vars, t_margin *margin, int i)
 	coeff_y = i;
 	if (pos->pdy < 0)
 		coeff_y = -i;
-	margin->ipx_add_xo = (pos->player_x + coeff_x) / IMG;
-	margin->ipx_sub_xo = (pos->player_x - coeff_x) / IMG;
-	margin->ipy_add_yo = (pos->player_y + coeff_y) / IMG;
-	margin->ipy_sub_yo = (pos->player_y - coeff_y) / IMG;
+	margin->ipx_add_xo = (pos->player_x + coeff_x) / SQ_SIZE;
+	margin->ipx_sub_xo = (pos->player_x - coeff_x) / SQ_SIZE;
+	margin->ipy_add_yo = (pos->player_y + coeff_y) / SQ_SIZE;
+	margin->ipy_sub_yo = (pos->player_y - coeff_y) / SQ_SIZE;
 }
-
-// void	ft_map_door(t_vars *vars)
-// {
-// 	char	**map;
-// 	int		player_x;
-// 	int		player_y;
-// 	double 	view_angle;
-// 	int off_set;
-
-// 	view_angle = vars->position->view_angle;
-// 	player_y = (int)vars->position->player_y;
-// 	player_x = (int)vars->position->player_x;
-
-// 	off_set = 0;
-// 	map = vars->context->map;
-// 	while(off_set < 248)
-// 	{
-// 		if (map[(player_y - off_set) / IMG][(player_x - off_set) / IMG] == 'C' && view_angle > (M_PI / 2) && view_angle < M_PI)
-// 			map[(player_y - off_set) / IMG][(player_x - off_set) / IMG] = 'O';
-// 		else if (map[(player_y + off_set) / IMG][(player_x + off_set) / IMG] == 'C' && view_angle > (3 * M_PI) / 2 && view_angle < (2 * M_PI))
-// 			map[(player_y - off_set) / IMG][(player_x - off_set) / IMG] = 'O';
-// 		else if (map[(player_y - off_set) / IMG][(player_x - off_set) / IMG] == 'O' && view_angle > (M_PI / 2) && view_angle < M_PI)
-// 			map[(player_y - off_set) / IMG][(player_x - off_set) / IMG] = 'C';
-// 		else if (map[(player_y + off_set) / IMG][(player_x + off_set) / IMG] == 'O' && view_angle > (3 * M_PI) / 2 && view_angle < (2 * M_PI))
-// 			map[(player_y - off_set) / IMG][(player_x - off_set) / IMG] = 'C';
-// 		off_set++;
-// 	}
-// }
 
 void	ft_map_door(t_vars *vars, t_margin *margin)
 {
 	char	**map;
-	int off_set;
+	int		offset;
 
-
-	off_set = 0;
+	offset = 0;
 	map = vars->context->map;
-	while(off_set < 64)
+	while (offset < 64)
 	{
-		ft_collision(vars, margin,off_set);
-		if(map[margin->ipy_add_yo][margin->ipx_add_xo] == 'C')
+		ft_collision(vars, margin, offset);
+		if (map[margin->ipy_add_yo][margin->ipx_add_xo] == 'C')
 		{
 			map[margin->ipy_add_yo][margin->ipx_add_xo] = 'O';
 			return ;
 		}
-		else if(map[margin->ipy_add_yo][margin->ipx_add_xo] == 'O')
+		else if (map[margin->ipy_add_yo][margin->ipx_add_xo] == 'O')
 		{
 			map[margin->ipy_add_yo][margin->ipx_add_xo] = 'C';
 			return ;
 		}
-		off_set++;
+		offset++;
 	}
 }
 
 void	ft_keyboard_interactions(t_vars *vars)
 {
-	static int    i = 0;
+	static int	i;
 	t_margin	margin;
 
 	if (vars->keys->left_arr == 1 || vars->keys->right_arr == 1)
@@ -924,13 +860,13 @@ void	ft_keyboard_interactions(t_vars *vars)
 		ft_left_right(vars);
 	if (vars->keys->e == 1)
 	{
-        i++;
-        if (i != 1)
-            return ;
+		i++;
+		if (i != 1)
+			return ;
 		ft_map_door(vars, &margin);
 	}
-    else
-        i = 0;
+	else
+		i = 0;
 }
 
 void	ft_draw_ceilling(t_context *context, t_vars *vars)
@@ -985,12 +921,11 @@ int	ft_cub3d(t_vars *vars)
 	md->img = mlx_new_image(md->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	md->addr = mlx_get_data_addr(md->img, &md->bits_per_pixel, \
 		&md->line_length, &md->endian);
-	ft_draw_ceilling(vars->context, vars);//done
-	ft_draw_floor(vars->context, vars);//done
-	ft_keyboard_interactions(vars);//done
-	ft_draw_environment(vars);//done
-	ft_draw_minimap(vars);//done?
-	ft_draw_minimap(vars);//done?
+	ft_draw_ceilling(vars->context, vars);
+	ft_draw_floor(vars->context, vars);
+	ft_keyboard_interactions(vars);
+	ft_draw_environment(vars);
+	ft_draw_minimap(vars);
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);
 }
@@ -1053,7 +988,6 @@ void	ft_hooks_activation(t_vars *vars)
 	mlx_hook(md->win, 3, 1L << 1, ft_release_key, vars);
 	mlx_hook(md->win, 6, 1L << 6, ft_mouse_interactions, vars);
 	mlx_mouse_hide(md->mlx, md->win);/////////////////////////////////////leak a mort
-	///manque events open/close
 }
 
 /////////////////////////////////////////////////////////////VARS BUILDING
@@ -1098,11 +1032,11 @@ t_player	*ft_get_player_position(t_vars *vars, char orientation)
 		{
 			if (ft_if_player_here(vars, y, x))
 			{
-				position->view_angle = ft_get_first_angle(orientation);//////////////////////////look HERE
+				position->view_angle = ft_get_first_angle(orientation);
 				position->pdx = cos(position->view_angle) * 5;
 				position->pdy = sin(position->view_angle) * 5;
-				position->player_x = x * IMG + (IMG / 2);
-				position->player_y = y * IMG + (IMG / 2);
+				position->player_x = x * SQ_SIZE + (SQ_SIZE / 2);
+				position->player_y = y * SQ_SIZE + (SQ_SIZE / 2);
 			}
 		}
 	}
@@ -1128,8 +1062,8 @@ t_keys	*ft_init_keys(void)
 
 void	ft_set_minimap(t_vars *vars)
 {
-	vars->minimap->width = vars->context->map_length * IMG;
-	vars->minimap->height = vars->context->map_height * IMG;
+	vars->minimap->width = vars->context->map_length * SQ_SIZE;
+	vars->minimap->height = vars->context->map_height * SQ_SIZE;
 	printf("vars->minimap->width %d\n", vars->minimap->width);
 	printf("vars->minimap->height %d\n", vars->minimap->height);
 }
@@ -1203,7 +1137,6 @@ void	ft_set_texture(t_textures *data, t_mlx_datas *md)
 	data->tex_img = mlx_xpm_file_to_image(md->mlx, data->path, data->tex_width, data->tex_height);
 	data->tex_addr = mlx_get_data_addr(data->tex_img, &data->bppixels, \
 		data->tex_width, &data->endian);
-	printf("path : %s, w:%d, h:%d\n", data->path, *data->tex_width, *data->tex_height);
 }
 
 void	ft_get_textures_paths(t_context *context, t_lines *content)
