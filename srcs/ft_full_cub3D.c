@@ -15,6 +15,7 @@
 #define ERR_TEXTURE_INIT_FAILED 13
 #define ERR_MALLOC_CONTEXT 14
 #define ERR_BAD_TEXTURE_FILE 15
+#define ERR_FLOOR_CEILLING_FORMAT 16
 
 #define PLAYER_COLOR 0x20FF15
 #define RAY_COLOR 0xFFDF00
@@ -264,13 +265,13 @@ void	ft_print_type(double step, unsigned int *col, t_vars *vars)
 		ft_get_wall_color(vars->context->animated[vars->context->frames], \
 			vars, step, col);
 	else if (vars->rays->wall_direction == NORTH)
-		ft_get_wall_color(vars->context->north, vars, step, col);
-	else if (vars->rays->wall_direction == SOUTH)
 		ft_get_wall_color(vars->context->south, vars, step, col);
+	else if (vars->rays->wall_direction == SOUTH)
+		ft_get_wall_color(vars->context->north, vars, step, col);
 	else if (vars->rays->wall_direction == WEST)
-		ft_get_wall_color(vars->context->west, vars, step, col);
-	else if (vars->rays->wall_direction == EAST)
 		ft_get_wall_color(vars->context->east, vars, step, col);
+	else if (vars->rays->wall_direction == EAST)
+		ft_get_wall_color(vars->context->west, vars, step, col);
 }
 
 void	ft_print_column(t_vars *vars, int line_start, int line_end)
@@ -322,7 +323,7 @@ void	ft_deep_of_view_explorer(t_vars *vars, int dov)
 			&& ray->tmp_ry < vars->context->map_height
 			&& ray->tmp_ry < WINDOW_HEIGHT
 			&& ray->tmp_rx < WINDOW_WIDTH
-			&& (ft_strchr("1CA", vars->context->map[ray->tmp_ry][ray->tmp_rx])))
+			&& (ft_strchr("1DA", vars->context->map[ray->tmp_ry][ray->tmp_rx])))
 			ray->dov = dov;
 		else
 		{
@@ -449,7 +450,7 @@ void	ft_minimap_pixel_put(t_minimap *minimap, int x, int y, int color)//done
 
 void	ft_confirm_wall_type(t_rays *r, char **map, int x, int y)
 {
-	if (map[y / SQ_SIZE][x / SQ_SIZE] == 'C')
+	if (map[y / SQ_SIZE][x / SQ_SIZE] == 'D')
 		r->wall_type = DOOR;
 	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'A')
 		r->wall_type = ANIMATION;
@@ -676,7 +677,7 @@ void	ft_draw_miniwalls(t_vars *vars)
 		{
 			if (ft_strchr("1A", vars->context->map[y][x]))
 				ft_draw_square_minimap(vars, y, x, WALL_COLOR);
-			else if (ft_strchr("C", vars->context->map[y][x]))
+			else if (ft_strchr("D", vars->context->map[y][x]))
 				ft_draw_square_minimap(vars, y, x, CLOSE_COLOR);
 			x++;
 		}
@@ -749,10 +750,10 @@ int	ft_map_wall(t_vars *vars)
 	map = vars->context->map;
 	player_y = (int)vars->position->player_y;
 	player_x = (int)vars->position->player_x;
-	if (ft_strchr("1AC", map[(player_y + 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1AC", map[(player_y - 22) / 64][(player_x - 22) / 64])
-		|| ft_strchr("1AC", map[(player_y - 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1AC", map[(player_y + 22) / 64][(player_x - 22) / 64]))
+	if (ft_strchr("1AD", map[(player_y + 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1AD", map[(player_y - 22) / 64][(player_x - 22) / 64])
+		|| ft_strchr("1AD", map[(player_y - 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1AD", map[(player_y + 22) / 64][(player_x - 22) / 64]))
 		return (1);
 	return (0);
 }
@@ -833,14 +834,14 @@ void	ft_map_door(t_vars *vars, t_margin *margin)
 	while (offset < 64)
 	{
 		ft_collision(vars, margin, offset);
-		if (map[margin->ipy_add_yo][margin->ipx_add_xo] == 'C')
+		if (map[margin->ipy_add_yo][margin->ipx_add_xo] == 'D')
 		{
 			map[margin->ipy_add_yo][margin->ipx_add_xo] = 'O';
 			return ;
 		}
 		else if (map[margin->ipy_add_yo][margin->ipx_add_xo] == 'O')
 		{
-			map[margin->ipy_add_yo][margin->ipx_add_xo] = 'C';
+			map[margin->ipy_add_yo][margin->ipx_add_xo] = 'D';
 			return ;
 		}
 		offset++;
@@ -987,7 +988,7 @@ void	ft_hooks_activation(t_vars *vars)
 	mlx_hook(md->win, 2, 1L << 0, ft_hold_key, vars);
 	mlx_hook(md->win, 3, 1L << 1, ft_release_key, vars);
 	mlx_hook(md->win, 6, 1L << 6, ft_mouse_interactions, vars);
-	mlx_mouse_hide(md->mlx, md->win);/////////////////////////////////////leak a mort
+	// mlx_mouse_hide(md->mlx, md->win);/////////////////////////////////////leak a mort
 }
 
 /////////////////////////////////////////////////////////////VARS BUILDING
@@ -1239,9 +1240,9 @@ int	ft_potential_map_line(char *str, int len)
 
 	i = 0;
 	// while (str[i] && ft_strchr(" 01NSWE", str[i]))/////////////////mandatory
-	while (str[i] && ft_strchr(" 01CNSWEA", str[i]))////////////////bonus
+	while (str[i] && ft_strchr(" 01NSWEADO", str[i]))////////////////bonus
 		i++;
-	if (i == len)
+	if (i && i == len)
 		return (1);
 	return (0);
 }
@@ -1265,12 +1266,40 @@ int	ft_strs_are_digits(char **strs)
 	return (1);
 }
 
-char	ft_find_valid_fc(char *str)
+int	ft_atoi_rgb_safe(const char *nptr, int *check)
+{
+	long int	i;
+	int			k;
+
+	i = 0;
+	k = 0;
+	if (nptr)
+	{
+		while ((*nptr >= '\t' && *nptr <= '\r') || *nptr == ' ')
+			nptr++;
+		if (*nptr == '-')
+			k = -1;
+		else if (*nptr == '+' || (*nptr >= '0' && *nptr <= '9'))
+			k = 1;
+		if (*nptr == '-' || *nptr == '+')
+			nptr++;
+		while (*nptr && *nptr >= '0' && *nptr <= '9')
+		{
+			i *= 10;
+			i += *nptr - '0';
+			if ((k * i) > 255 || (k * i) < 0)
+				*check = 0;
+			nptr++;
+		}
+	}
+	return (i * k);
+}
+
+char	ft_check_valid_fc(char *str)
 {
 	int		i;
 	char	type;
 	char	**colors;
-	t_rgb	set;
 
 	type = str[0];
 	i = 1;
@@ -1281,18 +1310,20 @@ char	ft_find_valid_fc(char *str)
 	colors = ft_split(str + i, ',');
 	if (ft_strslen(colors) == 3 && ft_strs_are_digits(colors))
 	{
-		set.red = ft_atoi(colors[0]);
-		set.green = ft_atoi(colors[1]);
-		set.blue = ft_atoi(colors[2]);
-		ft_full_free((void **)colors);
-		if (set.red <= 255 || set.green <= 255 || set.blue <= 255)
+		ft_atoi_rgb_safe(colors[0], &i);
+		ft_atoi_rgb_safe(colors[1], &i);
+		ft_atoi_rgb_safe(colors[2], &i);
+		if (i)
+		{
+			ft_full_free((void **)colors);
 			return (type);
+		}
 	}
 	ft_full_free((void **)colors);
 	return ('0');
 }
 
-char	ft_find_valid_nswe(char *str)
+char	ft_check_valid_nswe(char *str)
 {
 	int		i;
 	char	type;
@@ -1311,15 +1342,48 @@ char	ft_find_valid_nswe(char *str)
 	return (type);
 }
 
-char	ft_type_specifier(char *str, int target_size)
+char	ft_check_valid_animation(char *str)
+{
+	int		i;
+	char	type;
+
+	i = 2;
+	type = str[0];
+	while (str[i] == ' ')
+		i++;
+	if (i == 2 || !str[i])
+		return ('0');
+	return (type);
+}
+
+char	ft_check_valid_door(char *str)
+{
+	int		i;
+	char	type;
+
+	i = 2;
+	if ((str[0] == 'D' && str[1] == 'R' && str[2] == ' '))
+		type = str[0];
+	while (str[i] == ' ')
+		i++;
+	if (i == 2 || !str[i])
+		return ('0');
+	return (type);
+}
+
+char	ft_type_specifier(char *str, int target_type)
 {
 	char	type;
 
 	type = '0';
-	if (target_size == 1)
-		type = ft_find_valid_fc(str);
-	else if (target_size == 2)
-		type = ft_find_valid_nswe(str);
+	if (target_type == 1)
+		type = ft_check_valid_fc(str);
+	else if (target_type == 2)
+		type = ft_check_valid_nswe(str);
+	else if (target_type == 3)
+		type = ft_check_valid_door(str);
+	else if (target_type == 4)
+		type = ft_check_valid_animation(str);
 	return (type);
 }
 
@@ -1330,17 +1394,21 @@ char	ft_define_line_type(char *str, int	len)
 	type = '0';
 	if (len)
 	{
-		if (ft_strchr("FC", str[0]) && len > 2)
-			type = ft_type_specifier(str, 1);
-		if (ft_strchr("NSWE", str[0]) && len > 3)
-			type = ft_type_specifier(str, 2);
-		else if (ft_potential_map_line(str, len))
+		if (ft_potential_map_line(str, len))
 			type = 'M';
+		else if (ft_strchr("FC", str[0]) && len > 2)
+			type = ft_type_specifier(str, 1);
+		else if (ft_strchr("D", str[0]) && len > 3)
+			type = ft_type_specifier(str, 3);
+		else if (ft_strchr("A", str[0]) && len > 2)
+			type = ft_type_specifier(str, 4);
+		else if (ft_strchr("NSWE", str[0]) && len > 3)
+			type = ft_type_specifier(str, 2);
 	}
 	return (type);
 }
 
-t_lines	*ft_setup_lst(int size, int fd, int index)
+t_lines	*ft_fill_content(int size, int fd, int index)
 {
 	t_lines	*elem;
 	char	*buffer;
@@ -1360,14 +1428,14 @@ t_lines	*ft_setup_lst(int size, int fd, int index)
 		elem->type = ft_define_line_type(buffer, ft_strlen(buffer));
 		--size;
 		++index;
-		elem->next = ft_setup_lst(size, fd, index);
+		elem->next = ft_fill_content(size, fd, index);
 	}
 	if (++size && --index == 0)
 		buffer = get_next_line(fd);
 	return (elem);
 }
 
-t_lines	*ft_get_all_lines(char *filename, int *err_no)
+t_lines	*ft_init_content(char *filename, int *err_no)
 {
 	t_lines	*lst;
 	int		size;
@@ -1380,7 +1448,7 @@ t_lines	*ft_get_all_lines(char *filename, int *err_no)
 		size = ft_file_lines_counter(fd);
 		close(fd);
 		fd = open(filename, O_RDONLY);
-		lst = ft_setup_lst(size, fd, 0);
+		lst = ft_fill_content(size, fd, 0);
 		close(fd);
 	}
 	else
@@ -1495,7 +1563,7 @@ int	ft_just_enough_paths(t_lines *content, int *tab, int *err_no)
 			tab[3] += 1;
 		content = content->next;
 	}
-	if (tab[0] != 1 && tab[1] != 1 && tab[2] != 1 && tab[3] != 1)
+	if (tab[0] != 1 || tab[1] != 1 || tab[2] != 1 || tab[3] != 1)
 	{
 		if (tab[0] == 0 || tab[1] == 0 || tab[2] == 0 || tab[3] == 0)
 			*err_no = ERR_MISSING_TEXTURE_PATHS;
@@ -1575,6 +1643,11 @@ int	ft_check_format_textures(t_lines *content, int *err_no)
 	return (1);
 }
 
+// int	ft_check_doors(t_lines *content, int *err_no)/////////////////////////////finir ca et le check des animations
+// {
+// 	;
+// }
+
 int	ft_check_content(t_lines *content, int *err_no)
 {
 	if (!ft_just_enough_paths(content, (int [4]){0, 0, 0, 0}, err_no))
@@ -1587,6 +1660,8 @@ int	ft_check_content(t_lines *content, int *err_no)
 		return (0);
 	if (!ft_only_one_position(content, err_no))
 		return (0);
+	// if (!ft_check_doors(content, err_no))
+	// 	return (0);
 	return (1);
 }
 
@@ -1741,7 +1816,7 @@ int	ft_check_if_flawless(char **map, int *err_no)
 		j = 0;
 		while (++j < (len - 1))
 		{
-			if (ft_strchr("NSWE0", map[i][j]))
+			if (ft_strchr("NSWE0DO", map[i][j]))//////////////
 			{
 				if (map[i - 1][j] == '.' || map[i + 1][j] == '.' \
 					|| map[i][j - 1] == '.' || map[i][j + 1] == '.')
@@ -1804,7 +1879,7 @@ void	ft_show_content(t_lines *content)
 	printf("\nBEFORE PARSING\n");
 	while (content)
 	{
-		printf("%s\n", content->line);
+		printf("%c %s\n", content->type, content->line);
 		content = content->next;
 	}
 }
@@ -1831,13 +1906,13 @@ void	ft_unset_context(t_context *context)
 	ft_true_free((void **)&context);
 }
 
-t_context	*ft_cub3d_parsing(char **argv, int *err_no)
+t_context	*ft_cub3d_bonus_parsing(char **argv, int *err_no)
 {
 	t_context	*context;
 	t_lines		*content;
 
 	context = NULL;
-	content = ft_get_all_lines(argv[1], err_no);
+	content = ft_init_content(argv[1], err_no);//done
 	ft_show_content(content);///////////////////////////////////////to remove
 	if (content && ft_check_content(content, err_no))
 	{
@@ -1852,8 +1927,8 @@ t_context	*ft_cub3d_parsing(char **argv, int *err_no)
 			context->map = ft_get_map(content);
 			context->map_height = ft_get_map_size(content);
 			context->map_length = ft_get_greatest_len(content);
-			// if (!ft_check_if_flawless(context->map, err_no))
-			// 	ft_unset_context(context);
+			if (!ft_check_if_flawless(context->map, err_no))
+				ft_unset_context(context);
 		}
 	}
 	ft_unset_content(content);
@@ -1870,6 +1945,8 @@ void	ft_print_cub3d_error_2(int err_no)
 		printf("Failed to malloc parsed datas structure.\n");
 	else if (err_no == ERR_BAD_TEXTURE_FILE)
 		printf("Wrong texture file content.\n");
+	else if (err_no == ERR_FLOOR_CEILLING_FORMAT)
+		printf("Wrong definition of colors for floor or ceilling.\n");
 }
 
 void	ft_print_cub3d_error_1(int err_no)
@@ -1884,13 +1961,13 @@ void	ft_print_cub3d_error_1(int err_no)
 	else if (err_no == ERR_MISSING_MAP)
 		printf("No map defined.\n");
 	else if (err_no == ERR_SOMETHING_BELOW_MAP)
-		printf("Map not at the end of file.\n");
+		printf("Unexpected map content or position.\n");
 	else if (err_no == ERR_MISSING_TEXTURE_PATHS)
 		printf("Missing texture paths.\n");
 	else if (err_no == ERR_TOO_MUCH_TEXTURE_PATHS)
 		printf("Too much texture paths defined.\n");
 	else if (err_no == ERR_MISSING_SURFACES)
-		printf("Floor or ceilling undefined.\n");
+		printf("Missing proper floor or ceilling definition.\n");
 	else if (err_no == ERR_TOO_MUCH_SURFACES)
 		printf("Too much floor or ceilling definition.\n");
 	else if (err_no == ERR_MAP_NOT_CLOSED)
@@ -1930,7 +2007,7 @@ int	main(int ac, char **argv)
 	err_no = 0;
 	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
 	{
-		context = ft_cub3d_parsing(argv, &err_no);
+		context = ft_cub3d_bonus_parsing(argv, &err_no);
 		if (!err_no)
 			vars = ft_get_vars(context, &err_no);
 		if (context && vars && !err_no)
@@ -1938,7 +2015,6 @@ int	main(int ac, char **argv)
 			ft_hooks_activation(vars);
 			mlx_loop_hook(vars->mlx_datas->mlx, ft_cub3d, vars);
 			mlx_loop(vars->mlx_datas->mlx);
-			printf("%f-%f\n",vars->position->player_x,vars->position->player_y);
 			ft_unset_vars(vars);
 		}
 		else
