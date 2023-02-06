@@ -225,7 +225,7 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 	{
 		coeff = (double)(*wall->tex_width / sizeof(int)) / (double)SQ_SIZE;
 		x = (*wall->tex_width / sizeof(int)) - \
-			((int)(rank * coeff) % (*wall->tex_width / sizeof(int)));
+			((int)(rank * coeff) % (*wall->tex_width / sizeof(int))) - 1;
 		y = *(wall->tex_height) * step;
 		color = wall->tex_addr + (y * *(wall->tex_width) \
 			+ x * (wall->bppixels / 8));
