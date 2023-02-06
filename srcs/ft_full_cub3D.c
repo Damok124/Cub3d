@@ -824,34 +824,75 @@ void	ft_collision(t_vars *vars, t_margin *margin, int i)
 	margin->ipy_sub_yo = (pos->player_y - coeff_y) / SQ_SIZE;
 }
 
-void	ft_map_door(t_vars *vars, t_margin *margin)
+int	ft_open_door(t_vars *vars, int x, int y, double ang)
 {
 	char	**map;
-	int		offset;
 
-	offset = 0;
 	map = vars->context->map;
-	while (offset < 64)
+	if (map[y - 1][x] == 'D' && ang > (M_PI * 5) / 4 && ang < (7 * M_PI) / 4)
 	{
-		ft_collision(vars, margin, offset);
-		if (map[margin->ipy_add_yo][margin->ipx_add_xo] == 'D')
-		{
-			map[margin->ipy_add_yo][margin->ipx_add_xo] = 'O';
-			return ;
-		}
-		else if (map[margin->ipy_add_yo][margin->ipx_add_xo] == 'O')
-		{
-			map[margin->ipy_add_yo][margin->ipx_add_xo] = 'D';
-			return ;
-		}
-		offset++;
+		map[y - 1][x] = 'O';
+		return (1);
 	}
+	else if (map[y + 1][x] == 'D' && ang > M_PI / 4 && ang < (3 * M_PI) / 4)
+	{
+		map[y + 1][x] = 'O';
+		return (1);
+	}
+	else if (map[y][x + 1] == 'D' && (ang > (7 * M_PI) / 4 || ang < M_PI / 4))
+	{
+		map[y][x + 1] = 'O';
+		return (1);
+	}
+	else if (map[y][x - 1] == 'D' && ang > (3 * M_PI) / 4
+		&& ang < (5 * M_PI) / 4)
+	{
+		map[y][x - 1] = 'O';
+		return (1);
+	}
+	return (0);
+}
+
+void	ft_close_door(t_vars *vars, int x, int y, double ang)
+{
+	char	**map;
+
+	map = vars->context->map;
+	if (map[y - 1][x] == 'O' && ang > (M_PI * 5) / 4 && ang < (7 * M_PI) / 4
+		&& ((int)(vars->position->player_y) % SQ_SIZE) > (SQ_SIZE / 2))
+		map[y - 1][x] = 'D';
+	else if (map[y + 1][x] == 'O' && ang > M_PI / 4 && ang < (3 * M_PI) / 4
+		&& ((int)(vars->position->player_y) % SQ_SIZE) < (SQ_SIZE / 2))
+		map[y + 1][x] = 'D';
+	else if (map[y][x + 1] == 'O' && (ang > (7 * M_PI) / 4 || ang < M_PI / 4)
+		&& ((int)(vars->position->player_x) % SQ_SIZE) < (SQ_SIZE / 2))
+		map[y][x + 1] = 'D';
+	else if (map[y][x - 1] == 'O' && ang > (3 * M_PI) / 4 \
+		&& ang < (5 * M_PI) / 4 && ((int)(vars->position->player_x) \
+		% SQ_SIZE) > (SQ_SIZE / 2))
+		map[y][x - 1] = 'D';
+}
+
+void	ft_map_door(t_vars *vars)
+{
+	char		**map;
+	int			player_x;
+	int			player_y;
+	double		player_angle;
+
+	player_x = (int)(vars->position->player_x / SQ_SIZE);
+	player_y = (int)(vars->position->player_y / SQ_SIZE);
+	player_angle = vars->position->view_angle;
+	map = vars->context->map;
+	if (ft_open_door(vars, player_x, player_y, player_angle))
+		return ;
+	else
+		ft_close_door(vars, player_x, player_y, player_angle);
 }
 
 void	ft_keyboard_interactions(t_vars *vars)
 {
 	static int	i;
-	t_margin	margin;
 
 	if (vars->keys->left_arr == 1 || vars->keys->right_arr == 1)
 		ft_rotation(vars);
@@ -864,7 +905,7 @@ void	ft_keyboard_interactions(t_vars *vars)
 		i++;
 		if (i != 1)
 			return ;
-		ft_map_door(vars, &margin);
+		ft_map_door(vars);
 	}
 	else
 		i = 0;
