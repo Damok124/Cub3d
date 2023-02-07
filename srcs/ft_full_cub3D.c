@@ -39,6 +39,7 @@
 #define WALL 5
 #define DOOR 6
 #define ANIMATION 7
+#define DOOR_ANIMATION 8
 
 #define SQ_SIZE 64			//size_image
 #define SCALING 4
@@ -96,6 +97,7 @@ typedef struct s_keys {
 }		t_keys;
 
 typedef struct s_rays {
+	int				door;
 	int				r_id;//banque nombre de rayons
 	double			short_x;//banque - valeur la plus petite entre le player et l'impact
 	double			short_y;//banque - valeur la plus petite entre le player et l'impact
@@ -172,6 +174,7 @@ typedef struct s_context {
 	t_rgb		floor;
 	t_rgb		ceiling;
 	char		**map;
+	int			frames_door;
 	int			frames;
 	int			map_height;
 	int			map_length;
@@ -184,6 +187,7 @@ typedef struct s_vars {
 	t_player	*position;
 	t_keys		*keys;
 	t_rays		*rays;
+	t_rays		*rays_door;
 	t_minimap	*minimap;
 }				t_vars;
 
@@ -241,40 +245,85 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 	return (*(unsigned int *)color);
 }
 
-void	ft_get_wall_color(t_textures *texture,t_vars *vars, double step, unsigned int *col)
+unsigned int	ft_get_color_from_xpm_door(t_textures *wall, double step, \
+	double rank, int read_from , t_vars *vars)
 {
-	if (vars->rays->wall_direction == NORTH)
-	*col = ft_get_color_from_xpm(texture, step, \
-		vars->rays->short_x, LEFT);
-	else if (vars->rays->wall_direction == SOUTH)
-	*col = ft_get_color_from_xpm(texture, step, \
-		vars->rays->short_x, RIGHT);
-	else if (vars->rays->wall_direction == WEST)
-	*col = ft_get_color_from_xpm(texture, step, \
-		vars->rays->short_y, RIGHT);
-	else if (vars->rays->wall_direction == EAST)
-	*col = ft_get_color_from_xpm(texture, step, \
-		vars->rays->short_y, LEFT);
+	double	coeff;
+	char	*color;
+	int		y;
+	int		x;
+
+	if (read_from == RIGHT)
+	{
+		coeff = (double)(*wall->tex_width / sizeof(int)) / (double)SQ_SIZE;
+		x = (*wall->tex_width / sizeof(int)) - \
+			((int)(rank * coeff) % (*wall->tex_width / sizeof(int))) - 1;
+		y = *(wall->tex_height) * step + (vars->context->frames_door * 2);
+		if(y >= *(wall->tex_height))
+			return (0xff00ff);
+		color = wall->tex_addr + (y * *(wall->tex_width) \
+			+ x * (wall->bppixels / 8));
+	}
+	else
+	{
+		coeff = (double)(*wall->tex_width / sizeof(int)) / (double)SQ_SIZE;
+		x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
+		y = *(wall->tex_height) * step + (vars->context->frames_door * 2);
+		if(y >= *(wall->tex_height))
+			return (0xff00ff);
+		color = wall->tex_addr + (y * *(wall->tex_width) \
+			+ x * (wall->bppixels / 8));
+	}
+	return (*(unsigned int *)color);
 }
 
-void	ft_print_type(double step, unsigned int *col, t_vars *vars)
+
+void	ft_get_wall_color(t_textures *texture, double step, unsigned int *col, t_rays *rays, t_vars *vars)
 {
-	if (vars->rays->wall_type == DOOR)
-		ft_get_wall_color(vars->context->door, vars, step, col);
-	else if (vars->rays->wall_type == ANIMATION)
-		ft_get_wall_color(vars->context->animated[vars->context->frames], \
-			vars, step, col);
-	else if (vars->rays->wall_direction == NORTH)
-		ft_get_wall_color(vars->context->south, vars, step, col);
-	else if (vars->rays->wall_direction == SOUTH)
-		ft_get_wall_color(vars->context->north, vars, step, col);
-	else if (vars->rays->wall_direction == WEST)
-		ft_get_wall_color(vars->context->east, vars, step, col);
-	else if (vars->rays->wall_direction == EAST)
-		ft_get_wall_color(vars->context->west, vars, step, col);
+	if (rays->wall_direction == NORTH && rays->wall_type != DOOR_ANIMATION)
+	*col = ft_get_color_from_xpm(texture, step, \
+		rays->short_x, LEFT);
+	else if (rays->wall_direction == SOUTH && rays->wall_type != DOOR_ANIMATION)
+	*col = ft_get_color_from_xpm(texture, step, \
+		rays->short_x, RIGHT);
+	else if (rays->wall_direction == WEST && rays->wall_type != DOOR_ANIMATION)
+	*col = ft_get_color_from_xpm(texture, step, \
+		rays->short_y, RIGHT);
+	else if (rays->wall_direction == EAST && rays->wall_type != DOOR_ANIMATION)
+	*col = ft_get_color_from_xpm(texture, step, \
+		rays->short_y, LEFT);
+	else if (rays->wall_direction == NORTH)
+	*col = ft_get_color_from_xpm_door(texture, step, \
+		rays->short_x, LEFT, vars);
+	else if (rays->wall_direction == SOUTH)
+	*col = ft_get_color_from_xpm_door(texture, step, \
+		rays->short_x, RIGHT, vars);
+	else if (rays->wall_direction == WEST)
+	*col = ft_get_color_from_xpm_door(texture, step, \
+		rays->short_y, RIGHT, vars);
+	else if (rays->wall_direction == EAST)
+	*col = ft_get_color_from_xpm_door(texture, step, \
+		rays->short_y, LEFT, vars);
 }
 
-void	ft_print_column(t_vars *vars, int line_start, int line_end)
+void	ft_print_type(double step, unsigned int *col, t_vars *vars, t_rays *rays)
+{
+	if (rays->wall_type == DOOR || rays->wall_type == DOOR_ANIMATION)
+		ft_get_wall_color(vars->context->door, step, col, rays, vars);
+	else if (rays->wall_type == ANIMATION)
+		ft_get_wall_color(vars->context->animated[vars->context->frames / 21], \
+			step, col, rays, vars);
+	else if (rays->wall_direction == NORTH)
+		ft_get_wall_color(vars->context->south, step, col, rays, vars);
+	else if (rays->wall_direction == SOUTH)
+		ft_get_wall_color(vars->context->north, step, col, rays, vars);
+	else if (rays->wall_direction == WEST)
+		ft_get_wall_color(vars->context->east, step, col, rays, vars);
+	else if (rays->wall_direction == EAST)
+		ft_get_wall_color(vars->context->west, step, col, rays, vars);
+}
+
+void	ft_print_column(t_vars *vars, int line_start, int line_end, t_rays *rays)
 {
 	unsigned int	col;
 	double			step;
@@ -283,11 +332,28 @@ void	ft_print_column(t_vars *vars, int line_start, int line_end)
 	pixel = 0;
 	while ((line_start + pixel) < line_end)
 	{
-		step = ((double)pixel / (double)(line_end - line_start));
-		ft_print_type(step, &col, vars);
-		if (col != 0xff00ff)
-			ft_mlx_pixel_put(vars, vars->rays->r_id, (line_start + pixel), col);
 		pixel++;
+		step = ((double)pixel / (double)(line_end - line_start));
+		ft_print_type(step, &col, vars, rays);
+		if (col != 0xff00ff)
+			ft_mlx_pixel_put(vars, rays->r_id, (line_start + pixel), col);
+	}
+}
+
+void	ft_print_door(t_vars *vars, int line_start, int line_end, t_rays *rays)
+{
+	unsigned int	col;
+	double			step;
+	int				pixel;
+
+	pixel = 0;
+	while ((line_start + pixel) < line_end)
+	{
+		pixel++;
+		step = ((double)pixel / (double)(line_end - line_start));
+		ft_print_type(step, &col, vars, rays);
+		if (col != 0xff00ff)
+			ft_mlx_pixel_put(vars, rays->r_id, (line_start + pixel), col);
 	}
 }
 
@@ -298,7 +364,6 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	double	line_end;
 	double	ratio;
 	double	ca;
-
 	ratio = (double)WINDOW_WIDTH / (double)WINDOW_HEIGHT;
 	ca = vars->position->view_angle - rays->r_angle;//fisheye????
 	ft_angle_adjustement(&ca);
@@ -306,14 +371,14 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	line_height = ((SQ_SIZE * (WINDOW_HEIGHT)) / rays->ray_len) * ratio;
 	line_start = ((WINDOW_HEIGHT) / 2) - (line_height / 2);
 	line_end = line_start + line_height;
-	ft_print_column(vars, line_start, line_end);
+	if(rays->door == 1 && rays->wall_type == DOOR_ANIMATION)
+		ft_print_door(vars, line_start, line_end, rays);
+	else
+		ft_print_column(vars, line_start, line_end, rays);
 }
 
-void	ft_deep_of_view_explorer(t_vars *vars, int dov)
+void	ft_ray_impact_wall(t_vars *vars, int dov, t_rays *ray)
 {
-	t_rays	*ray;
-
-	ray = vars->rays;
 	while (ray->dov < dov)
 	{
 		ray->tmp_rx = (int)(ray->impact_x) >> 6;
@@ -333,15 +398,44 @@ void	ft_deep_of_view_explorer(t_vars *vars, int dov)
 		}
 	}
 }
-
-void	ft_parallel_axis(t_vars *vars, int dov)
+void	ft_ray_impact_door(t_vars *vars, int dov, t_rays *ray)
 {
-	vars->rays->impact_x = vars->position->player_x;
-	vars->rays->impact_y = vars->position->player_y;
-	vars->rays->dov = dov;
+	while (ray->dov < dov)
+	{
+		ray->tmp_rx = (int)(ray->impact_x) >> 6;
+		ray->tmp_ry = (int)(ray->impact_y) >> 6;
+		if (ray->tmp_rx >= 0 && ray->tmp_ry >= 0
+			&& ray->tmp_rx < vars->context->map_length
+			&& ray->tmp_ry < vars->context->map_height
+			&& ray->tmp_ry < WINDOW_HEIGHT
+			&& ray->tmp_rx < WINDOW_WIDTH
+			&& ft_strchr("1DEAe", vars->context->map[ray->tmp_ry][ray->tmp_rx]))
+			ray->dov = dov;
+		else
+		{
+			ray->impact_x += ray->xo;
+			ray->impact_y += ray->yo;
+			ray->dov += 1;
+		}
+	}
 }
 
-void	ft_h_not_parallel_axis(t_vars *vars, int coeff)
+void	ft_deep_of_view_explorer(t_vars *vars, int dov, t_rays *rays)
+{
+	if(!rays->door)
+		ft_ray_impact_wall(vars, dov, rays);
+	else if (rays->door == 1)
+		ft_ray_impact_door(vars, dov, rays);
+}
+
+void	ft_parallel_axis(t_vars *vars, int dov, t_rays *rays)
+{
+	rays->impact_x = vars->position->player_x;
+	rays->impact_y = vars->position->player_y;
+	rays->dov = dov;
+}
+
+void	ft_h_not_parallel_axis(t_vars *vars, int coeff, t_rays *rays)
 {
 	double	corr;
 
@@ -349,14 +443,14 @@ void	ft_h_not_parallel_axis(t_vars *vars, int coeff)
 		corr = SQ_SIZE;
 	else
 		corr = -0.0001;
-	vars->rays->impact_y = (((int)vars->position->player_y >> 6) << 6) + corr;
-	vars->rays->impact_x = (vars->position->player_y - vars->rays->impact_y) \
-		* vars->rays->a_tan + vars->position->player_x;
-	vars->rays->yo = SQ_SIZE * coeff;
-	vars->rays->xo = -vars->rays->yo * vars->rays->a_tan;
+	rays->impact_y = (((int)vars->position->player_y >> 6) << 6) + corr;
+	rays->impact_x = (vars->position->player_y - rays->impact_y) \
+		* rays->a_tan + vars->position->player_x;
+	rays->yo = SQ_SIZE * coeff;
+	rays->xo = -rays->yo * rays->a_tan;
 }
 
-void	ft_v_not_parallel_axis(t_vars *vars, int coeff)
+void	ft_v_not_parallel_axis(t_vars *vars, int coeff, t_rays *rays)
 {
 	double	corr;
 
@@ -364,51 +458,49 @@ void	ft_v_not_parallel_axis(t_vars *vars, int coeff)
 		corr = SQ_SIZE;
 	else
 		corr = -0.0001;
-	vars->rays->impact_x = (((int)vars->position->player_x >> 6) << 6) + corr;
-	vars->rays->impact_y = (vars->position->player_x - vars->rays->impact_x) \
-		* vars->rays->n_tan + vars->position->player_y;
-	vars->rays->xo = SQ_SIZE * coeff;
-	vars->rays->yo = -vars->rays->xo * vars->rays->n_tan;
+	rays->impact_x = (((int)vars->position->player_x >> 6) << 6) + corr;
+	rays->impact_y = (vars->position->player_x - rays->impact_x) \
+		* rays->n_tan + vars->position->player_y;
+	rays->xo = SQ_SIZE * coeff;
+	rays->yo = -rays->xo * rays->n_tan;
 }
 
-void	ft_horizontal_axis_intersection(t_vars *vars)
+void	ft_horizontal_axis_intersection(t_vars *vars, t_rays *rays)
 {
 	int	dov;
 
-	vars->rays->dov = 0;
+	rays->dov = 0;
 	if (vars->context->map_height < vars->context->map_length)
-		dov = vars->context->map_length;
+		dov = vars->context->map_length * 2;
 	else
-		dov = vars->context->map_height;
-	dov = 4000;
-	if (vars->rays->r_angle == 0 || vars->rays->r_angle == PI)
-		ft_parallel_axis(vars, dov);
-	else if (vars->rays->r_angle > PI)
-		ft_h_not_parallel_axis(vars, -1);
-	else if (vars->rays->r_angle < PI)
-		ft_h_not_parallel_axis(vars, 1);
-	ft_deep_of_view_explorer(vars, dov);
+		dov = vars->context->map_height * 2;
+	if (rays->r_angle == 0 || rays->r_angle == PI)
+		ft_parallel_axis(vars, dov, rays);
+	else if (rays->r_angle > PI)
+		ft_h_not_parallel_axis(vars, -1, rays);
+	else if (rays->r_angle < PI)
+		ft_h_not_parallel_axis(vars, 1, rays);
+	ft_deep_of_view_explorer(vars, dov, rays);
 }
 
-void	ft_vertical_axis_intersection(t_vars *vars)
+void	ft_vertical_axis_intersection(t_vars *vars, t_rays *rays)
 {
 	double	angle;
 	int		dov;
 
 	if (vars->context->map_height < vars->context->map_length)
-		dov = vars->context->map_length;
+		dov = vars->context->map_length * 2;
 	else
-		dov = vars->context->map_height;
-	dov = 4000;
-	angle = vars->rays->r_angle;
-	vars->rays->dov = 0;
+		dov = vars->context->map_height * 2;
+	angle = rays->r_angle;
+	rays->dov = 0;
 	if (angle == (PI / 2) || angle == (3 * PI / 2))
-		ft_parallel_axis(vars, dov);
+		ft_parallel_axis(vars, dov, rays);
 	else if (angle > (PI / 2) && angle < (3 * PI / 2))
-		ft_v_not_parallel_axis(vars, -1);
+		ft_v_not_parallel_axis(vars, -1, rays);
 	else if (angle < (PI / 2) || angle > (3 * PI / 2))
-		ft_v_not_parallel_axis(vars, 1);
-	ft_deep_of_view_explorer(vars, dov);
+		ft_v_not_parallel_axis(vars, 1, rays);
+	ft_deep_of_view_explorer(vars, dov, rays);
 }
 
 void	ft_wall_identification(t_player *position, t_rays *rays)
@@ -452,51 +544,85 @@ void	ft_confirm_wall_type(t_rays *r, char **map, int x, int y)
 {
 	if (map[y / SQ_SIZE][x / SQ_SIZE] == 'D')
 		r->wall_type = DOOR;
+	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'E' || map[y / SQ_SIZE][x / SQ_SIZE] == 'e')
+		r->wall_type = DOOR_ANIMATION;
 	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'A')
 		r->wall_type = ANIMATION;
 	else
 		r->wall_type = WALL;
 }
 
-void	ft_animate_frames(t_vars *vars)
+void	ft_animate_frames_door(int *frames)
 {
-	static int	i;
 	static int	j;
 
 	if (!j)
 		j = 1;
-	if (i++ / 4)
+	if(*frames == 59)
+		j = -1;
+	else if (*frames == 0)
+		j = 1;
+	*frames += j;
+}
+
+void	ft_animate_frames(int *frames)
+{
+	static int	j;
+
+	if (!j)
+		j = 1;
+	if (*frames > 60 && j == 1)
+		j = -1;
+	else if (*frames < 1 && j == -1)
+		j = 1;
+	*frames += j;
+}
+
+void	ft_draw_environment(t_vars *vars, t_rays *rays)
+{
+	rays->r_id = 0;
+	rays->door = 0;
+	rays->r_angle = vars->position->view_angle - (RADIAN * 30);
+	ft_angle_adjustement(&rays->r_angle);
+	while (rays->r_id < WINDOW_WIDTH)
 	{
-		i = 0;
-		vars->context->frames += j;
-		if (vars->context->frames > 1 && j == 1)
-			j = -1;
-		else if (vars->context->frames < 1 && j == -1)
-			j = 1;
+		rays->a_tan = -1 / tan(rays->r_angle);
+		rays->n_tan = -tan(rays->r_angle);
+		ft_horizontal_axis_intersection(vars, rays);
+		rays->short_x = rays->impact_x;
+		rays->short_y = rays->impact_y;
+		ft_vertical_axis_intersection(vars, rays);
+		ft_wall_identification(vars->position, rays);
+		ft_confirm_wall_type(rays, vars->context->map, \
+			(int)rays->short_x, (int)rays->short_y);
+		ft_3d_display(vars, rays);
+		ft_angle_adjustement(&rays->r_angle);
+		rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
+		rays->r_id++;
 	}
 }
 
-void	ft_draw_environment(t_vars *vars)
+void	ft_draw_door(t_vars *vars, t_rays *rays)
 {
-	vars->rays->r_id = 0;
-	vars->rays->r_angle = vars->position->view_angle - (RADIAN * 30);
-	ft_angle_adjustement(&vars->rays->r_angle);
-	ft_animate_frames(vars);
-	while (vars->rays->r_id < WINDOW_WIDTH)
+	rays->r_id = 0;
+	rays->door = 1;
+	rays->r_angle = vars->position->view_angle - (RADIAN * 30);
+	ft_angle_adjustement(&rays->r_angle);
+	while (rays->r_id < WINDOW_WIDTH)
 	{
-		vars->rays->a_tan = -1 / tan(vars->rays->r_angle);
-		vars->rays->n_tan = -tan(vars->rays->r_angle);
-		ft_horizontal_axis_intersection(vars);
-		vars->rays->short_x = vars->rays->impact_x;
-		vars->rays->short_y = vars->rays->impact_y;
-		ft_vertical_axis_intersection(vars);
-		ft_wall_identification(vars->position, vars->rays);
-		ft_confirm_wall_type(vars->rays, vars->context->map, \
-			(int)vars->rays->short_x, (int)vars->rays->short_y);
-		ft_3d_display(vars, vars->rays);
-		ft_angle_adjustement(&vars->rays->r_angle);
-		vars->rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
-		vars->rays->r_id++;
+		rays->a_tan = -1 / tan(rays->r_angle);
+		rays->n_tan = -tan(rays->r_angle);
+		ft_horizontal_axis_intersection(vars, rays);
+		rays->short_x = rays->impact_x;
+		rays->short_y = rays->impact_y;
+		ft_vertical_axis_intersection(vars, rays);
+		ft_wall_identification(vars->position, rays);
+		ft_confirm_wall_type(rays, vars->context->map, \
+			(int)rays->short_x, (int)rays->short_y);
+		ft_3d_display(vars, rays);
+		ft_angle_adjustement(&rays->r_angle);
+		rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
+		rays->r_id++;
 	}
 }
 
@@ -519,23 +645,21 @@ void	ft_pixel_around_impacts(t_vars *vars, int size, unsigned int color)
 	}
 }
 
-void	ft_draw_ray_hit(t_vars *vars, unsigned int color)
+void	ft_draw_ray_hit(t_vars *vars, unsigned int color, t_rays *rays)
 {
 	t_player	*pos;
-	t_rays		*r;
 
 	pos = vars->position;
-	r = vars->rays;
-	if (ft_distance(pos->player_x, pos->player_y, r->impact_x, r->impact_y)
-		< ft_distance(pos->player_x, pos->player_y, r->short_x, r->short_y))
+	if (ft_distance(pos->player_x, pos->player_y, rays->impact_x, rays->impact_y)
+		< ft_distance(pos->player_x, pos->player_y, rays->short_x, rays->short_y))
 	{
-		r->short_x = r->impact_x;
-		r->short_y = r->impact_y;
+		rays->short_x = rays->impact_x;
+		rays->short_y = rays->impact_y;
 	}
 	ft_pixel_around_impacts(vars, 3, color);
 }
 
-void	ft_draw_rays_minimap(t_vars *vars)
+void	ft_draw_rays_minimap(t_vars *vars, t_rays *rays)
 {
 	vars->rays->r_id = 0;
 	vars->rays->r_angle = vars->position->view_angle - (RADIAN * 30);
@@ -544,11 +668,11 @@ void	ft_draw_rays_minimap(t_vars *vars)
 		ft_angle_adjustement(&vars->rays->r_angle);
 		vars->rays->a_tan = -1 / tan(vars->rays->r_angle);
 		vars->rays->n_tan = -tan(vars->rays->r_angle);
-		ft_horizontal_axis_intersection(vars);
+		ft_horizontal_axis_intersection(vars, rays);
 		vars->rays->short_x = vars->rays->impact_x;
 		vars->rays->short_y = vars->rays->impact_y;
-		ft_vertical_axis_intersection(vars);
-		ft_draw_ray_hit(vars, RAY_COLOR);
+		ft_vertical_axis_intersection(vars, rays);
+		ft_draw_ray_hit(vars, RAY_COLOR, rays);
 		vars->rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
 		vars->rays->r_id++;
 	}
@@ -695,7 +819,7 @@ void	ft_draw_minimap(t_vars *vars)
 		&vars->minimap->bits_per_pixel, &vars->minimap->line_length, \
 		&vars->minimap->endian);
 	ft_draw_miniwalls(vars);
-	ft_draw_rays_minimap(vars);
+	ft_draw_rays_minimap(vars, vars->rays);
 	ft_draw_minispaces(vars);
 	ft_draw_player(vars);
 	ft_put_minimap_on_display(vars, vars->position, vars->minimap);
@@ -831,23 +955,27 @@ int	ft_open_door(t_vars *vars, int x, int y, double ang)
 	map = vars->context->map;
 	if (map[y - 1][x] == 'D' && ang > (M_PI * 5) / 4 && ang < (7 * M_PI) / 4)
 	{
-		map[y - 1][x] = 'O';
+		vars->context->frames_door = 1;
+		map[y - 1][x] = 'E';
 		return (1);
 	}
 	else if (map[y + 1][x] == 'D' && ang > M_PI / 4 && ang < (3 * M_PI) / 4)
 	{
-		map[y + 1][x] = 'O';
+		vars->context->frames_door = 1;
+		map[y + 1][x] = 'E';
 		return (1);
 	}
 	else if (map[y][x + 1] == 'D' && (ang > (7 * M_PI) / 4 || ang < M_PI / 4))
 	{
-		map[y][x + 1] = 'O';
+		vars->context->frames_door = 1;
+		map[y][x + 1] = 'E';
 		return (1);
 	}
 	else if (map[y][x - 1] == 'D' && ang > (3 * M_PI) / 4
 		&& ang < (5 * M_PI) / 4)
 	{
-		map[y][x - 1] = 'O';
+		vars->context->frames_door = 1;
+		map[y][x - 1] = 'E';
 		return (1);
 	}
 	return (0);
@@ -860,17 +988,29 @@ void	ft_close_door(t_vars *vars, int x, int y, double ang)
 	map = vars->context->map;
 	if (map[y - 1][x] == 'O' && ang > (M_PI * 5) / 4 && ang < (7 * M_PI) / 4
 		&& ((int)(vars->position->player_y) % SQ_SIZE) > (SQ_SIZE / 2))
-		map[y - 1][x] = 'D';
+	{
+		vars->context->frames_door = 59;
+		map[y - 1][x] = 'e';
+	}
 	else if (map[y + 1][x] == 'O' && ang > M_PI / 4 && ang < (3 * M_PI) / 4
 		&& ((int)(vars->position->player_y) % SQ_SIZE) < (SQ_SIZE / 2))
-		map[y + 1][x] = 'D';
+	{
+		vars->context->frames_door = 59;
+		map[y + 1][x] = 'e';
+	}
 	else if (map[y][x + 1] == 'O' && (ang > (7 * M_PI) / 4 || ang < M_PI / 4)
 		&& ((int)(vars->position->player_x) % SQ_SIZE) < (SQ_SIZE / 2))
-		map[y][x + 1] = 'D';
+	{
+		vars->context->frames_door = 59;
+		map[y][x + 1] = 'e';
+	}
 	else if (map[y][x - 1] == 'O' && ang > (3 * M_PI) / 4 \
 		&& ang < (5 * M_PI) / 4 && ((int)(vars->position->player_x) \
 		% SQ_SIZE) > (SQ_SIZE / 2))
-		map[y][x - 1] = 'D';
+	{
+		vars->context->frames_door = 59;
+		map[y][x - 1] = 'e';
+	}
 }
 
 void	ft_map_door(t_vars *vars)
@@ -953,9 +1093,31 @@ void	ft_draw_floor(t_context *context, t_vars *vars)
 	}
 }
 
+void	ft_parse_map_to_close(t_vars *vars)
+{
+	int x; 
+	int y;
+
+	y = 0;
+	while(y < vars->context->map_height)
+	{
+		x = 0;
+		while(x < vars->context->map_length)
+		{
+			if(vars->context->map[y][x] == 'E')
+				vars->context->map[y][x] = 'O';
+			else if(vars->context->map[y][x] == 'e')
+				vars->context->map[y][x] = 'D';
+			x++;
+		}
+		y++;
+	}
+}
+
 int	ft_cub3d(t_vars *vars)
 {
 	t_mlx_datas	*md;
+	static int i;
 
 	md = vars->mlx_datas;
 	if (md->img)
@@ -966,9 +1128,24 @@ int	ft_cub3d(t_vars *vars)
 	ft_draw_ceilling(vars->context, vars);
 	ft_draw_floor(vars->context, vars);
 	ft_keyboard_interactions(vars);
-	ft_draw_environment(vars);
+	ft_animate_frames(&vars->context->frames);
+	ft_draw_environment(vars,vars->rays);
+	if(vars->keys->e || vars->context->frames_door != 60 || vars->context->frames_door != 0 )
+	{
+		ft_animate_frames_door(&vars->context->frames_door);
+		i++;
+		ft_draw_door(vars,vars->rays_door);
+	}
 	ft_draw_minimap(vars);
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
+	if(i > 1)
+		i++;
+	if(i / 60 && (vars->context->frames_door == 59 || vars->context->frames_door == 0))
+	{
+		ft_parse_map_to_close(vars);
+		vars->context->frames_door = 0;
+		i = 0;
+	}
 	return (1);
 }
 
@@ -1143,7 +1320,11 @@ t_vars	*ft_init_vars(t_context *context)
 		vars->rays = (t_rays *)malloc(sizeof(t_rays));
 		if (!vars->rays)
 			return (NULL);
+		vars->rays_door = (t_rays *)malloc(sizeof(t_rays));
+		if (!vars->rays_door)
+			return (NULL);
 		vars->context = context;
+		vars->context->frames_door = 0;
 		vars->context->frames = 0;
 		vars->keys = ft_init_keys();
 		vars->minimap = ft_init_minimap();
@@ -1196,10 +1377,10 @@ void	ft_get_textures_paths(t_context *context, t_lines *content)
 		content = content->next;
 	}
 	//brute bonus
-	context->door->path = ft_strdup("./textures/t_gungeon_door.xpm");
-	context->animated[0]->path = ft_strdup("./textures/flame1.xpm");
-	context->animated[1]->path = ft_strdup("./textures/flame2.xpm");
-	context->animated[2]->path = ft_strdup("./textures/flame3.xpm");
+	context->door->path = ft_strdup("/nfs/homes/alprival/Cub3d/textures/t_gungeon_door.xpm");
+	context->animated[0]->path = ft_strdup("/nfs/homes/alprival/Cub3d/textures/flame1.xpm");
+	context->animated[1]->path = ft_strdup("/nfs/homes/alprival/Cub3d/textures/flame2.xpm");
+	context->animated[2]->path = ft_strdup("/nfs/homes/alprival/Cub3d/textures/flame3.xpm");
 }
 
 void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no)
