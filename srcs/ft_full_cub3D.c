@@ -1215,8 +1215,11 @@ void	ft_set_texture(t_textures *data, t_mlx_datas *md)
 {
 	data->tex_img = mlx_xpm_file_to_image(md->mlx, \
 		data->path, data->tex_width, data->tex_height);
-	data->tex_addr = mlx_get_data_addr(data->tex_img, &data->bppixels, \
-		data->tex_width, &data->endian);
+	if (data->tex_img)
+		data->tex_addr = mlx_get_data_addr(data->tex_img, &data->bppixels, \
+			data->tex_width, &data->endian);
+	else
+		data->tex_addr = NULL;
 }
 
 void	ft_get_textures_paths(t_context *context, t_lines *content)
@@ -2066,21 +2069,27 @@ void	ft_print_cub3d_error_1(int err_no)
 	ft_print_cub3d_error_2(err_no);
 }
 
+void	ft_destroy_safely(t_textures *texture, t_vars *vars)
+{
+	if (texture)
+		mlx_destroy_image(vars->mlx_datas->mlx, texture);
+}
+
 void	ft_unset_vars(t_vars *vars)
 {
 	t_context	*context;
 
 	context = vars->context;
-	mlx_destroy_image(vars->mlx_datas->mlx, context->north->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, context->south->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, context->east->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, context->west->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, context->animated[0]->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, context->animated[1]->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, context->animated[2]->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, context->door->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
-	mlx_destroy_image(vars->mlx_datas->mlx, vars->mlx_datas->img);
+	ft_destroy_safely(context->north->tex_img, vars);
+	ft_destroy_safely(context->south->tex_img, vars);
+	ft_destroy_safely(context->east->tex_img, vars);
+	ft_destroy_safely(context->west->tex_img, vars);
+	ft_destroy_safely(context->animated[0]->tex_img, vars);
+	ft_destroy_safely(context->animated[1]->tex_img, vars);
+	ft_destroy_safely(context->animated[2]->tex_img, vars);
+	ft_destroy_safely(context->door->tex_img, vars);
+	ft_destroy_safely(vars->minimap->img, vars);
+	ft_destroy_safely(vars->mlx_datas->img, vars);
 	mlx_destroy_window(vars->mlx_datas->mlx, vars->mlx_datas->win);
 	mlx_destroy_display(vars->mlx_datas->mlx);
 	ft_unset_context(context);
@@ -2094,6 +2103,23 @@ void	ft_unset_vars(t_vars *vars)
 	ft_true_free((void **)&vars);
 }
 
+void	if_not_err_no(t_vars *vars, t_context *context, int err_no)
+{
+	vars = ft_get_vars(context, &err_no);
+	if (context && vars && !err_no)
+	{
+		ft_hooks_activation(vars);
+		mlx_loop_hook(vars->mlx_datas->mlx, ft_cub3d, vars);
+		mlx_loop(vars->mlx_datas->mlx);
+		ft_unset_vars(vars);
+	}
+	else
+	{
+		ft_unset_vars(vars);
+		ft_print_cub3d_error_1(err_no);
+	}
+}
+
 int	main(int ac, char **argv)
 {
 	int			err_no;
@@ -2101,20 +2127,12 @@ int	main(int ac, char **argv)
 	t_vars		*vars;
 
 	err_no = 0;
+	vars = NULL;
 	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
 	{
 		context = ft_cub3d_bonus_parsing(argv, &err_no);
 		if (!err_no)
-			vars = ft_get_vars(context, &err_no);
-		if (context && vars && !err_no)
-		{
-			ft_hooks_activation(vars);
-			mlx_loop_hook(vars->mlx_datas->mlx, ft_cub3d, vars);
-			mlx_loop(vars->mlx_datas->mlx);
-			ft_unset_vars(vars);
-		}
-		else
-			ft_print_cub3d_error_1(err_no);
+			if_not_err_no(vars, context, err_no);
 	}
 	else
 		write(2, "Error.\nWrong arguments.\n", 24);

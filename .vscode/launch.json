@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "/nfs/homes/alprival/Cub3d/cub3D",
-			"args": ["/nfs/homes/alprival/Cub3d/maps/pop.cub"],
+			"args": ["/nfs/homes/alprival/Cub3d_bonus/maps/error/no_player.cub"],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",
 			"environment": [],
