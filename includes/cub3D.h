@@ -6,7 +6,7 @@
 /*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/02/07 18:57:06 by alprival         ###   ########.fr       */
+/*   Updated: 2023/02/08 16:04:17 by alprival         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,58 +23,57 @@
 # include "libft.h"
 # include "ft_printf.h"
 
+# define ERR_BAD_FD 1
+# define ERR_MISSING_START_POSITION 2
+# define ERR_TOO_MUCH_START_POSITION 3
+# define ERR_MISSING_MAP 4
+# define ERR_SOMETHING_BELOW_MAP 5
+# define ERR_MISSING_TEXTURE_PATHS 6
+# define ERR_TOO_MUCH_TEXTURE_PATHS 7
+# define ERR_MISSING_SURFACES 8
+# define ERR_TOO_MUCH_SURFACES 9
+# define ERR_MAP_NOT_CLOSED 10
+# define ERR_UNREADABLE_PATH 11
+# define ERR_EMPTY_FILE 12
+# define ERR_TEXTURE_INIT_FAILED 13
+# define ERR_MALLOC_CONTEXT 14
+# define ERR_BAD_TEXTURE_FILE 15
+# define ERR_FLOOR_CEILLING_FORMAT 16
 
-#define ERR_BAD_FD 1
-#define ERR_MISSING_START_POSITION 2
-#define ERR_TOO_MUCH_START_POSITION 3
-#define ERR_MISSING_MAP 4
-#define ERR_SOMETHING_BELOW_MAP 5
-#define ERR_MISSING_TEXTURE_PATHS 6
-#define ERR_TOO_MUCH_TEXTURE_PATHS 7
-#define ERR_MISSING_SURFACES 8
-#define ERR_TOO_MUCH_SURFACES 9
-#define ERR_MAP_NOT_CLOSED 10
-#define ERR_UNREADABLE_PATH 11
-#define ERR_EMPTY_FILE 12
-#define ERR_TEXTURE_INIT_FAILED 13
-#define ERR_MALLOC_CONTEXT 14
-#define ERR_BAD_TEXTURE_FILE 15
-#define ERR_FLOOR_CEILLING_FORMAT 16
+# define PLAYER_COLOR 0x20FF15
+# define RAY_COLOR 0xFFDF00
+# define SPACE_COLOR 0x302010
+# define START_COLOR 0x504030
+# define WALL_COLOR 0xA090A0
+# define CLOSE_COLOR 0xC01030
+# define OPEN_COLOR 0x3050C0
+# define EXT_COLOR 0
 
-#define PLAYER_COLOR 0x20FF15
-#define RAY_COLOR 0xFFDF00
-#define SPACE_COLOR 0x302010
-#define START_COLOR 0x504030
-#define WALL_COLOR 0xA090A0
-#define CLOSE_COLOR 0xC01030
-#define OPEN_COLOR 0x3050C0
-#define EXT_COLOR 0
+# define LEFT 1
+# define RIGHT -1
 
-#define LEFT 1
-#define RIGHT -1
+# define X 0
+# define Y 1
 
-#define X 0
-#define Y 1
+# define NORTH 1
+# define SOUTH 2
+# define WEST 3
+# define EAST 4
+# define WALL 5
+# define DOOR 6
+# define ANIMATION 7
+# define DOOR_ANIMATION 8
+# define DOOR_CLOSED 9
 
-#define NORTH 1
-#define SOUTH 2
-#define WEST 3
-#define EAST 4
-#define WALL 5
-#define DOOR 6
-#define ANIMATION 7
-#define DOOR_ANIMATION 8
-#define DOOR_CLOSED 9
-
-#define SQ_SIZE 64			//size_image
-#define SCALING 4
-#define MINIZONE 9
-#define SPEED 5		//speed
-#define RSPEED 0.06 		//rotation speed
-#define RADIAN 0.0174533 	// one degree in radian
-#define PI 3.1415926535
-#define DOV 2000
-#define COLLISION 20
+# define SQ_SIZE 64
+# define SCALING 4
+# define MINIZONE 9
+# define SPEED 5
+# define RSPEED 0.06
+# define RADIAN 0.0174533
+# define PI 3.1415926535
+# define DOV 2000
+# define COLLISION 20
 
 enum {
 	ON_KEYDOWN = 2,
@@ -123,17 +122,17 @@ typedef struct s_keys {
 
 typedef struct s_rays {
 	int				door;
-	int				r_id;//banque nombre de rayons
-	double			short_x;//banque - valeur la plus petite entre le player et l'impact
-	double			short_y;//banque - valeur la plus petite entre le player et l'impact
-	unsigned int	color;//banque - type de mur (ou couleur pour l'instant)
-	double			ray_len;//banque - taille du rayon (et donc la taille du mur)
-	int				dov;//deep of view
-	int				tmp_rx;//variable temporaire de x
-	int				tmp_ry;//variable temporaire de y
-	double			impact_x;//point d'impact x
-	double			impact_y;//point d'impact y
-	double			r_angle;//angle du rayon
+	int				r_id;
+	double			short_x;
+	double			short_y;
+	unsigned int	color;
+	double			ray_len;
+	int				dov;
+	int				tmp_rx;
+	int				tmp_ry;
+	double			impact_x;
+	double			impact_y;
+	double			r_angle;
 	double			xo;
 	double			yo;
 	double			a_tan;
@@ -157,9 +156,9 @@ typedef struct s_player
 {
 	double		player_x;
 	double		player_y;
-	double		pdx;//voir plus tard
-	double		pdy;//voir plus tard
-	double		view_angle;//direction du champs de vision
+	double		pdx;
+	double		pdy;
+	double		view_angle;
 }				t_player;
 
 typedef struct s_minimap
@@ -201,7 +200,7 @@ typedef struct s_context {
 	char		**map;
 	int			frames_door;
 	int			frames;
-	double 		step;
+	double		step;
 	int			map_height;
 	int			map_length;
 	char		orientation;
