@@ -155,6 +155,7 @@ void	ft_print_column(t_vars *vars, int line_start,
 	unsigned int	col;
 	int				pixel;
 
+	vars->context->step = 0;
 	pixel = 0;
 	while ((line_start + pixel) < line_end \
 			&& (vars->context->step * rays->short_y * 0.8) < WINDOW_HEIGHT)
@@ -1952,6 +1953,26 @@ void	ft_show_content(t_lines *content)
 	}
 }
 
+void	ft_unset_context_animated(t_context *context)
+{
+	ft_true_free((void **)&context->animated[0]->path);
+	ft_true_free((void **)&context->animated[1]->path);
+	ft_true_free((void **)&context->animated[2]->path);
+	ft_true_free((void **)&context->door->path);
+	ft_true_free((void **)&context->animated[0]->tex_width);
+	ft_true_free((void **)&context->animated[1]->tex_width);
+	ft_true_free((void **)&context->animated[2]->tex_width);
+	ft_true_free((void **)&context->door->tex_width);
+	ft_true_free((void **)&context->animated[0]->tex_height);
+	ft_true_free((void **)&context->animated[1]->tex_height);
+	ft_true_free((void **)&context->animated[2]->tex_height);
+	ft_true_free((void **)&context->door->tex_height);
+	ft_true_free((void **)&context->animated[0]);
+	ft_true_free((void **)&context->animated[1]);
+	ft_true_free((void **)&context->animated[2]);
+	ft_true_free((void **)&context->door);
+}
+
 void	ft_unset_context(t_context *context)
 {
 	ft_true_free((void **)&context->north->path);
@@ -1971,6 +1992,7 @@ void	ft_unset_context(t_context *context)
 	ft_true_free((void **)&context->east);
 	ft_true_free((void **)&context->west);
 	ft_full_free((void **)context->map);
+	ft_unset_context_animated(context);
 	ft_true_free((void **)&context);
 }
 
@@ -2046,19 +2068,28 @@ void	ft_print_cub3d_error_1(int err_no)
 
 void	ft_unset_vars(t_vars *vars)
 {
-	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->north->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->south->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->east->tex_img);
-	mlx_destroy_image(vars->mlx_datas->mlx, vars->context->west->tex_img);
+	t_context	*context;
+
+	context = vars->context;
+	mlx_destroy_image(vars->mlx_datas->mlx, context->north->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, context->south->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, context->east->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, context->west->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, context->animated[0]->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, context->animated[1]->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, context->animated[2]->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, context->door->tex_img);
+	mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
 	mlx_destroy_image(vars->mlx_datas->mlx, vars->mlx_datas->img);
 	mlx_destroy_window(vars->mlx_datas->mlx, vars->mlx_datas->win);
 	mlx_destroy_display(vars->mlx_datas->mlx);
-	ft_unset_context(vars->context);
+	ft_unset_context(context);
 	ft_true_free((void **)&vars->minimap);
 	ft_true_free((void **)&vars->mlx_datas->mlx);
 	ft_true_free((void **)&vars->keys);
 	ft_true_free((void **)&vars->mlx_datas);
 	ft_true_free((void **)&vars->position);
+	ft_true_free((void **)&vars->rays_door);
 	ft_true_free((void **)&vars->rays);
 	ft_true_free((void **)&vars);
 }
