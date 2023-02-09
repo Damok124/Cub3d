@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3D.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alprival <alprival@student.42.fr>          +#+  +:+       +#+        */
+/*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/02/08 16:37:50 by alprival         ###   ########.fr       */
+/*   Updated: 2023/02/09 16:06:18 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,8 @@
 # define ERR_MALLOC_CONTEXT 14
 # define ERR_BAD_TEXTURE_FILE 15
 # define ERR_FLOOR_CEILLING_FORMAT 16
+# define ERR_WRONG_FORMAT_ANI 17
+# define ERR_WRONG_FORMAT_SURFACES 18
 
 # define PLAYER_COLOR 0x20FF15
 # define RAY_COLOR 0xFFDF00

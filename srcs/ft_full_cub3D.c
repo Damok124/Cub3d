@@ -838,7 +838,7 @@ void	ft_close_door(t_vars *vars, int x, int y, double ang)
 
 void	ft_map_door(t_vars *vars)
 {
-	char		**map;
+	// char		**map;
 	int			player_x;
 	int			player_y;
 	double		player_angle;
@@ -846,7 +846,7 @@ void	ft_map_door(t_vars *vars)
 	player_x = (int)(vars->position->player_x / SQ_SIZE);
 	player_y = (int)(vars->position->player_y / SQ_SIZE);
 	player_angle = vars->position->view_angle;
-	map = vars->context->map;
+	// map = vars->context->map;
 	if (ft_open_door(vars, player_x, player_y, player_angle))
 		return ;
 	else
@@ -1607,6 +1607,23 @@ void	ft_unset_content(t_lines *content)
 	}
 }
 
+int	ft_valid_format_surfaces(t_lines *content, int *err_no)
+{
+	while (content)
+	{
+		if (content->type == 'F' || content->type == 'c')
+		{
+			if (!ft_isdigit(content->line[ft_strlen(content->line)]))
+			{
+				*err_no = ERR_WRONG_FORMAT_SURFACES;
+				return (0);
+			}
+		}
+		content = content->next;
+	}
+	return (1);
+}
+
 int	ft_just_enough_surfaces(t_lines *content, int *tab, int *err_no)
 {
 	while (content && content->type != 'M')
@@ -1717,6 +1734,25 @@ void	ft_check_one_texture(char *path, int *err_no)
 	ft_true_free((void **)&path);
 }
 
+void	ft_check_line_ending(char *line, char c, int *err_no)
+{
+	int	len;
+	int	i;
+
+	len = ft_strlen(line);
+	i = len;
+	if (len > 2)
+	{
+		while (i && !(*err_no))
+		{
+			if (line[i] == c)
+				i--;
+			if (i == len || i < (len -2))
+				*err_no = ERR_WRONG_FORMAT_ANI;
+		}
+	}
+}
+
 int	ft_check_format_textures(t_lines *content, int *err_no)
 {
 	char	*path;
@@ -1725,19 +1761,20 @@ int	ft_check_format_textures(t_lines *content, int *err_no)
 
 	path = NULL;
 	ani_paths = NULL;
-	while (content)
+	while (content && !(*err_no))
 	{
 		i = -1;
 		if (ft_strchr("NSWEDA", content->type))
 			path = ft_strtrim(content->line + 3, " ");
-		if (content->type == 'A')
+		if (content->type == 'A' )
 			ani_paths = ft_split(path, ';');
-		if (!ani_paths)
+		if (path && !ani_paths)
 			ft_check_one_texture(path, err_no);
 		if (path && ani_paths)
 			while (ani_paths[i++])
 				ft_check_one_texture(ani_paths[i], err_no);
 		ft_full_free((void **)ani_paths);
+		ft_check_line_ending(content->line, ';', err_no);
 		content = content->next;
 	}
 	if (*err_no)
@@ -1911,7 +1948,7 @@ int	ft_check_if_flawless(char **map, int *err_no)
 		j = 0;
 		while (++j < (len - 1))
 		{
-			if (ft_strchr("NSWE0DO", map[i][j]))
+			if (ft_strchr("NSWE0DOXx", map[i][j]))
 			{
 				if (map[i - 1][j] == '.' || map[i + 1][j] == '.' \
 					|| map[i][j - 1] == '.' || map[i][j + 1] == '.')
@@ -2062,6 +2099,10 @@ void	ft_print_cub3d_error_2(int err_no)
 		printf("Wrong texture file content.\n");
 	else if (err_no == ERR_FLOOR_CEILLING_FORMAT)
 		printf("Wrong definition of colors for floor or ceilling.\n");
+	else if (err_no == ERR_WRONG_FORMAT_ANI)
+		printf("Wrong format for animation line.\n");
+	else if (err_no == ERR_WRONG_FORMAT_SURFACES)
+		printf("Wrong surfaces format.\n");
 }
 
 void	ft_print_cub3d_error_1(int err_no)
