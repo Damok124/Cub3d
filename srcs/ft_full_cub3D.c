@@ -1424,11 +1424,13 @@ char	ft_check_valid_animation(char *str)
 	int		i;
 	char	type;
 
-	i = 2;
+	i = 3;
 	type = str[0];
+	if ((str[0] == 'A' && str[1] == 'N' && str[2] == 'I' && str[3] == ' '))
+		type = str[0];
 	while (str[i] == ' ')
 		i++;
-	if (i == 2 || !str[i])
+	if (i == 3 || !str[i])
 		return ('0');
 	return (type);
 }
@@ -1477,7 +1479,7 @@ char	ft_define_line_type(char *str, int len)
 			type = ft_type_specifier(str, 1);
 		else if (ft_strchr("D", str[0]) && len > 3)
 			type = ft_type_specifier(str, 3);
-		else if (ft_strchr("A", str[0]) && len > 2)
+		else if (ft_strchr("A", str[0]) && len > 4)
 			type = ft_type_specifier(str, 4);
 		else if (ft_strchr("NSWE", str[0]) && len > 3)
 			type = ft_type_specifier(str, 2);
@@ -1626,6 +1628,14 @@ int	ft_just_enough_surfaces(t_lines *content, int *tab, int *err_no)
 	return (1);
 }
 
+void	ft_enough_paths_err_no(int *tab, int *err_no)
+{
+	if (tab[0] == 0 || tab[1] == 0 || tab[2] == 0 || tab[3] == 0)
+		*err_no = ERR_MISSING_TEXTURE_PATHS;
+	else
+		*err_no = ERR_TOO_MUCH_TEXTURE_PATHS;
+}
+
 int	ft_just_enough_paths(t_lines *content, int *tab, int *err_no)
 {
 	while (content && content->type != 'M')
@@ -1638,14 +1648,16 @@ int	ft_just_enough_paths(t_lines *content, int *tab, int *err_no)
 			tab[2] += 1;
 		else if (content->type == 'E')
 			tab[3] += 1;
+		else if (content->type == 'D')
+			tab[4] += 1;
+		else if (content->type == 'A')
+			tab[5] += 1;
 		content = content->next;
 	}
-	if (tab[0] != 1 || tab[1] != 1 || tab[2] != 1 || tab[3] != 1)
+	if (tab[0] != 1 || tab[1] != 1 || tab[2] != 1 || tab[3] != 1 \
+		|| tab[4] > 1 || tab[5] > 1)
 	{
-		if (tab[0] == 0 || tab[1] == 0 || tab[2] == 0 || tab[3] == 0)
-			*err_no = ERR_MISSING_TEXTURE_PATHS;
-		else
-			*err_no = ERR_TOO_MUCH_TEXTURE_PATHS;
+		ft_enough_paths_err_no(tab, err_no);
 		return (0);
 	}
 	return (1);
@@ -1698,21 +1710,34 @@ int	ft_only_one_position(t_lines *content, int *err_no)
 	return (1);
 }
 
+void	ft_check_one_texture(char *path, int *err_no)
+{
+	if (!ft_check_extension(path, ".xpm") || access(path, R_OK))
+		*err_no = ERR_UNREADABLE_PATH;
+	ft_true_free((void **)&path);
+}
+
 int	ft_check_format_textures(t_lines *content, int *err_no)
 {
 	char	*path;
+	char	**ani_paths;
+	int		i;
 
 	path = NULL;
+	ani_paths = NULL;
 	while (content)
 	{
-		if (content->type == 'N' || content->type == 'S' \
-			|| content->type == 'W' || content->type == 'E')
-		{
-			path = ft_strtrim(content->line + 2, " ");
-			if (!ft_check_extension(path, ".xpm") || access(path, R_OK))
-				*err_no = ERR_UNREADABLE_PATH;
-			ft_true_free((void **)&path);
-		}
+		i = -1;
+		if (ft_strchr("NSWEDA", content->type))
+			path = ft_strtrim(content->line + 3, " ");
+		if (content->type == 'A')
+			ani_paths = ft_split(path, ';');
+		if (!ani_paths)
+			ft_check_one_texture(path, err_no);
+		if (path && ani_paths)
+			while (ani_paths[i++])
+				ft_check_one_texture(ani_paths[i], err_no);
+		ft_full_free((void **)ani_paths);
 		content = content->next;
 	}
 	if (*err_no)
@@ -1722,18 +1747,16 @@ int	ft_check_format_textures(t_lines *content, int *err_no)
 
 int	ft_check_content(t_lines *content, int *err_no)
 {
-	if (!ft_just_enough_paths(content, (int [4]){0, 0, 0, 0}, err_no))
+	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no))
+		return (0);
+	if (!ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
 		return (0);
 	if (!ft_check_format_textures(content, err_no))
-		return (0);
-	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no))
 		return (0);
 	if (!ft_one_last_map(content, err_no))
 		return (0);
 	if (!ft_only_one_position(content, err_no))
 		return (0);
-	// if (!ft_check_doors(content, err_no))
-	// 	return (0);
 	return (1);
 }
 
@@ -2069,7 +2092,7 @@ void	ft_print_cub3d_error_1(int err_no)
 	ft_print_cub3d_error_2(err_no);
 }
 
-void	ft_destroy_safely(t_textures *texture, t_vars *vars)
+void	ft_destroy_img_safely(t_textures *texture, t_vars *vars)
 {
 	if (texture)
 		mlx_destroy_image(vars->mlx_datas->mlx, texture);
@@ -2080,16 +2103,16 @@ void	ft_unset_vars(t_vars *vars)
 	t_context	*context;
 
 	context = vars->context;
-	ft_destroy_safely(context->north->tex_img, vars);
-	ft_destroy_safely(context->south->tex_img, vars);
-	ft_destroy_safely(context->east->tex_img, vars);
-	ft_destroy_safely(context->west->tex_img, vars);
-	ft_destroy_safely(context->animated[0]->tex_img, vars);
-	ft_destroy_safely(context->animated[1]->tex_img, vars);
-	ft_destroy_safely(context->animated[2]->tex_img, vars);
-	ft_destroy_safely(context->door->tex_img, vars);
-	ft_destroy_safely(vars->minimap->img, vars);
-	ft_destroy_safely(vars->mlx_datas->img, vars);
+	ft_destroy_img_safely(context->north->tex_img, vars);
+	ft_destroy_img_safely(context->south->tex_img, vars);
+	ft_destroy_img_safely(context->east->tex_img, vars);
+	ft_destroy_img_safely(context->west->tex_img, vars);
+	ft_destroy_img_safely(context->animated[0]->tex_img, vars);
+	ft_destroy_img_safely(context->animated[1]->tex_img, vars);
+	ft_destroy_img_safely(context->animated[2]->tex_img, vars);
+	ft_destroy_img_safely(context->door->tex_img, vars);
+	ft_destroy_img_safely(vars->minimap->img, vars);
+	ft_destroy_img_safely(vars->mlx_datas->img, vars);
 	mlx_destroy_window(vars->mlx_datas->mlx, vars->mlx_datas->win);
 	mlx_destroy_display(vars->mlx_datas->mlx);
 	ft_unset_context(context);
