@@ -1729,9 +1729,12 @@ int	ft_only_one_position(t_lines *content, int *err_no)
 
 void	ft_check_one_texture(char *path, int *err_no)
 {
-	if (!ft_check_extension(path, ".xpm") || access(path, R_OK))
-		*err_no = ERR_UNREADABLE_PATH;
-	ft_true_free((void **)&path);
+	if (path)
+	{
+		if (!ft_check_extension(path, ".xpm"))
+			if (access(path, R_OK))
+				*err_no = ERR_UNREADABLE_PATH;
+	}
 }
 
 void	ft_check_line_ending(char *line, char c, int *err_no)
@@ -1753,28 +1756,41 @@ void	ft_check_line_ending(char *line, char c, int *err_no)
 	}
 }
 
-int	ft_check_format_textures(t_lines *content, int *err_no)
+int	ft_check_ani_punctuation(t_lines *content, int *err_no)
 {
-	char	*path;
-	char	**ani_paths;
-	int		i;
+	while (content)
+	{
+		if (content->type == 'A' )
+			ft_check_line_ending(content->line, ';', err_no);
+		content = content->next;
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
 
-	path = NULL;
-	ani_paths = NULL;
+int	ft_check_format_textures(char *path, t_lines *content, int *err_no, int i)
+{
+	char	**paths;
+
+	paths = NULL;
 	while (content && !(*err_no))
 	{
 		i = -1;
 		if (ft_strchr("NSWEDA", content->type))
 			path = ft_strtrim(content->line + 3, " ");
 		if (content->type == 'A' )
-			ani_paths = ft_split(path, ';');
-		if (path && !ani_paths)
+			paths = ft_split(path, ';');
+		if (path && !paths)
+		{
 			ft_check_one_texture(path, err_no);
-		if (path && ani_paths)
-			while (ani_paths[i++])
-				ft_check_one_texture(ani_paths[i], err_no);
-		ft_full_free((void **)ani_paths);
-		ft_check_line_ending(content->line, ';', err_no);
+			ft_true_free((void **)&path);
+		}
+		if (path && paths)
+			while (paths[i++])
+				ft_check_one_texture(paths[i], err_no);
+		if (paths)
+			ft_true_free((void **)paths);
 		content = content->next;
 	}
 	if (*err_no)
@@ -1784,11 +1800,16 @@ int	ft_check_format_textures(t_lines *content, int *err_no)
 
 int	ft_check_content(t_lines *content, int *err_no)
 {
+	char	*path;
+
+	path = NULL;
 	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no))
 		return (0);
 	if (!ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
 		return (0);
-	if (!ft_check_format_textures(content, err_no))
+	if (!ft_check_format_textures(path, content, err_no, -1))
+		return (0);
+	if (!ft_check_ani_punctuation(content, err_no))
 		return (0);
 	if (!ft_one_last_map(content, err_no))
 		return (0);
@@ -2167,7 +2188,7 @@ void	ft_unset_vars(t_vars *vars)
 	ft_true_free((void **)&vars);
 }
 
-void	if_not_err_no(t_vars *vars, t_context *context, int err_no)
+void	ft_init_cub3d(t_vars *vars, t_context *context, int err_no)
 {
 	vars = ft_get_vars(context, &err_no);
 	if (context && vars && !err_no)
@@ -2196,9 +2217,12 @@ int	main(int ac, char **argv)
 	{
 		context = ft_cub3d_bonus_parsing(argv, &err_no);
 		if (!err_no)
-			if_not_err_no(vars, context, err_no);
+			ft_init_cub3d(vars, context, err_no);
+		else
+			ft_print_cub3d_error_1(err_no);
 	}
 	else
 		write(2, "Error.\nWrong arguments.\n", 24);
+	ft_close_stdfds();
 	return (0);
 }

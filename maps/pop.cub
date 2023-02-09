@@ -2,14 +2,14 @@
 C 25,25,50
 
 
-SO /nfs/homes/alprival/Cub3d/textures/wall.xpm
-NO /nfs/homes/alprival/Cub3d/textures/wall.xpm
+SO textures/wall.xpm
+NO textures/wall.xpm
 
-EA /nfs/homes/alprival/Cub3d/textures/wall.xpm
+EA textures/wall.xpm
 
 F 130,100,70
 
-WE /nfs/homes/alprival/Cub3d/textures/wall.xpm
+WE textures/wall.xpm
         1111111111111111111111111
         1000000000110000000000001
         10110000011A0000000000001
