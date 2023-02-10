@@ -18,6 +18,7 @@
 # define ERR_FLOOR_CEILLING_FORMAT 16
 # define ERR_WRONG_FORMAT_ANI 17
 # define ERR_WRONG_FORMAT_SURFACES 18
+# define ERR_NO_CONSISTENCY 19
 
 # define PLAYER_COLOR 0x20FF15
 # define RAY_COLOR 0xFFDF00
@@ -1432,7 +1433,7 @@ void	ft_get_textures_paths(t_context *context, t_lines *content)
 		// else if (content->type == 'A')
 		// {
 		// 	context->animated[i]->path = ft_strtrim(content->line + 3, " ");
-			
+
 		// }
 		content = content->next;
 	}
@@ -1479,7 +1480,7 @@ void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, int 
 	{
 			ft_set_animated_texture(context->animated, md);
 		if (!ft_check_animated_texture(context->animated))
-			*err_no = ERR_BAD_TEXTURE_FILE;	
+			*err_no = ERR_BAD_TEXTURE_FILE;
 	}
 	if (!context->north->tex_img || !context->north->tex_addr \
 		|| !context->south->tex_img || !context->south->tex_addr \
@@ -2111,6 +2112,41 @@ int	ft_check_format_ani_textures(char *path, t_lines *content, int *err_no, int 
 	return (1);
 }
 
+int	ft_check_if_any_animation(t_lines *content)
+{
+	while (content && content->type != 'A')
+		content = content->next;
+	if (!content)
+		return (0);
+	return (1);
+}
+
+int	ft_check_ani_consistency(t_lines *content, int *err_no)
+{
+	int	i;
+
+	i = 0;
+	if (!ft_check_if_any_animation(content))
+	{
+		while (content && content->type != 'M')
+			content = content->next;
+		while (content && content->type == 'M')
+		{
+			while (content->line && content->line[i])
+			{
+				if (content->line[i] == 'A')
+					*err_no = ERR_NO_CONSISTENCY;
+				i++;
+			}
+			i = 0;
+			content = content->next;
+		}
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
 int	ft_check_content(t_lines *content, int *err_no)
 {
 	char	*path;
@@ -2129,6 +2165,8 @@ int	ft_check_content(t_lines *content, int *err_no)
 	if (!ft_one_last_map(content, err_no))
 		return (0);
 	if (!ft_only_one_position(content, err_no))
+		return (0);
+	if (!ft_check_ani_consistency(content, err_no))
 		return (0);
 	return (1);
 }
@@ -2395,15 +2433,6 @@ void	ft_unset_context(t_context *context)
 	ft_true_free((void **)&context);
 }
 
-int	ft_check_if_any_animation(t_lines *content)
-{
-	while (content && content->type != 'A')
-		content = content->next;
-	if (!content)
-		return (0);
-	return (1);
-}
-
 t_context	*ft_cub3d_bonus_parsing(char **argv, int *err_no, int *ani)
 {
 	t_context	*context;
@@ -2449,6 +2478,8 @@ void	ft_print_cub3d_error_2(int err_no)
 		printf("Wrong format for animation line.\n");
 	else if (err_no == ERR_WRONG_FORMAT_SURFACES)
 		printf("Wrong surfaces format.\n");
+	else if (err_no == ERR_NO_CONSISTENCY)
+		printf("Animation textures needed for this map.\n");
 }
 
 void	ft_print_cub3d_error_1(int err_no)
