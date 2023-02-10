@@ -74,6 +74,11 @@ typedef struct s_lines {
 	struct s_lines	*next;
 }					t_lines;
 
+typedef struct s_checker {
+	int			ani;
+	int			door;
+}					t_checker;
+
 typedef struct s_minitools {
 	int	i;
 	int	j;
@@ -1463,14 +1468,15 @@ int	ft_check_animated_texture(t_textures **animated)
 	return (1);
 }
 
-void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, int ani)
+void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, t_checker *checker)
 {
 	ft_set_texture(context->north, md);
 	ft_set_texture(context->south, md);
 	ft_set_texture(context->west, md);
 	ft_set_texture(context->east, md);
-	ft_set_texture(context->door, md);
-	if (ani)
+	if (checker->door)
+		ft_set_texture(context->door, md);
+	if (checker->ani)
 	{
 			ft_set_animated_texture(context->animated, md);
 		if (!ft_check_animated_texture(context->animated))
@@ -1493,14 +1499,14 @@ int	ft_total_frames(t_textures **animated)
 	return (i);
 }
 
-t_vars	*ft_get_vars(t_context *context, int *err_no, int ani)
+t_vars	*ft_get_vars(t_context *context, int *err_no,t_checker *checker)
 {
 	t_vars		*vars;
 	t_mlx_datas	*md;
 
 	ft_show_context(context);
 	vars = ft_init_vars(context);
-	if (ani)
+	if (checker->ani)
 		vars->ani_frames = ft_total_frames(context->animated);
 	md = vars->mlx_datas;
 	if (vars)
@@ -1510,7 +1516,7 @@ t_vars	*ft_get_vars(t_context *context, int *err_no, int ani)
 		md->img = mlx_new_image(md->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 		md->addr = mlx_get_data_addr(md->img, &md->bits_per_pixel, \
 			&md->line_length, &md->endian);
-		ft_get_full_textures(vars->context, vars->mlx_datas, err_no, ani);
+		ft_get_full_textures(vars->context, vars->mlx_datas, err_no, checker);
 		ft_set_minimap(vars);
 	}
 	return (vars);
@@ -1833,7 +1839,7 @@ char	**ft_get_animated_textures(t_lines *content)
 	{
 		path = ft_strtrim(content->line + 3, " ");
 		paths = ft_split(path, ';');
-		// ft_true_free((void **)path);
+		ft_true_free((void **)&path);
 	}
 	return (paths);
 }
@@ -1852,21 +1858,22 @@ t_textures	**ft_init_ani_textures(t_lines *content)
 	if (!texture)
 		return (NULL);
 	texture[size] = NULL;
-	while(i < size)
+	while (i < size)
 	{
 		texture[i] = ft_init_t_textures();
 		i++;
 	}
 	i = 0;
-	while(i < size)
+	while (i < size)
 	{
-		texture[i]->path = paths[i];
+		texture[i]->path = ft_strdup(paths[i]);
 		i++;
 	}
+	ft_full_free((void **)paths);
 	return (texture);
 }
 
-t_context	*ft_init_t_context(t_lines *content, int *err_no)
+t_context	*ft_init_t_context(t_lines *content, int *err_no, t_checker *checker)
 {
 	t_context	*context;
 
@@ -1879,9 +1886,11 @@ t_context	*ft_init_t_context(t_lines *content, int *err_no)
 	context->north = ft_init_t_textures();
 	context->south = ft_init_t_textures();
 	context->west = ft_init_t_textures();
-	context->door = ft_init_t_textures();
 	context->east = ft_init_t_textures();
-	context->animated = ft_init_ani_textures(content);
+	if (checker->door)
+		context->door = ft_init_t_textures();
+	if (checker->ani)
+		context->animated = ft_init_ani_textures(content);
 	context->map = NULL;
 	if (!context->north || !context->south || !context->west || !context->east)
 		*err_no = ERR_TEXTURE_INIT_FAILED;
@@ -2412,27 +2421,39 @@ void	ft_show_content(t_lines *content)
 	}
 }
 
-void	ft_unset_context_animated(t_context *context)
+void	ft_destroy_ani_context(t_textures **animated)
 {
-	// ft_true_free((void **)&context->animated[0].path);
-	// ft_true_free((void **)&context->animated[1].path);
-	// ft_true_free((void **)&context->animated[2].path);
-	ft_true_free((void **)&context->door->path);
-	// ft_true_free((void **)&context->animated[0].tex_width);
-	// ft_true_free((void **)&context->animated[1].tex_width);
-	// ft_true_free((void **)&context->animated[2].tex_width);
-	ft_true_free((void **)&context->door->tex_width);
-	// ft_true_free((void **)&context->animated[0].tex_height);
-	// ft_true_free((void **)&context->animated[1].tex_height);
-	// ft_true_free((void **)&context->animated[2].tex_height);
-	ft_true_free((void **)&context->door->tex_height);
-	// ft_true_free((void **)&context->animated[0]);
-	// ft_true_free((void **)&context->animated[1]);
-	// ft_true_free((void **)&context->animated[2]);
-	ft_true_free((void **)&context->door);
+	int	i;
+
+	i = 0;
+	while (animated && animated[i])
+	{
+		ft_true_free((void **)&(animated[i]->tex_width));
+		ft_true_free((void **)&(animated[i]->path));
+		ft_true_free((void **)&(animated[i]->tex_height));
+		ft_true_free((void **)&(animated[i]));
+		i++;	
+	}
 }
 
-void	ft_unset_context(t_context *context)
+void	ft_unset_context_animated(t_context *context, t_checker *checker)
+{
+	if (checker->door)
+	{
+		ft_true_free((void **)&context->door->path);
+		ft_true_free((void **)&context->door->tex_width);
+		ft_true_free((void **)&context->door->tex_height);
+		ft_true_free((void **)&context->door);
+	}
+	if (checker->ani)
+	{
+		ft_destroy_ani_context(context->animated);
+		ft_true_free((void **)&context->animated);
+		//free(context->animated);
+	}
+}
+
+void	ft_unset_context(t_context *context, t_checker *checker)
 {
 	ft_true_free((void **)&context->north->path);
 	ft_true_free((void **)&context->south->path);
@@ -2451,11 +2472,11 @@ void	ft_unset_context(t_context *context)
 	ft_true_free((void **)&context->east);
 	ft_true_free((void **)&context->west);
 	ft_full_free((void **)context->map);
-	ft_unset_context_animated(context);
+	ft_unset_context_animated(context, checker);
 	ft_true_free((void **)&context);
 }
 
-t_context	*ft_cub3d_bonus_parsing(char **argv, int *err_no, int *ani)
+t_context	*ft_cub3d_bonus_parsing(char **argv, int *err_no, t_checker *checker)
 {
 	t_context	*context;
 	t_lines		*content;
@@ -2464,8 +2485,9 @@ t_context	*ft_cub3d_bonus_parsing(char **argv, int *err_no, int *ani)
 	content = ft_init_content(argv[1], err_no);
 	if (content && ft_check_content(content, err_no))
 	{
-		*ani = ft_check_type_in_content(content, 'A');
-		context = ft_init_t_context(content, err_no);
+		checker->ani = ft_check_type_in_content(content, 'A');
+		checker->door = ft_check_type_in_content(content, 'D');
+		context = ft_init_t_context(content, err_no, checker);
 		if (context)
 		{
 			ft_square_shaped_dotted_map(content);
@@ -2477,7 +2499,7 @@ t_context	*ft_cub3d_bonus_parsing(char **argv, int *err_no, int *ani)
 			context->map_height = ft_get_map_size(content);
 			context->map_length = ft_get_greatest_len(content);
 			if (!ft_check_if_flawless(context->map, err_no))
-				ft_unset_context(context);
+				ft_unset_context(context, checker);
 		}
 	}
 	ft_unset_content(content);
@@ -2540,7 +2562,21 @@ void	ft_destroy_img_safely(t_textures *texture, t_vars *vars)
 		mlx_destroy_image(vars->mlx_datas->mlx, texture);
 }
 
-void	ft_unset_vars(t_vars *vars)
+void	ft_destroy_ani(t_vars *vars)
+{
+	t_context	*context;
+	int			i;
+
+	context = vars->context;
+	i = 0;
+	while (context->animated[i])
+	{
+		ft_destroy_img_safely(context->animated[i]->tex_img, vars);
+		i++;
+	}
+}
+
+void	ft_unset_vars(t_vars *vars, t_checker *checker)
 {
 	t_context	*context;
 
@@ -2549,15 +2585,15 @@ void	ft_unset_vars(t_vars *vars)
 	ft_destroy_img_safely(context->south->tex_img, vars);
 	ft_destroy_img_safely(context->east->tex_img, vars);
 	ft_destroy_img_safely(context->west->tex_img, vars);
-	ft_destroy_img_safely(context->animated[0]->tex_img, vars);
-	ft_destroy_img_safely(context->animated[1]->tex_img, vars);
-	ft_destroy_img_safely(context->animated[2]->tex_img, vars);
-	ft_destroy_img_safely(context->door->tex_img, vars);
+	if (checker->ani)
+		ft_destroy_ani(vars);
+	if (checker->door)
+		ft_destroy_img_safely(context->door->tex_img, vars);
 	ft_destroy_img_safely(vars->minimap->img, vars);
 	ft_destroy_img_safely(vars->mlx_datas->img, vars);
 	mlx_destroy_window(vars->mlx_datas->mlx, vars->mlx_datas->win);
 	mlx_destroy_display(vars->mlx_datas->mlx);
-	ft_unset_context(context);
+	ft_unset_context(context, checker);
 	ft_true_free((void **)&vars->minimap);
 	ft_true_free((void **)&vars->mlx_datas->mlx);
 	ft_true_free((void **)&vars->keys);
@@ -2568,19 +2604,19 @@ void	ft_unset_vars(t_vars *vars)
 	ft_true_free((void **)&vars);
 }
 
-void	ft_init_cub3d(t_vars *vars, t_context *context, int err_no, int ani)
+void	ft_init_cub3d(t_vars *vars, t_context *context, int err_no, t_checker *checker)
 {
-	vars = ft_get_vars(context, &err_no, ani);
+	vars = ft_get_vars(context, &err_no, checker);
 	if (context && vars && !err_no)
 	{
 		ft_hooks_activation(vars);
 		mlx_loop_hook(vars->mlx_datas->mlx, ft_cub3d, vars);
 		mlx_loop(vars->mlx_datas->mlx);
-		ft_unset_vars(vars);
+		ft_unset_vars(vars, checker);
 	}
 	else
 	{
-		ft_unset_vars(vars);
+		ft_unset_vars(vars, checker);
 		ft_print_cub3d_error_1(err_no);
 	}
 }
@@ -2590,16 +2626,17 @@ int	main(int ac, char **argv)
 	int			err_no;
 	t_context	*context;
 	t_vars		*vars;
-	int			ani;
+	t_checker	checker;
 
 	err_no = 0;
-	ani = 0;
+	checker.ani = 0;
+	checker.door = 0;
 	vars = NULL;
 	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
 	{
-		context = ft_cub3d_bonus_parsing(argv, &err_no, &ani);////////////////ajouter door?
+		context = ft_cub3d_bonus_parsing(argv, &err_no, &checker);////////////////ajouter door?
 		if (!err_no)
-			ft_init_cub3d(vars, context, err_no, ani);////////////////ajouter door?
+			ft_init_cub3d(vars, context, err_no, &checker);////////////////ajouter door?
 		else
 			ft_print_cub3d_error_1(err_no);
 	}
