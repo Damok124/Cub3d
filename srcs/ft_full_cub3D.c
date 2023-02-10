@@ -1430,17 +1430,10 @@ void	ft_get_textures_paths(t_context *context, t_lines *content)
 			context->west->path = ft_strtrim(content->line + 2, " ");
 		else if (content->type == 'E')
 			context->east->path = ft_strtrim(content->line + 2, " ");
-		// else if (content->type == 'A')
-		// {
-		// 	context->animated[i]->path = ft_strtrim(content->line + 3, " ");
-
-		// }
+		else if (content->type == 'D')
+			context->door->path = ft_strtrim(content->line + 2, " ");
 		content = content->next;
 	}
-	context->door->path = ft_strdup("./textures/t_gungeon_door.xpm");
-	// context->animated[0]->path = ft_strdup("./textures/flame1.xpm");
-	// context->animated[1]->path = ft_strdup("./textures/flame2.xpm");
-	// context->animated[2]->path = ft_strdup("./textures/flame3.xpm");
 }
 
 void	ft_set_animated_texture(t_textures **animated, t_mlx_datas *md)
@@ -2525,9 +2518,9 @@ void	ft_unset_vars(t_vars *vars)
 	ft_destroy_img_safely(context->south->tex_img, vars);
 	ft_destroy_img_safely(context->east->tex_img, vars);
 	ft_destroy_img_safely(context->west->tex_img, vars);
-	// ft_destroy_img_safely(context->animated[0].tex_img, vars);
-	// ft_destroy_img_safely(context->animated[1].tex_img, vars);
-	// ft_destroy_img_safely(context->animated[2].tex_img, vars);
+	ft_destroy_img_safely(context->animated[0]->tex_img, vars);
+	ft_destroy_img_safely(context->animated[1]->tex_img, vars);
+	ft_destroy_img_safely(context->animated[2]->tex_img, vars);
 	ft_destroy_img_safely(context->door->tex_img, vars);
 	ft_destroy_img_safely(vars->minimap->img, vars);
 	ft_destroy_img_safely(vars->mlx_datas->img, vars);
