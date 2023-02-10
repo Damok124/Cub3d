@@ -18,7 +18,8 @@
 # define ERR_FLOOR_CEILLING_FORMAT 16
 # define ERR_WRONG_FORMAT_ANI 17
 # define ERR_WRONG_FORMAT_SURFACES 18
-# define ERR_NO_CONSISTENCY 19
+# define ERR_NO_ANI_CONSISTENCY 19
+# define ERR_NO_DOOR_CONSISTENCY 20
 
 # define PLAYER_COLOR 0x20FF15
 # define RAY_COLOR 0xFFDF00
@@ -2105,9 +2106,9 @@ int	ft_check_format_ani_textures(char *path, t_lines *content, int *err_no, int 
 	return (1);
 }
 
-int	ft_check_if_any_animation(t_lines *content)
+int	ft_check_type_in_content(t_lines *content, char type)
 {
-	while (content && content->type != 'A')
+	while (content && content->type != type)
 		content = content->next;
 	if (!content)
 		return (0);
@@ -2119,7 +2120,7 @@ int	ft_check_ani_consistency(t_lines *content, int *err_no)
 	int	i;
 
 	i = 0;
-	if (!ft_check_if_any_animation(content))
+	if (!ft_check_type_in_content(content, 'A'))
 	{
 		while (content && content->type != 'M')
 			content = content->next;
@@ -2128,7 +2129,33 @@ int	ft_check_ani_consistency(t_lines *content, int *err_no)
 			while (content->line && content->line[i])
 			{
 				if (content->line[i] == 'A')
-					*err_no = ERR_NO_CONSISTENCY;
+					*err_no = ERR_NO_ANI_CONSISTENCY;
+				i++;
+			}
+			i = 0;
+			content = content->next;
+		}
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
+int	ft_check_door_consistency(t_lines *content, int *err_no)
+{
+	int	i;
+
+	i = 0;
+	if (!ft_check_type_in_content(content, 'D'))
+	{
+		while (content && content->type != 'M')
+			content = content->next;
+		while (content && content->type == 'M')
+		{
+			while (content->line && content->line[i])
+			{
+				if (ft_strchr("DO", content->line[i]))
+					*err_no = ERR_NO_DOOR_CONSISTENCY;
 				i++;
 			}
 			i = 0;
@@ -2160,6 +2187,8 @@ int	ft_check_content(t_lines *content, int *err_no)
 	if (!ft_only_one_position(content, err_no))
 		return (0);
 	if (!ft_check_ani_consistency(content, err_no))
+		return (0);
+	if (!ft_check_door_consistency(content, err_no))
 		return (0);
 	return (1);
 }
@@ -2435,7 +2464,7 @@ t_context	*ft_cub3d_bonus_parsing(char **argv, int *err_no, int *ani)
 	content = ft_init_content(argv[1], err_no);
 	if (content && ft_check_content(content, err_no))
 	{
-		*ani = ft_check_if_any_animation(content);
+		*ani = ft_check_type_in_content(content, 'A');
 		context = ft_init_t_context(content, err_no);
 		if (context)
 		{
@@ -2471,8 +2500,10 @@ void	ft_print_cub3d_error_2(int err_no)
 		printf("Wrong format for animation line.\n");
 	else if (err_no == ERR_WRONG_FORMAT_SURFACES)
 		printf("Wrong surfaces format.\n");
-	else if (err_no == ERR_NO_CONSISTENCY)
+	else if (err_no == ERR_NO_ANI_CONSISTENCY)
 		printf("Animation textures needed for this map.\n");
+	else if (err_no == ERR_NO_DOOR_CONSISTENCY)
+		printf("Door texture needed for this map.\n");
 }
 
 void	ft_print_cub3d_error_1(int err_no)
@@ -2566,9 +2597,9 @@ int	main(int ac, char **argv)
 	vars = NULL;
 	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
 	{
-		context = ft_cub3d_bonus_parsing(argv, &err_no, &ani);
+		context = ft_cub3d_bonus_parsing(argv, &err_no, &ani);////////////////ajouter door?
 		if (!err_no)
-			ft_init_cub3d(vars, context, err_no, ani);
+			ft_init_cub3d(vars, context, err_no, ani);////////////////ajouter door?
 		else
 			ft_print_cub3d_error_1(err_no);
 	}
