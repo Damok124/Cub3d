@@ -1802,23 +1802,6 @@ void	ft_unset_content(t_lines *content)
 	}
 }
 
-// int	ft_valid_format_surfaces(t_lines *content, int *err_no)
-// {
-// 	while (content)
-// 	{
-// 		if (content->type == 'F' || content->type == 'c')
-// 		{
-// 			if (!ft_isdigit(content->line[ft_strlen(content->line)]))
-// 			{
-// 				*err_no = ERR_WRONG_FORMAT_SURFACES;
-// 				return (0);
-// 			}
-// 		}
-// 		content = content->next;
-// 	}
-// 	return (1);
-// }
-
 int	ft_just_enough_surfaces(t_lines *content, int *tab, int *err_no)
 {
 	while (content && content->type != 'M')
@@ -1932,47 +1915,6 @@ void	ft_check_one_texture(char *path, int *err_no)
 	}
 }
 
-// void	ft_check_line_ending(char *line, char c, int *err_no)
-// {
-// 	int	len;
-// 	int	i;
-
-// 	len = ft_strlen(line);
-// 	i = len - 1;
-// 	if (len > 2)
-// 	{
-// 		while (i >= 0 && !(*err_no) && line[i] == c)
-// 				i--;
-// 		if (i == len - 1 || i < (len - 2))
-// 				*err_no = ERR_WRONG_FORMAT_ANI;
-// 	}
-// }
-
-// void	ft_check_format_ani(char *path, char *ext, int *err_no, char c)
-// {
-// 	int	i;
-// 	int	j;
-
-// 	i = 0;
-// 	j = 0;
-// 	while (path && path[i + j] && ext && ext[j])
-// 	{
-// 		if (path[i + j] == c)
-// 			*err_no = ERR_WRONG_FORMAT_ANI;
-// 		while (path[i + j] == ext[j])
-// 		{
-// 			j++;
-// 			if (!ext[j])
-// 			{
-// 				if (!path[i + j] || (path[i + j] != c))
-// 					*err_no = ERR_WRONG_FORMAT_ANI;
-// 			}
-// 		}
-// 		j = 0;
-// 		i++;
-// 	}
-// }
-
 void	ft_check_duplicates(char *path, int *err_no, char c)
 {
 	int	i;
@@ -2022,26 +1964,39 @@ int	ft_check_format_punctuation(t_lines *content, int *err_no)
 
 int	ft_check_format_textures(char *path, t_lines *content, int *err_no, int i)
 {
+	while (content && !(*err_no))
+	{
+		i = -1;
+		if (ft_strchr("NSWED", content->type))
+		{
+			path = ft_strtrim(content->line + 3, " ");
+			ft_check_one_texture(path, err_no);
+			ft_true_free((void **)&path);
+		}
+		content = content->next;
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
+int	ft_check_format_ani_textures(char *path, t_lines *content, int *err_no, int i)
+{
 	char	**paths;
 
 	paths = NULL;
 	while (content && !(*err_no))
 	{
 		i = -1;
-		if (ft_strchr("NSWEDA", content->type))
-			path = ft_strtrim(content->line + 3, " ");
 		if (content->type == 'A' )
-			paths = ft_split(path, ';');
-		if (path && !paths)
 		{
-			ft_check_one_texture(path, err_no);
+			path = ft_strtrim(content->line + 3, " ");
+			paths = ft_split(path, ';');
 			ft_true_free((void **)&path);
-		}
-		if (path && paths)
-			while (paths[i++])
+			while (paths[++i])
 				ft_check_one_texture(paths[i], err_no);
-		if (paths)
-			ft_true_free((void **)paths);
+			ft_full_free((void **)paths);
+		}
 		content = content->next;
 	}
 	if (*err_no)
@@ -2059,6 +2014,8 @@ int	ft_check_content(t_lines *content, int *err_no)
 	if (!ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
 		return (0);
 	if (!ft_check_format_textures(path, content, err_no, -1))
+		return (0);
+	if (!ft_check_format_ani_textures(path, content, err_no, -1))
 		return (0);
 	if (!ft_check_format_punctuation(content, err_no))
 		return (0);
@@ -2473,7 +2430,7 @@ int	main(int ac, char **argv)
 			ft_print_cub3d_error_1(err_no);
 	}
 	else
-		write(2, "Error.\nWrong arguments.\n", 24);
+		write(2, "Error.\nCheck your arguments.\n", 24);
 	ft_close_stdfds();
 	return (0);
 }
