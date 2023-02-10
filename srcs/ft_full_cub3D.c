@@ -193,6 +193,7 @@ typedef struct s_vars {
 	t_rays		*rays;
 	t_rays		*rays_door;
 	t_minimap	*minimap;
+	int			ani_frames;
 }				t_vars;
 
 void	ft_angle_adjustement(double *angle)
@@ -332,7 +333,7 @@ void	ft_print_type(double step, unsigned int *col,
 	if (rays->wall_type == DOOR || rays->wall_type == DOOR_ANIMATION)
 		*col = ft_get_wall_color(context->door, step, rays, vars);
 	else if (rays->wall_type == ANIMATION)
-		*col = ft_get_wall_color(context->animated[1], \
+		*col = ft_get_wall_color(context->animated[context->frames / (vars->ani_frames + 1)], \
 			step, rays, vars);
 	else if (rays->wall_direction == NORTH)
 		*col = ft_get_wall_color(context->south, step, rays, vars);
@@ -352,8 +353,7 @@ void	ft_print_column(t_vars *vars, int line_start,
 
 	vars->context->step = 0;
 	pixel = 0;
-	while ((line_start + pixel) < line_end \
-			&& (vars->context->step * rays->short_y * 0.8) < WINDOW_HEIGHT)
+	while ((line_start + pixel) < line_end)
 	{
 		pixel++;
 		vars->context->step = ((double)pixel / (double)(line_end - line_start));
@@ -1488,6 +1488,16 @@ void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, int 
 		*err_no = ERR_BAD_TEXTURE_FILE;
 }
 
+int	ft_total_frames(t_textures **animated)
+{
+	int i;
+
+	i = 0;
+	while (animated && animated[i])
+		i++;
+	return (i);
+}
+
 t_vars	*ft_get_vars(t_context *context, int *err_no, int ani)
 {
 	t_vars		*vars;
@@ -1495,6 +1505,8 @@ t_vars	*ft_get_vars(t_context *context, int *err_no, int ani)
 
 	ft_show_context(context);
 	vars = ft_init_vars(context);
+	if (ani)
+		vars->ani_frames = ft_total_frames(context->animated);
 	md = vars->mlx_datas;
 	if (vars)
 	{
@@ -1826,7 +1838,7 @@ char	**ft_get_animated_textures(t_lines *content)
 	{
 		path = ft_strtrim(content->line + 3, " ");
 		paths = ft_split(path, ';');
-		ft_true_free((void **)path);
+		// ft_true_free((void **)path);
 	}
 	return (paths);
 }
