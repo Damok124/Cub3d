@@ -2,7 +2,6 @@
 C 25,25,50
 
 ANI ./textures/flame1.xpm;./textures/flame2.xpm;./textures/flame3.xpm;
-ANI ./textures/flame1.xpm;./textures/flame2.xpm;./textures/flame3.xpm;
 
 SO ./textures/wall.xpm
 NO ./textures/wall.xpm
