@@ -262,15 +262,6 @@ char	*ft_left_color_from_xpm(t_textures *wall, double step, \
 	return (color);
 }
 
-unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
-	double rank, int read_from)
-{
-	if (read_from == RIGHT)
-		return (*(unsigned int *)ft_right_color_from_xpm(wall, step, rank));
-	else
-		return (*(unsigned int *)ft_left_color_from_xpm(wall, step, rank));
-}
-
 unsigned int	ft_get_color_from_xpm_door(t_textures *wall, \
 	double rank, int read_from, t_vars *vars)
 {
@@ -286,13 +277,23 @@ unsigned int	ft_get_color_from_xpm_door(t_textures *wall, \
 	else
 		x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
 	y = *(wall->tex_height) * vars->context->step + \
-		(vars->context->frames_door * 2);
+		(vars->context->frames_door);
 	if (y >= *(wall->tex_height))
 		return (0xff00ff);
 	color = wall->tex_addr + (y * *(wall->tex_width) \
 		+ x * (wall->bppixels / 8));
 	return (*(unsigned int *)color);
 }
+
+unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
+	double rank, int read_from)
+{
+	if (read_from == RIGHT)
+		return (*(unsigned int *)ft_right_color_from_xpm(wall, step, rank));
+	else
+		return (*(unsigned int *)ft_left_color_from_xpm(wall, step, rank));
+}
+
 
 unsigned int	ft_get_door_color(t_textures *texture, \
 	t_rays *rays, t_vars *vars)
@@ -340,7 +341,7 @@ void	ft_print_type(double step, unsigned int *col,
 	if (rays->wall_type == DOOR || rays->wall_type == DOOR_ANIMATION)
 		*col = ft_get_wall_color(context->door, step, rays, vars);
 	else if (rays->wall_type == ANIMATION)
-		*col = ft_get_wall_color(context->animated[context->frames / (vars->ani_frames + 1)], \
+		*col = ft_get_wall_color(context->animated[context->frames % vars->ani_frames], \
 			step, rays, vars);
 	else if (rays->wall_direction == NORTH)
 		*col = ft_get_wall_color(context->south, step, rays, vars);
@@ -376,8 +377,7 @@ void	ft_print_door(t_vars *vars, int line_start, int line_end, t_rays *rays)
 	int				pixel;
 
 	pixel = 0;
-	while ((line_start + pixel) < line_end \
-			&& (vars->context->step * rays->short_y * 0.8) < WINDOW_HEIGHT)
+	while ((line_start + pixel) < line_end)
 	{
 		pixel++;
 		vars->context->step = ((double)pixel / (double)(line_end - line_start));
@@ -441,7 +441,7 @@ void	ft_ray_impact_door(t_vars *vars, int dov, t_rays *ray)
 			&& ray->tmp_ry < vars->context->map_height
 			&& ray->tmp_ry < WINDOW_HEIGHT
 			&& ray->tmp_rx < WINDOW_WIDTH
-			&& ft_strchr("1DEAe", vars->context->map[ray->tmp_ry][ray->tmp_rx]))
+			&& ft_strchr("1DXAx", vars->context->map[ray->tmp_ry][ray->tmp_rx]))
 			ray->dov = dov;
 		else
 		{
@@ -576,8 +576,8 @@ void	ft_confirm_wall_type(t_rays *r, char **map, int x, int y)
 {
 	if (map[y / SQ_SIZE][x / SQ_SIZE] == 'D')
 		r->wall_type = DOOR;
-	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'E' \
-		|| map[y / SQ_SIZE][x / SQ_SIZE] == 'e')
+	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'X' \
+		|| map[y / SQ_SIZE][x / SQ_SIZE] == 'x')
 		r->wall_type = DOOR_ANIMATION;
 	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'A')
 		r->wall_type = ANIMATION;
@@ -591,7 +591,7 @@ void	ft_animate_frames_door(int *frames)
 
 	if (!j)
 		j = 1;
-	if (*frames == 59)
+	if (*frames == 60)
 		j = -1;
 	else if (*frames == 1)
 		j = 1;
@@ -601,14 +601,19 @@ void	ft_animate_frames_door(int *frames)
 void	ft_animate_frames(int *frames)
 {
 	static int	j;
+	static int	i;
 
 	if (!j)
 		j = 1;
-	if (*frames > 10 && j == 1)
-		j = -1;
-	else if (*frames < 1 && j == -1)
-		j = 1;
-	*frames += j;
+	if (i++ / 20)
+	{
+		i = 0;
+		if (*frames > 10 && j == 1)
+			j = -1;
+		else if (*frames < 1 && j == -1)
+			j = 1;
+		*frames += j;
+	}
 }
 
 void	ft_draw_environment(t_vars *vars, t_rays *rays)
@@ -909,10 +914,10 @@ int	ft_map_wall(t_vars *vars)
 	map = vars->context->map;
 	player_y = (int)vars->position->player_y;
 	player_x = (int)vars->position->player_x;
-	if (ft_strchr("1ADeE", map[(player_y + 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1ADeE", map[(player_y - 22) / 64][(player_x - 22) / 64])
-		|| ft_strchr("1ADeE", map[(player_y - 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1ADeE", map[(player_y + 22) / 64][(player_x - 22) / 64]))
+	if (ft_strchr("1ADxX", map[(player_y + 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1ADxX", map[(player_y - 22) / 64][(player_x - 22) / 64])
+		|| ft_strchr("1ADxX", map[(player_y - 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1ADxX", map[(player_y + 22) / 64][(player_x - 22) / 64]))
 		return (1);
 	return (0);
 }
@@ -991,12 +996,12 @@ int	ft_putchar_on_map(t_vars *vars, int x, int y, int type)
 	if (type == DOOR)
 	{
 		vars->context->frames_door = 1;
-		map[y][x] = 'E';
+		map[y][x] = 'X';
 	}
 	else
 	{
 		vars->context->frames_door = 59;
-		map[y][x] = 'e';
+		map[y][x] = 'x';
 	}
 	return (1);
 }
@@ -1150,12 +1155,12 @@ int	ft_parse_map_to_close(t_vars *vars)
 		x = 0;
 		while (x < vars->context->map_length)
 		{
-			if (vars->context->map[y][x] == 'E')
+			if (vars->context->map[y][x] == 'X')
 			{
 				vars->context->map[y][x] = 'O';
 				return (1);
 			}
-			else if (vars->context->map[y][x] == 'e')
+			else if (vars->context->map[y][x] == 'x')
 			{
 				vars->context->map[y][x] = 'D';
 				return (1);
@@ -1899,7 +1904,7 @@ void	ft_unset_content(t_lines *content)
 
 int	ft_just_enough_surfaces(t_lines *content, int *tab, int *err_no)
 {
-	while (content && content->type != 'M')
+	while (content)
 	{
 		if (content->type == 'F')
 			tab[0] += 1;
@@ -1928,7 +1933,7 @@ void	ft_enough_paths_err_no(int *tab, int *err_no)
 
 int	ft_just_enough_paths(t_lines *content, int *tab, int *err_no)
 {
-	while (content && content->type != 'M')
+	while (content)
 	{
 		if (content->type == 'N')
 			tab[0] += 1;
@@ -2213,7 +2218,9 @@ int	ft_check_door_textures(t_lines *content, int *err_no)
 int	ft_check_content(t_lines *content, int *err_no)
 {
 	char	*path;
+	int		i;
 
+	i = 0;
 	path = NULL;
 	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no) \
 		|| !ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
