@@ -341,7 +341,7 @@ void	ft_print_type(double step, unsigned int *col,
 	if (rays->wall_type == DOOR || rays->wall_type == DOOR_ANIMATION)
 		*col = ft_get_wall_color(context->door, step, rays, vars);
 	else if (rays->wall_type == ANIMATION)
-		*col = ft_get_wall_color(context->animated[(context->frames / vars->ani_frames) - 1], \
+		*col = ft_get_wall_color(context->animated[context->frames % vars->ani_frames], \
 			step, rays, vars);
 	else if (rays->wall_direction == NORTH)
 		*col = ft_get_wall_color(context->south, step, rays, vars);
@@ -591,7 +591,7 @@ void	ft_animate_frames_door(int *frames)
 
 	if (!j)
 		j = 1;
-	if (*frames == 59)
+	if (*frames == 60)
 		j = -1;
 	else if (*frames == 1)
 		j = 1;
@@ -601,14 +601,19 @@ void	ft_animate_frames_door(int *frames)
 void	ft_animate_frames(int *frames)
 {
 	static int	j;
+	static int	i;
 
 	if (!j)
 		j = 1;
-	if (*frames > 10 && j == 1)
-		j = -1;
-	else if (*frames < 1 && j == -1)
-		j = 1;
-	*frames += j;
+	if (i++ / 20)
+	{
+		i = 0;
+		if (*frames > 10 && j == 1)
+			j = -1;
+		else if (*frames < 1 && j == -1)
+			j = 1;
+		*frames += j;
+	}
 }
 
 void	ft_draw_environment(t_vars *vars, t_rays *rays)
