@@ -295,7 +295,6 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 		return (*(unsigned int *)ft_left_color_from_xpm(wall, step, rank));
 }
 
-
 unsigned int	ft_get_door_color(t_textures *texture, \
 	t_rays *rays, t_vars *vars)
 {
@@ -337,13 +336,16 @@ void	ft_print_type(double step, unsigned int *col,
 	t_vars *vars, t_rays *rays)
 {
 	t_context	*context;
+	int			frame;
 
 	context = vars->context;
 	if (rays->wall_type == DOOR || rays->wall_type == DOOR_ANIMATION)
 		*col = ft_get_wall_color(context->door, step, rays, vars);
 	else if (rays->wall_type == ANIMATION)
-		*col = ft_get_wall_color(context->animated[context->frames % vars->ani_frames], \
-			step, rays, vars);
+	{
+		frame = context->frames % vars->ani_frames;
+		*col = ft_get_wall_color(context->animated[frame], step, rays, vars);
+	}
 	else if (rays->wall_direction == NORTH)
 		*col = ft_get_wall_color(context->south, step, rays, vars);
 	else if (rays->wall_direction == SOUTH)
@@ -1046,7 +1048,6 @@ void	ft_close_door(t_vars *vars, int x, int y, double ang)
 
 void	ft_map_door(t_vars *vars)
 {
-	// char		**map;
 	int			player_x;
 	int			player_y;
 	double		player_angle;
@@ -1054,7 +1055,6 @@ void	ft_map_door(t_vars *vars)
 	player_x = (int)(vars->position->player_x / SQ_SIZE);
 	player_y = (int)(vars->position->player_y / SQ_SIZE);
 	player_angle = vars->position->view_angle;
-	// map = vars->context->map;
 	if (ft_open_door(vars, player_x, player_y, player_angle))
 		return ;
 	else
@@ -1290,11 +1290,11 @@ double	ft_get_first_angle(char orientation)
 	if (orientation == 'E')
 		axis = 0;
 	else if (orientation == 'N')
-		axis = PI / 2;
+		axis = 3 * PI / 2;
 	else if (orientation == 'W')
 		axis = PI;
 	else if (orientation == 'S')
-		axis = 3 * PI / 2;
+		axis = PI / 2;
 	return (axis);
 }
 
@@ -1474,7 +1474,8 @@ int	ft_check_animated_texture(t_textures **animated)
 	return (1);
 }
 
-void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, t_checker *checker)
+void	ft_get_full_textures(t_context *context, t_mlx_datas *md, \
+	int *err_no, t_checker *checker)
 {
 	ft_set_texture(context->north, md);
 	ft_set_texture(context->south, md);
@@ -1509,12 +1510,11 @@ int	ft_total_frames(t_textures **animated)
 	return (i);
 }
 
-t_vars	*ft_get_vars(t_context *context, int *err_no,t_checker *checker)
+t_vars	*ft_get_vars(t_context *context, int *err_no, t_checker *checker)
 {
 	t_vars		*vars;
 	t_mlx_datas	*md;
 
-	// ft_show_context(context);
 	vars = ft_init_vars(context);
 	if (checker->ani)
 		vars->ani_frames = ft_total_frames(context->animated);
@@ -2537,6 +2537,12 @@ void	ft_unset_context(t_context *context, t_checker *checker)
 	}
 }
 
+void	ft_init_checker(t_lines *content, t_checker *checker)
+{
+	checker->ani = ft_check_type_in_content(content, 'A');
+	checker->door = ft_check_type_in_content(content, 'D');
+}
+
 t_context	*ft_cub3d_bonus_parsing(char **av, int *err_no, t_checker *checker)
 {
 	t_context	*context;
@@ -2546,8 +2552,7 @@ t_context	*ft_cub3d_bonus_parsing(char **av, int *err_no, t_checker *checker)
 	content = ft_init_content(av[1], err_no);
 	if (content && ft_check_content(content, err_no))
 	{
-		checker->ani = ft_check_type_in_content(content, 'A');
-		checker->door = ft_check_type_in_content(content, 'D');
+		ft_init_checker(content, checker);
 		context = ft_init_t_context(content, err_no, checker);
 		if (context && !(*err_no))
 		{
@@ -2576,7 +2581,7 @@ void	ft_print_cub3d_error_2(int err_no)
 	else if (err_no == ERR_MALLOC_CONTEXT)
 		printf("Failed to malloc parsed datas structure.\n");
 	else if (err_no == ERR_BAD_TEXTURE_FILE)
-		printf("Wrong texture file content.\n");
+		printf("Wrong texture file.\n");
 	else if (err_no == ERR_FLOOR_CEILLING_FORMAT)
 		printf("Wrong definition of colors for floor or ceilling.\n");
 	else if (err_no == ERR_WRONG_FORMAT_ANI)
