@@ -20,6 +20,7 @@
 # define ERR_WRONG_FORMAT_SURFACES 18
 # define ERR_NO_ANI_CONSISTENCY 19
 # define ERR_NO_DOOR_CONSISTENCY 20
+# define ERR_UNEXPECTED_MENTIONS 21
 
 # define PLAYER_COLOR 0x20FF15
 # define RAY_COLOR 0xFFDF00
@@ -2122,7 +2123,7 @@ int	ft_check_ani_consistency(t_lines *content, int *err_no)
 	int	i;
 
 	i = 0;
-	if (!ft_check_type_in_content(content, 'A'))
+	if (!ft_check_type_in_content(content, 'A') && !(*err_no))
 	{
 		while (content && content->type != 'M')
 			content = content->next;
@@ -2148,7 +2149,7 @@ int	ft_check_door_consistency(t_lines *content, int *err_no)
 	int	i;
 
 	i = 0;
-	if (!ft_check_type_in_content(content, 'D'))
+	if (!ft_check_type_in_content(content, 'D') && !(*err_no))
 	{
 		while (content && content->type != 'M')
 			content = content->next;
@@ -2178,7 +2179,7 @@ int	ft_check_ani_textures(t_lines *content, int *err_no, char *line)
 	paths = NULL;
 	while (content && content->type != 'A')
 		content = content->next;
-	if (content && content->type == 'A')
+	if (content && content->type == 'A' && !(*err_no))
 	{
 		line = ft_strtrim(content->line + 3, " ");
 		paths = ft_split(line, ';');
@@ -2207,7 +2208,7 @@ int	ft_check_door_textures(t_lines *content, int *err_no)
 	path = NULL;
 	while (content && content->type != 'D')
 		content = content->next;
-	if (content && content->type == 'D')
+	if (content && content->type == 'D' && !(*err_no))
 	{
 		path = ft_strtrim(content->line + 2, " ");
 		if (!ft_check_extension(path, ".xpm"))
@@ -2219,19 +2220,28 @@ int	ft_check_door_textures(t_lines *content, int *err_no)
 	return (1);
 }
 
+int	ft_check_garbage(t_lines *content, int *err_no)
+{
+	while (content && !(*err_no))
+	{
+		printf("type : [%c] line :%s", content->type, content->line);
+		if (content->type == '0' && content->line && content->line[0] != '\0')
+			*err_no = ERR_UNEXPECTED_MENTIONS;
+		content = content->next;
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
 int	ft_check_content(t_lines *content, int *err_no)
 {
-	char	*path;
-	int		i;
-
-	i = 0;
-	path = NULL;
-	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no) \
-		|| !ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
+	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no))
 		return (0);
-	if (!ft_check_format_textures(path, content, err_no, -1))
+	if (!ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
 		return (0);
-	if (!ft_check_format_ani_textures(path, content, err_no, -1))
+	if (!ft_check_format_textures(NULL, content, err_no, -1) \
+		|| !ft_check_format_ani_textures(NULL, content, err_no, -1))
 		return (0);
 	if (!ft_check_format_punctuation(content, err_no))
 		return (0);
@@ -2246,6 +2256,8 @@ int	ft_check_content(t_lines *content, int *err_no)
 	if (!ft_check_ani_textures(content, err_no, NULL))
 		return (0);
 	if (!ft_check_door_textures(content, err_no))
+		return (0);
+	if (!ft_check_garbage(content, err_no))
 		return (0);
 	return (1);
 }
@@ -2576,6 +2588,8 @@ void	ft_print_cub3d_error_2(int err_no)
 		printf("Animation textures needed for this map.\n");
 	else if (err_no == ERR_NO_DOOR_CONSISTENCY)
 		printf("Door texture needed for this map.\n");
+	else if (err_no == ERR_UNEXPECTED_MENTIONS)
+		printf("There are unexpected mentions in your file.\n");
 }
 
 void	ft_print_cub3d_error_1(int err_no)
