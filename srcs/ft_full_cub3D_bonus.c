@@ -16,7 +16,10 @@
 # define ERR_MALLOC_CONTEXT 14
 # define ERR_BAD_TEXTURE_FILE 15
 # define ERR_FLOOR_CEILLING_FORMAT 16
+# define ERR_WRONG_FORMAT_ANI 17
 # define ERR_WRONG_FORMAT_SURFACES 18
+# define ERR_NO_ANI_CONSISTENCY 19
+# define ERR_NO_DOOR_CONSISTENCY 20
 # define ERR_UNEXPECTED_MENTIONS 21
 
 # define PLAYER_COLOR 0x20FF15
@@ -24,6 +27,8 @@
 # define SPACE_COLOR 0x302010
 # define START_COLOR 0x504030
 # define WALL_COLOR 0xA090A0
+# define CLOSE_COLOR 0xC01030
+# define OPEN_COLOR 0x3050C0
 # define EXT_COLOR 0
 
 # define LEFT 1
@@ -37,6 +42,10 @@
 # define WEST 3
 # define EAST 4
 # define WALL 5
+# define DOOR 6
+# define ANIMATION 7
+# define DOOR_ANIMATION 8
+# define DOOR_CLOSED 9
 
 # define SQ_SIZE 64
 # define SCALING 4
@@ -71,14 +80,14 @@ typedef struct s_checker {
 	int			door;
 }					t_checker;
 
-// typedef struct s_minitools {
-// 	int	i;
-// 	int	j;
-// 	int	start_x;
-// 	int	start_y;
-// 	int	target_x;
-// 	int	target_y;
-// }		t_minitools;
+typedef struct s_minitools {
+	int	i;
+	int	j;
+	int	start_x;
+	int	start_y;
+	int	target_x;
+	int	target_y;
+}		t_minitools;
 
 typedef struct s_margin {
 	int	ipx_add_xo;
@@ -99,6 +108,7 @@ typedef struct s_keys {
 }		t_keys;
 
 typedef struct s_rays {
+	int				door;
 	int				r_id;
 	double			short_x;
 	double			short_y;
@@ -138,16 +148,16 @@ typedef struct s_player
 	double		view_angle;
 }				t_player;
 
-// typedef struct s_minimap
-// {
-// 	void	*img;
-// 	void	*addr;
-// 	int		width;
-// 	int		height;
-// 	int		bits_per_pixel;
-// 	int		line_length;
-// 	int		endian;
-// }	t_minimap;
+typedef struct s_minimap
+{
+	void	*img;
+	void	*addr;
+	int		width;
+	int		height;
+	int		bits_per_pixel;
+	int		line_length;
+	int		endian;
+}	t_minimap;
 
 typedef struct s_rgb {
 	int	red;
@@ -169,10 +179,14 @@ typedef struct s_context {
 	t_textures	*north;
 	t_textures	*south;
 	t_textures	*west;
+	t_textures	*door;
+	t_textures	**animated;
 	t_textures	*east;
 	t_rgb		floor;
 	t_rgb		ceiling;
 	char		**map;
+	int			frames_door;
+	int			frames;
 	double		step;
 	int			map_height;
 	int			map_length;
@@ -185,6 +199,9 @@ typedef struct s_vars {
 	t_player	*position;
 	t_keys		*keys;
 	t_rays		*rays;
+	t_rays		*rays_door;
+	t_minimap	*minimap;
+	int			ani_frames;
 }				t_vars;
 
 void	ft_angle_adjustement(double *angle)
@@ -246,6 +263,29 @@ char	*ft_left_color_from_xpm(t_textures *wall, double step, \
 	return (color);
 }
 
+unsigned int	ft_get_color_from_xpm_door(t_textures *wall, \
+	double rank, int read_from, t_vars *vars)
+{
+	double	coeff;
+	char	*color;
+	int		y;
+	int		x;
+
+	coeff = (double)(*wall->tex_width / sizeof(int)) / (double)SQ_SIZE;
+	if (read_from == RIGHT)
+		x = (*wall->tex_width / sizeof(int)) - \
+			((int)(rank * coeff) % (*wall->tex_width / sizeof(int))) - 1;
+	else
+		x = (int)(rank * coeff) % (*wall->tex_width / sizeof(int));
+	y = *(wall->tex_height) * vars->context->step + \
+		(vars->context->frames_door);
+	if (y >= *(wall->tex_height))
+		return (0xff00ff);
+	color = wall->tex_addr + (y * *(wall->tex_width) \
+		+ x * (wall->bppixels / 8));
+	return (*(unsigned int *)color);
+}
+
 unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 	double rank, int read_from)
 {
@@ -255,39 +295,65 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 		return (*(unsigned int *)ft_left_color_from_xpm(wall, step, rank));
 }
 
-
-unsigned int	ft_get_wall_color(t_textures *texture, double step, \
-	t_rays *rays)
+unsigned int	ft_get_door_color(t_textures *texture, \
+	t_rays *rays, t_vars *vars)
 {
 	if (rays->wall_direction == NORTH)
+		return (ft_get_color_from_xpm_door(texture, \
+			rays->short_x, LEFT, vars));
+	else if (rays->wall_direction == SOUTH)
+		return (ft_get_color_from_xpm_door(texture, \
+			rays->short_x, RIGHT, vars));
+	else if (rays->wall_direction == WEST)
+		return (ft_get_color_from_xpm_door(texture, \
+			rays->short_y, RIGHT, vars));
+	else if (rays->wall_direction == EAST)
+		return (ft_get_color_from_xpm_door(texture, \
+			rays->short_y, LEFT, vars));
+	return (0);
+}
+
+unsigned int	ft_get_wall_color(t_textures *texture, double step, \
+	t_rays *rays, t_vars *vars)
+{
+	if (rays->wall_direction == NORTH && rays->wall_type != DOOR_ANIMATION)
 		return (ft_get_color_from_xpm(texture, step, \
 			rays->short_x, LEFT));
-	else if (rays->wall_direction == SOUTH)
+	else if (rays->wall_direction == SOUTH && rays->wall_type != DOOR_ANIMATION)
 		return (ft_get_color_from_xpm(texture, step, \
 			rays->short_x, RIGHT));
-	else if (rays->wall_direction == WEST)
+	else if (rays->wall_direction == WEST && rays->wall_type != DOOR_ANIMATION)
 		return (ft_get_color_from_xpm(texture, step, \
 			rays->short_y, RIGHT));
-	else if (rays->wall_direction == EAST)
+	else if (rays->wall_direction == EAST && rays->wall_type != DOOR_ANIMATION)
 		return (ft_get_color_from_xpm(texture, step, \
 			rays->short_y, LEFT));
-	return (0);
+	else
+		return (ft_get_door_color(texture, rays, vars));
 }
 
 void	ft_print_type(double step, unsigned int *col,
 	t_vars *vars, t_rays *rays)
 {
 	t_context	*context;
+	int			frame;
 
 	context = vars->context;
-	if (rays->wall_direction == NORTH)
-		*col = ft_get_wall_color(context->south, step, rays);
+	if (rays->wall_type == DOOR || rays->wall_type == DOOR_ANIMATION)
+		*col = ft_get_wall_color(context->door, step, rays, vars);
+	else if (rays->wall_type == ANIMATION)
+	{
+		frame = context->frames % vars->ani_frames;
+		*col = ft_get_wall_color(context->animated[frame], step, rays, vars);
+	}
+	else if (rays->wall_direction == NORTH)
+		*col = ft_get_wall_color(context->south, step, rays, vars);
 	else if (rays->wall_direction == SOUTH)
-		*col = ft_get_wall_color(context->north, step, rays);
+		*col = ft_get_wall_color(context->north, step, rays, vars);
 	else if (rays->wall_direction == WEST)
-		*col = ft_get_wall_color(context->east, step, rays);
+		*col = ft_get_wall_color(context->east, step, rays, vars);
 	else if (rays->wall_direction == EAST)
-		*col = ft_get_wall_color(context->west, step, rays);
+		*col = ft_get_wall_color(context->west, step, rays, vars);
 }
 
 void	ft_print_column(t_vars *vars, int line_start,
@@ -298,6 +364,26 @@ void	ft_print_column(t_vars *vars, int line_start,
 
 	vars->context->step = 0;
 	pixel = 0;
+	while ((line_start + pixel) < line_end - 1 && line_start + pixel < WINDOW_HEIGHT)
+	{
+		pixel++;
+		if (line_start + pixel > 0)
+		{
+			vars->context->step = ((double)pixel / (double)(line_end - line_start));
+			ft_print_type(vars->context->step, &col, vars, rays);
+			if (col != 0xff00ff)
+				ft_mlx_pixel_put(vars, rays->r_id, (line_start + pixel), col);
+		}
+	}
+}
+
+void	ft_print_door(t_vars *vars, int line_start, int line_end, t_rays *rays)
+{
+	unsigned int	col;
+	int				pixel;
+
+	pixel = 0;
+
 	while ((line_start + pixel) < line_end - 1 && line_start + pixel < WINDOW_HEIGHT)
 	{
 		pixel++;
@@ -326,7 +412,10 @@ void	ft_3d_display(t_vars *vars, t_rays *rays)
 	line_height = ((SQ_SIZE * (WINDOW_HEIGHT)) / rays->ray_len) * ratio;
 	line_start = ((WINDOW_HEIGHT) / 2) - (line_height / 2);
 	line_end = line_start + line_height;
-	ft_print_column(vars, line_start, line_end, rays);
+	if (rays->door == 1 && rays->wall_type == DOOR_ANIMATION)
+		ft_print_door(vars, line_start, line_end, rays);
+	else
+		ft_print_column(vars, line_start, line_end, rays);
 }
 
 void	ft_ray_impact_wall(t_vars *vars, int dov, t_rays *ray)
@@ -340,7 +429,29 @@ void	ft_ray_impact_wall(t_vars *vars, int dov, t_rays *ray)
 			&& ray->tmp_ry < vars->context->map_height
 			&& ray->tmp_ry < WINDOW_HEIGHT
 			&& ray->tmp_rx < WINDOW_WIDTH
-			&& (ft_strchr("1", vars->context->map[ray->tmp_ry][ray->tmp_rx])))
+			&& (ft_strchr("1DA", vars->context->map[ray->tmp_ry][ray->tmp_rx])))
+			ray->dov = dov;
+		else
+		{
+			ray->impact_x += ray->xo;
+			ray->impact_y += ray->yo;
+			ray->dov += 1;
+		}
+	}
+}
+
+void	ft_ray_impact_door(t_vars *vars, int dov, t_rays *ray)
+{
+	while (ray->dov < dov)
+	{
+		ray->tmp_rx = (int)(ray->impact_x) >> 6;
+		ray->tmp_ry = (int)(ray->impact_y) >> 6;
+		if (ray->tmp_rx >= 0 && ray->tmp_ry >= 0
+			&& ray->tmp_rx < vars->context->map_length
+			&& ray->tmp_ry < vars->context->map_height
+			&& ray->tmp_ry < WINDOW_HEIGHT
+			&& ray->tmp_rx < WINDOW_WIDTH
+			&& ft_strchr("1DXAx", vars->context->map[ray->tmp_ry][ray->tmp_rx]))
 			ray->dov = dov;
 		else
 		{
@@ -353,7 +464,10 @@ void	ft_ray_impact_wall(t_vars *vars, int dov, t_rays *ray)
 
 void	ft_deep_of_view_explorer(t_vars *vars, int dov, t_rays *rays)
 {
-	ft_ray_impact_wall(vars, dov, rays);
+	if (!rays->door)
+		ft_ray_impact_wall(vars, dov, rays);
+	else if (rays->door == 1)
+		ft_ray_impact_door(vars, dov, rays);
 }
 
 void	ft_parallel_axis(t_vars *vars, int dov, t_rays *rays)
@@ -458,9 +572,64 @@ void	ft_wall_identification(t_player *position, t_rays *rays)
 	rays->ray_len = ft_distance(px, py, rays->short_x, rays->short_y);
 }
 
+void	ft_minimap_pixel_put(t_minimap *minimap, int x, int y, int color)
+{
+	char	*dst;
+
+	dst = minimap->addr + (y * (minimap->line_length) \
+		+ x * (minimap->bits_per_pixel / 8));
+	if (x >= 0 && y >= 0 && x < minimap->width && y < minimap->height)
+		*(unsigned int *)dst = color;
+}
+
+void	ft_confirm_wall_type(t_rays *r, char **map, int x, int y)
+{
+	if (map[y / SQ_SIZE][x / SQ_SIZE] == 'D')
+		r->wall_type = DOOR;
+	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'X' \
+		|| map[y / SQ_SIZE][x / SQ_SIZE] == 'x')
+		r->wall_type = DOOR_ANIMATION;
+	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'A')
+		r->wall_type = ANIMATION;
+	else
+		r->wall_type = WALL;
+}
+
+void	ft_animate_frames_door(int *frames)
+{
+	static int	j;
+
+	if (!j)
+		j = 1;
+	if (*frames == 60)
+		j = -1;
+	else if (*frames == 1)
+		j = 1;
+	*frames += j;
+}
+
+void	ft_animate_frames(int *frames)
+{
+	static int	j;
+	static int	i;
+
+	if (!j)
+		j = 1;
+	if (i++ / 20)
+	{
+		i = 0;
+		if (*frames > 10 && j == 1)
+			j = -1;
+		else if (*frames < 1 && j == -1)
+			j = 1;
+		*frames += j;
+	}
+}
+
 void	ft_draw_environment(t_vars *vars, t_rays *rays)
 {
 	rays->r_id = 0;
+	rays->door = 0;
 	rays->r_angle = vars->position->view_angle - (RADIAN * 30);
 	ft_angle_adjustement(&rays->r_angle);
 	while (rays->r_id < WINDOW_WIDTH)
@@ -472,12 +641,264 @@ void	ft_draw_environment(t_vars *vars, t_rays *rays)
 		rays->short_y = rays->impact_y;
 		ft_vertical_axis_intersection(vars, rays);
 		ft_wall_identification(vars->position, rays);
-		rays->wall_type = WALL;
+		ft_confirm_wall_type(rays, vars->context->map, \
+			(int)rays->short_x, (int)rays->short_y);
 		ft_3d_display(vars, rays);
 		ft_angle_adjustement(&rays->r_angle);
 		rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
 		rays->r_id++;
 	}
+}
+
+void	ft_draw_door(t_vars *vars, t_rays *rays)
+{
+	rays->r_id = 0;
+	rays->door = 1;
+	rays->r_angle = vars->position->view_angle - (RADIAN * 30);
+	ft_angle_adjustement(&rays->r_angle);
+	while (rays->r_id < WINDOW_WIDTH)
+	{
+		rays->a_tan = -1 / tan(rays->r_angle);
+		rays->n_tan = -tan(rays->r_angle);
+		ft_horizontal_axis_intersection(vars, rays);
+		rays->short_x = rays->impact_x;
+		rays->short_y = rays->impact_y;
+		ft_vertical_axis_intersection(vars, rays);
+		ft_wall_identification(vars->position, rays);
+		ft_confirm_wall_type(rays, vars->context->map, \
+			(int)rays->short_x, (int)rays->short_y);
+		ft_3d_display(vars, rays);
+		ft_angle_adjustement(&rays->r_angle);
+		rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
+		rays->r_id++;
+	}
+}
+
+void	ft_pixel_around_impacts(t_vars *vars, int size, unsigned int color)
+{
+	int	init_x;
+	int	init_y;
+	int	i;
+	int	j;
+
+	init_x = vars->rays->short_x / SCALING - (size / 2);
+	init_y = vars->rays->short_y / SCALING - (size / 2);
+	j = -1;
+	i = -1;
+	while (++j < size)
+	{
+		while (++i < size)
+			ft_minimap_pixel_put(vars->minimap, init_x + i, init_y + j, color);
+		i = -1;
+	}
+}
+
+void	ft_draw_ray_hit(t_vars *vars, unsigned int color, t_rays *rays)
+{
+	t_player	*pos;
+
+	pos = vars->position;
+	if (ft_distance(pos->player_x, pos->player_y,
+			rays->impact_x, rays->impact_y)
+		< ft_distance(pos->player_x, pos->player_y,
+			rays->short_x, rays->short_y))
+	{
+		rays->short_x = rays->impact_x;
+		rays->short_y = rays->impact_y;
+	}
+	ft_pixel_around_impacts(vars, 3, color);
+}
+
+void	ft_draw_rays_minimap(t_vars *vars, t_rays *rays)
+{
+	vars->rays->r_id = 0;
+	vars->rays->r_angle = vars->position->view_angle - (RADIAN * 30);
+	while (vars->rays->r_id < WINDOW_WIDTH)
+	{
+		ft_angle_adjustement(&vars->rays->r_angle);
+		vars->rays->a_tan = -1 / tan(vars->rays->r_angle);
+		vars->rays->n_tan = -tan(vars->rays->r_angle);
+		ft_horizontal_axis_intersection(vars, rays);
+		vars->rays->short_x = vars->rays->impact_x;
+		vars->rays->short_y = vars->rays->impact_y;
+		ft_vertical_axis_intersection(vars, rays);
+		ft_draw_ray_hit(vars, RAY_COLOR, rays);
+		vars->rays->r_angle += ((PI / 3 / WINDOW_WIDTH));
+		vars->rays->r_id++;
+	}
+}
+
+void	ft_put_pixel_around(t_vars *vars, int size, unsigned int color)
+{
+	int	init_x;
+	int	init_y;
+	int	i;
+	int	j;
+
+	init_x = vars->position->player_x / SCALING - (size / 2);
+	init_y = vars->position->player_y / SCALING - (size / 2);
+	j = -1;
+	i = -1;
+	while (++j < size)
+	{
+		while (++i < size)
+			ft_minimap_pixel_put(vars->minimap, init_x + i, init_y + j, color);
+		i = -1;
+	}
+}
+
+void	ft_draw_player(t_vars *vars)
+{
+	int				size;
+	unsigned int	color;
+
+	size = SQ_SIZE / SCALING / 4;
+	color = PLAYER_COLOR;
+	if (!size)
+		size = 1;
+	ft_put_pixel_around(vars, size, color);
+}
+
+void	ft_draw_square_minimap(t_vars *vars, int y, int x, int color)
+{
+	int	i;
+	int	j;
+
+	j = 0;
+	while (j < SQ_SIZE / SCALING)
+	{
+		i = 0;
+		while (i < SQ_SIZE / SCALING)
+		{
+			ft_minimap_pixel_put(vars->minimap, i + (x * SQ_SIZE / SCALING), \
+				j + (y * SQ_SIZE / SCALING), color);
+			i++;
+		}
+		j++;
+	}
+}
+
+void	ft_draw_minispaces(t_vars *vars)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (vars->context->map[y])
+	{
+		x = 0;
+		while (vars->context->map[y][x])
+		{
+			if (vars->context->map[y][x] == '0')
+				ft_draw_square_minimap(vars, y, x, SPACE_COLOR);
+			else if (ft_strchr("NSWE", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, START_COLOR);
+			else if (ft_strchr("O", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, OPEN_COLOR);
+			x++;
+		}
+		y++;
+	}
+}
+
+void	ft_init_minitools(t_minitools *tools, t_player *pos)
+{
+	tools->start_x = ((pos->player_x) - ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+	tools->start_y = ((pos->player_y) - ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+	tools->target_x = ((pos->player_x) + ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+	tools->target_y = ((pos->player_y) + ((MINIZONE * SQ_SIZE / 2))) / SCALING;
+}
+
+void	ft_put_minimap_on_display(t_vars *vars, t_player *pos, t_minimap *mini)
+{
+	t_minitools	t;
+	char		*col;
+
+	t.i = 0;
+	ft_init_minitools(&t, pos);
+	while (t.start_x + t.i < t.target_x)
+	{
+		t.j = 0;
+		while (t.start_y + t.j < t.target_y)
+		{
+			if ((t.start_x + t.i) >= 0 && t.start_y + t.j >= 0 && t.start_x \
+				+ t.i <= mini->width && t.start_y + t.j <= mini->height)
+			{
+				col = mini->addr + ((t.start_y + t.j) * (mini->line_length)) \
+					+ ((t.start_x + t.i) * (mini->bits_per_pixel / 8));
+				ft_mlx_pixel_put(vars, t.i + (SQ_SIZE / SCALING), \
+					t.j + (SQ_SIZE / SCALING), *(unsigned int *)col);
+			}
+			else
+				ft_mlx_pixel_put(vars, t.i + (SQ_SIZE / SCALING), \
+					t.j + (SQ_SIZE / SCALING), EXT_COLOR);
+			t.j++;
+		}
+		t.i++;
+	}
+}
+
+void	ft_draw_miniwalls(t_vars *vars)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (vars->context->map[y])
+	{
+		x = 0;
+		while (vars->context->map[y][x])
+		{
+			if (ft_strchr("1A", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, WALL_COLOR);
+			else if (ft_strchr("D", vars->context->map[y][x]))
+				ft_draw_square_minimap(vars, y, x, CLOSE_COLOR);
+			x++;
+		}
+		y++;
+	}
+}
+
+void	ft_draw_minimap(t_vars *vars)
+{
+	if (vars->minimap->img)
+		mlx_destroy_image(vars->mlx_datas->mlx, vars->minimap->img);
+	vars->minimap->img = mlx_new_image(vars->mlx_datas->mlx, \
+		vars->minimap->width, vars->minimap->height);
+	vars->minimap->addr = mlx_get_data_addr(vars->minimap->img, \
+		&vars->minimap->bits_per_pixel, &vars->minimap->line_length, \
+		&vars->minimap->endian);
+	ft_draw_miniwalls(vars);
+	ft_draw_rays_minimap(vars, vars->rays);
+	ft_draw_minispaces(vars);
+	ft_draw_player(vars);
+	ft_put_minimap_on_display(vars, vars->position, vars->minimap);
+}
+
+int	ft_mouse_interactions(int x, int y, t_vars *vars)
+{
+	(void)y;
+	if (x < (WINDOW_WIDTH / 2) - 20)
+	{
+		vars->position->view_angle -= RSPEED;
+		if (vars->position->view_angle < 0)
+			vars->position->view_angle += (2 * PI);
+		vars->position->pdx = cos(vars->position->view_angle) * SPEED;
+		vars->position->pdy = sin(vars->position->view_angle) * SPEED;
+		mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, \
+			WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+	}
+	else if (x > (WINDOW_WIDTH / 2) + 20)
+	{
+		vars->position->view_angle += RSPEED;
+		if (vars->position->view_angle > (2 * PI))
+			vars->position->view_angle -= (2 * PI);
+		vars->position->pdx = cos(vars->position->view_angle) * SPEED;
+		vars->position->pdy = sin(vars->position->view_angle) * SPEED;
+		mlx_mouse_move(vars->mlx_datas->mlx, vars->mlx_datas->win, \
+			WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+	}
+	return (1);
 }
 
 void	ft_rotation(t_vars *vars)
@@ -503,10 +924,10 @@ int	ft_map_wall(t_vars *vars)
 	map = vars->context->map;
 	player_y = (int)vars->position->player_y;
 	player_x = (int)vars->position->player_x;
-	if (ft_strchr("1", map[(player_y + 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1", map[(player_y - 22) / 64][(player_x - 22) / 64])
-		|| ft_strchr("1", map[(player_y - 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1", map[(player_y + 22) / 64][(player_x - 22) / 64]))
+	if (ft_strchr("1ADxX", map[(player_y + 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1ADxX", map[(player_y - 22) / 64][(player_x - 22) / 64])
+		|| ft_strchr("1ADxX", map[(player_y - 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1ADxX", map[(player_y + 22) / 64][(player_x - 22) / 64]))
 		return (1);
 	return (0);
 }
@@ -558,14 +979,114 @@ void	ft_left_right(t_vars *vars)
 	}
 }
 
+void	ft_collision(t_vars *vars, t_margin *margin, int i)
+{
+	t_player	*pos;
+	int			coeff_x;
+	int			coeff_y;
+
+	pos = vars->position;
+	coeff_x = i;
+	if (pos->pdx < 0)
+		coeff_x = -i;
+	coeff_y = i;
+	if (pos->pdy < 0)
+		coeff_y = -i;
+	margin->ipx_add_xo = (pos->player_x + coeff_x) / SQ_SIZE;
+	margin->ipx_sub_xo = (pos->player_x - coeff_x) / SQ_SIZE;
+	margin->ipy_add_yo = (pos->player_y + coeff_y) / SQ_SIZE;
+	margin->ipy_sub_yo = (pos->player_y - coeff_y) / SQ_SIZE;
+}
+
+int	ft_putchar_on_map(t_vars *vars, int x, int y, int type)
+{
+	char	**map;
+
+	map = vars->context->map;
+	if (type == DOOR)
+	{
+		vars->context->frames_door = 1;
+		map[y][x] = 'X';
+	}
+	else
+	{
+		vars->context->frames_door = 59;
+		map[y][x] = 'x';
+	}
+	return (1);
+}
+
+int	ft_open_door(t_vars *vars, int x, int y, double ang)
+{
+	char	**map;
+
+	map = vars->context->map;
+	if (map[y - 1][x] == 'D' && ang > (M_PI * 5) / 4 && ang < (7 * M_PI) / 4)
+		return (ft_putchar_on_map(vars, x, y - 1, DOOR));
+	else if (map[y + 1][x] == 'D' && ang > M_PI / 4 && ang < (3 * M_PI) / 4)
+		return (ft_putchar_on_map(vars, x, y + 1, DOOR));
+	else if (map[y][x + 1] == 'D' && (ang > (7 * M_PI) / 4 || ang < M_PI / 4))
+		return (ft_putchar_on_map(vars, x + 1, y, DOOR));
+	else if (map[y][x - 1] == 'D' && ang > (3 * M_PI) / 4
+		&& ang < (5 * M_PI) / 4)
+		return (ft_putchar_on_map(vars, x - 1, y, DOOR));
+	return (0);
+}
+
+void	ft_close_door(t_vars *vars, int x, int y, double ang)
+{
+	char	**map;
+
+	map = vars->context->map;
+	if (map[y - 1][x] == 'O' && ang > (M_PI * 5) / 4 && ang < (7 * M_PI) / 4
+		&& ((int)(vars->position->player_y) % SQ_SIZE) > (SQ_SIZE / 2))
+		ft_putchar_on_map(vars, x, y - 1, DOOR_CLOSED);
+	else if (map[y + 1][x] == 'O' && ang > M_PI / 4 && ang < (3 * M_PI) / 4
+		&& ((int)(vars->position->player_y) % SQ_SIZE) < (SQ_SIZE / 2))
+		ft_putchar_on_map(vars, x, y + 1, DOOR_CLOSED);
+	else if (map[y][x + 1] == 'O' && (ang > (7 * M_PI) / 4 || ang < M_PI / 4)
+		&& ((int)(vars->position->player_x) % SQ_SIZE) < (SQ_SIZE / 2))
+		ft_putchar_on_map(vars, x + 1, y, DOOR_CLOSED);
+	else if (map[y][x - 1] == 'O' && ang > (3 * M_PI) / 4 \
+		&& ang < (5 * M_PI) / 4 && ((int)(vars->position->player_x) \
+		% SQ_SIZE) > (SQ_SIZE / 2))
+		ft_putchar_on_map(vars, x - 1, y, DOOR_CLOSED);
+}
+
+void	ft_map_door(t_vars *vars)
+{
+	int			player_x;
+	int			player_y;
+	double		player_angle;
+
+	player_x = (int)(vars->position->player_x / SQ_SIZE);
+	player_y = (int)(vars->position->player_y / SQ_SIZE);
+	player_angle = vars->position->view_angle;
+	if (ft_open_door(vars, player_x, player_y, player_angle))
+		return ;
+	else
+		ft_close_door(vars, player_x, player_y, player_angle);
+}
+
 void	ft_keyboard_interactions(t_vars *vars)
 {
+	static int	i;
+
 	if (vars->keys->left_arr == 1 || vars->keys->right_arr == 1)
 		ft_rotation(vars);
 	if (vars->keys->w == 1 || vars->keys->s == 1)
 		ft_foreward_backward(vars);
 	if (vars->keys->a == 1 || vars->keys->d == 1)
 		ft_left_right(vars);
+	if (vars->keys->e == 1)
+	{
+		i++;
+		if (i != 1)
+			return ;
+		ft_map_door(vars);
+	}
+	else
+		i = 0;
 }
 
 void	ft_draw_ceilling(t_context *context, t_vars *vars)
@@ -610,6 +1131,79 @@ void	ft_draw_floor(t_context *context, t_vars *vars)
 	}
 }
 
+int	ft_player_around(t_vars *vars, int x, int y)
+{
+	if (y == (int)vars->position->player_y / 64
+		&& x == (int)vars->position->player_x / 64)
+		return (1);
+	else if (y == (int)vars->position->player_y / 64
+		&& x - 1 == (int)vars->position->player_x / 64)
+		return (1);
+	else if (y == (int)vars->position->player_y / 64
+		&& x + 1 == (int)vars->position->player_x / 64)
+		return (1);
+	else if (y - 1 == (int)vars->position->player_y / 64
+		&& x == (int)vars->position->player_x / 64)
+		return (1);
+	else if (y + 1 == (int)vars->position->player_y / 64
+		&& x == (int)vars->position->player_x / 64)
+		return (1);
+	else
+		return (0);
+}
+
+int	ft_parse_map_to_close(t_vars *vars)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (y < vars->context->map_height)
+	{
+		x = 0;
+		while (x < vars->context->map_length)
+		{
+			if (vars->context->map[y][x] == 'X')
+			{
+				vars->context->map[y][x] = 'O';
+				return (1);
+			}
+			else if (vars->context->map[y][x] == 'x')
+			{
+				vars->context->map[y][x] = 'D';
+				return (1);
+			}
+			x++;
+		}
+		y++;
+	}
+	return (0);
+}
+
+void	ft_door_animation(t_vars *vars)
+{
+	static int	i;
+
+	if (vars->keys->e || (vars->context->frames_door > 0
+			&& vars->context->frames_door < 60))
+	{
+		ft_animate_frames_door(&vars->context->frames_door);
+		i++;
+		ft_draw_door(vars, vars->rays_door);
+	}
+	if (i > 1)
+		i++;
+	if (i / 60 && (vars->context->frames_door == 59
+			|| vars->context->frames_door == 1))
+	{
+		if (ft_parse_map_to_close(vars))
+		{
+			vars->context->frames_door = 0;
+			i = 0;
+		}
+	}
+}
+
 int	ft_cub3d(t_vars *vars)
 {
 	t_mlx_datas	*md;
@@ -623,7 +1217,10 @@ int	ft_cub3d(t_vars *vars)
 	ft_draw_ceilling(vars->context, vars);
 	ft_draw_floor(vars->context, vars);
 	ft_keyboard_interactions(vars);
+	ft_animate_frames(&vars->context->frames);
 	ft_draw_environment(vars, vars->rays);
+	ft_door_animation(vars);
+	ft_draw_minimap(vars);
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);
 }
@@ -650,6 +1247,8 @@ int	ft_hold_key(int keycode, t_vars *vars)
 		vars->keys->d = 1;
 	if (keycode == XK_Escape)
 		mlx_loop_end(vars->mlx_datas->mlx);
+	if (keycode == 'e')
+		vars->keys->e = 1;
 	return (keycode);
 }
 
@@ -667,6 +1266,8 @@ int	ft_release_key(int keycode, t_vars *vars)
 		vars->keys->s = 0;
 	if (keycode == 'd')
 		vars->keys->d = 0;
+	if (keycode == 'e')
+		vars->keys->e = 0;
 	return (keycode);
 }
 
@@ -678,6 +1279,7 @@ void	ft_hooks_activation(t_vars *vars)
 	mlx_hook(md->win, ON_DESTROY, DestroyAll, ft_click_cross, md->mlx);
 	mlx_hook(md->win, 2, 1L << 0, ft_hold_key, vars);
 	mlx_hook(md->win, 3, 1L << 1, ft_release_key, vars);
+	mlx_hook(md->win, 6, 1L << 6, ft_mouse_interactions, vars);
 }
 
 int	ft_if_player_here(t_vars *vars, int y, int x)
@@ -742,11 +1344,36 @@ t_keys	*ft_init_keys(void)
 	keys->a = 0;
 	keys->s = 0;
 	keys->d = 0;
+	keys->e = 0;
 	keys->left_arr = 0;
 	keys->right_arr = 0;
 	return (keys);
 }
 
+void	ft_set_minimap(t_vars *vars)
+{
+	vars->minimap->width = vars->context->map_length * SQ_SIZE;
+	vars->minimap->height = vars->context->map_height * SQ_SIZE;
+	printf("vars->minimap->width %d\n", vars->minimap->width);
+	printf("vars->minimap->height %d\n", vars->minimap->height);
+}
+
+t_minimap	*ft_init_minimap(void)
+{
+	t_minimap	*mini;
+
+	mini = (t_minimap *)malloc(sizeof(t_minimap));
+	if (!mini)
+		return (NULL);
+	mini->img = NULL;
+	mini->addr = NULL;
+	mini->bits_per_pixel = 0;
+	mini->endian = 0;
+	mini->height = 0;
+	mini->line_length = 0;
+	mini->width = 0;
+	return (mini);
+}
 
 t_vars	*ft_init_vars(t_context *context)
 {
@@ -764,11 +1391,39 @@ t_vars	*ft_init_vars(t_context *context)
 		vars->rays = (t_rays *)malloc(sizeof(t_rays));
 		if (!vars->rays)
 			return (NULL);
+		vars->rays_door = (t_rays *)malloc(sizeof(t_rays));
+		if (!vars->rays_door)
+			return (NULL);
 		vars->context = context;
+		vars->context->frames_door = 0;
+		vars->context->frames = 0;
 		vars->keys = ft_init_keys();
+		vars->minimap = ft_init_minimap();
 		vars->position = ft_get_player_position(vars, context->orientation);
 	}
 	return (vars);
+}
+
+void	ft_show_context(t_context *context)
+{
+	if (context)
+	{
+		printf("\nAFTER PARSING\n");
+		printf("NO path : %s\n", context->north->path);
+		printf("SO path : %s\n", context->south->path);
+		printf("WE path : %s\n", context->west->path);
+		printf("EA path : %s\n", context->east->path);
+		printf("Player Orientation : %c\n", context->orientation);
+		printf("floor R%d G%d B%d\n", \
+			context->floor.red, context->floor.green, context->floor.blue);
+		printf("ceiling R%d G%d B%d\n", context->ceiling.red, \
+			context->ceiling.green, context->ceiling.blue);
+		printf("map :\n");
+		ft_show_strs(context->map);
+		printf("end of map.\n");
+	}
+	else
+		printf("Error.\nNo context.\n");
 }
 
 void	ft_set_texture(t_textures *data, t_mlx_datas *md)
@@ -794,17 +1449,57 @@ void	ft_get_textures_paths(t_context *context, t_lines *content)
 			context->west->path = ft_strtrim(content->line + 2, " ");
 		else if (content->type == 'E')
 			context->east->path = ft_strtrim(content->line + 2, " ");
+		else if (content->type == 'D')
+			context->door->path = ft_strtrim(content->line + 2, " ");
 		content = content->next;
 	}
 }
 
+void	ft_set_animated_texture(t_textures **animated, t_mlx_datas *md)
+{
+	int	i;
+
+	i = 0;
+	while (animated && md && animated[i])
+	{
+		ft_set_texture(animated[i], md);
+		i++;
+	}
+}
+
+int	ft_check_animated_texture(t_textures **animated)
+{
+	int	i;
+
+	i = 0;
+	while (animated && animated[i])
+	{
+		if (!animated[i]->tex_img)
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
 void	ft_get_full_textures(t_context *context, t_mlx_datas *md, \
-	int *err_no)
+	int *err_no, t_checker *checker)
 {
 	ft_set_texture(context->north, md);
 	ft_set_texture(context->south, md);
 	ft_set_texture(context->west, md);
 	ft_set_texture(context->east, md);
+	if (checker->door)
+	{
+		ft_set_texture(context->door, md);
+		if (!context->door->tex_img)
+			*err_no = ERR_BAD_TEXTURE_FILE;
+	}
+	if (checker->ani)
+	{
+		ft_set_animated_texture(context->animated, md);
+		if (!ft_check_animated_texture(context->animated))
+			*err_no = ERR_BAD_TEXTURE_FILE;
+	}
 	if (!context->north->tex_img || !context->north->tex_addr \
 		|| !context->south->tex_img || !context->south->tex_addr \
 		|| !context->west->tex_img || !context->west->tex_addr \
@@ -812,12 +1507,24 @@ void	ft_get_full_textures(t_context *context, t_mlx_datas *md, \
 		*err_no = ERR_BAD_TEXTURE_FILE;
 }
 
-t_vars	*ft_get_vars(t_context *context, int *err_no)
+int	ft_total_frames(t_textures **animated)
+{
+	int	i;
+
+	i = 0;
+	while (animated && animated[i])
+		i++;
+	return (i);
+}
+
+t_vars	*ft_get_vars(t_context *context, int *err_no, t_checker *checker)
 {
 	t_vars		*vars;
 	t_mlx_datas	*md;
 
 	vars = ft_init_vars(context);
+	if (checker->ani)
+		vars->ani_frames = ft_total_frames(context->animated);
 	md = vars->mlx_datas;
 	if (vars)
 	{
@@ -826,7 +1533,8 @@ t_vars	*ft_get_vars(t_context *context, int *err_no)
 		md->img = mlx_new_image(md->mlx, WINDOW_WIDTH, WINDOW_HEIGHT);
 		md->addr = mlx_get_data_addr(md->img, &md->bits_per_pixel, \
 			&md->line_length, &md->endian);
-		ft_get_full_textures(vars->context, vars->mlx_datas, err_no);
+		ft_get_full_textures(vars->context, vars->mlx_datas, err_no, checker);
+		ft_set_minimap(vars);
 	}
 	return (vars);
 }
@@ -852,7 +1560,7 @@ int	ft_potential_map_line(char *str, int len)
 	int	i;
 
 	i = 0;
-	while (str[i] && ft_strchr(" 01NSWE", str[i]))
+	while (str[i] && ft_strchr(" 01NSWEADO", str[i]))
 		i++;
 	if (i && i == len)
 		return (1);
@@ -1012,6 +1720,10 @@ char	ft_define_line_type(char *str, int len)
 			type = 'M';
 		else if (ft_strchr("FC", str[0]) && len > 2)
 			type = ft_type_specifier(str, 1);
+		else if (ft_strchr("D", str[0]) && len > 3)
+			type = ft_type_specifier(str, 3);
+		else if (ft_strchr("A", str[0]) && len > 4)
+			type = ft_type_specifier(str, 4);
 		else if (ft_strchr("NSWE", str[0]) && len > 3)
 			type = ft_type_specifier(str, 2);
 	}
@@ -1098,7 +1810,71 @@ t_textures	*ft_init_t_textures(void)
 	return (texture);
 }
 
-t_context	*ft_init_t_context(int *err)
+int	ft_get_animation_len(t_lines *content)
+{
+	int	i;
+	int	ret;
+
+	i = 0;
+	ret = 0;
+	while (content && content->type != 'A')
+		content = content->next;
+	if (content && content->type == 'A')
+	{
+		while (content->line && (content->line[i] + 3) == ' ')
+			i++;
+		ret = ft_count_strs(content->line + i + 3, ';');
+	}
+	return (ret);
+}
+
+char	**ft_get_animated_textures(t_lines *content)
+{
+	char	**paths;
+	char	*path;
+
+	paths = NULL;
+	while (content && content->type != 'A')
+		content = content->next;
+	if (content && content->type == 'A')
+	{
+		path = ft_strtrim(content->line + 3, " ");
+		paths = ft_split(path, ';');
+		ft_true_free((void **)&path);
+	}
+	return (paths);
+}
+
+t_textures	**ft_init_ani_textures(t_lines *content)
+{
+	t_textures	**texture;
+	int			i;
+	int			size;
+	char		**paths;
+
+	i = 0;
+	paths = ft_get_animated_textures(content);
+	size = ft_get_animation_len(content);
+	texture = (t_textures **)malloc(sizeof(t_textures *) * (size + 1));
+	if (!texture)
+		return (NULL);
+	texture[size] = NULL;
+	while (i < size)
+	{
+		texture[i] = ft_init_t_textures();
+		i++;
+	}
+	i = 0;
+	while (i < size)
+	{
+		texture[i]->path = ft_strdup(paths[i]);
+		i++;
+	}
+	ft_full_free((void **)paths);
+	return (texture);
+}
+
+t_context	*ft_init_t_context(t_lines *content, int *err, t_checker *checker)
 {
 	t_context	*context;
 
@@ -1112,6 +1888,10 @@ t_context	*ft_init_t_context(int *err)
 	context->south = ft_init_t_textures();
 	context->west = ft_init_t_textures();
 	context->east = ft_init_t_textures();
+	if (checker->door)
+		context->door = ft_init_t_textures();
+	if (checker->ani)
+		context->animated = ft_init_ani_textures(content);
 	context->map = NULL;
 	if (!context->north || !context->south || !context->west || !context->east)
 		*err = ERR_TEXTURE_INIT_FAILED;
@@ -1175,9 +1955,14 @@ int	ft_just_enough_paths(t_lines *content, int *tab, int *err_no)
 			tab[2] += 1;
 		else if (content->type == 'E')
 			tab[3] += 1;
+		else if (content->type == 'D')
+			tab[4] += 1;
+		else if (content->type == 'A')
+			tab[5] += 1;
 		content = content->next;
 	}
-	if (tab[0] != 1 || tab[1] != 1 || tab[2] != 1 || tab[3] != 1)
+	if (tab[0] != 1 || tab[1] != 1 || tab[2] != 1 || tab[3] != 1 \
+		|| tab[4] > 1 || tab[5] > 1)
 	{
 		ft_enough_paths_err_no(tab, err_no);
 		return (0);
@@ -1253,6 +2038,8 @@ void	ft_check_duplicates(char *path, int *err_no, char c)
 		{
 			if (c == ',')
 				*err_no = ERR_FLOOR_CEILLING_FORMAT;
+			if (c == ';')
+				*err_no = ERR_WRONG_FORMAT_ANI;
 		}
 		i++;
 	}
@@ -1272,6 +2059,13 @@ int	ft_check_format_punctuation(t_lines *content, int *err_no)
 			if (!ft_isdigit(path[ft_strlen(path) - 1]))
 				*err_no = ERR_WRONG_FORMAT_SURFACES;
 		}
+		if (content->type == 'A' )
+		{
+			path = ft_strtrim(content->line + 3, " ");
+			ft_check_duplicates(path, err_no, ';');
+			if (path[ft_strlen(path) - 1] != ';')
+				*err_no = ERR_WRONG_FORMAT_ANI;
+		}
 		ft_true_free((void **)&path);
 		content = content->next;
 	}
@@ -1285,7 +2079,7 @@ int	ft_check_format_textures(char *path, t_lines *content, int *err_no, int i)
 	while (content && !(*err_no))
 	{
 		i = -1;
-		if (ft_strchr("NSWE", content->type))
+		if (ft_strchr("NSWED", content->type))
 		{
 			path = ft_strtrim(content->line + 3, " ");
 			ft_check_one_texture(path, err_no);
@@ -1298,11 +2092,137 @@ int	ft_check_format_textures(char *path, t_lines *content, int *err_no, int i)
 	return (1);
 }
 
+int	ft_check_format_ani_textures(char *path, t_lines *content, int *err, int i)
+{
+	char	**paths;
+
+	paths = NULL;
+	while (content && !(*err))
+	{
+		i = -1;
+		if (content->type == 'A' )
+		{
+			path = ft_strtrim(content->line + 3, " ");
+			paths = ft_split(path, ';');
+			ft_true_free((void **)&path);
+			while (paths[++i])
+				ft_check_one_texture(paths[i], err);
+			ft_full_free((void **)paths);
+		}
+		content = content->next;
+	}
+	if (*err)
+		return (0);
+	return (1);
+}
+
 int	ft_check_type_in_content(t_lines *content, char type)
 {
 	while (content && content->type != type)
 		content = content->next;
 	if (!content)
+		return (0);
+	return (1);
+}
+
+int	ft_check_ani_consistency(t_lines *content, int *err_no)
+{
+	int	i;
+
+	i = 0;
+	if (!ft_check_type_in_content(content, 'A') && !(*err_no))
+	{
+		while (content && content->type != 'M')
+			content = content->next;
+		while (content && content->type == 'M')
+		{
+			while (content->line && content->line[i])
+			{
+				if (content->line[i] == 'A')
+					*err_no = ERR_NO_ANI_CONSISTENCY;
+				i++;
+			}
+			i = 0;
+			content = content->next;
+		}
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
+int	ft_check_door_consistency(t_lines *content, int *err_no)
+{
+	int	i;
+
+	i = 0;
+	if (!ft_check_type_in_content(content, 'D') && !(*err_no))
+	{
+		while (content && content->type != 'M')
+			content = content->next;
+		while (content && content->type == 'M')
+		{
+			while (content->line && content->line[i])
+			{
+				if (ft_strchr("DO", content->line[i]))
+					*err_no = ERR_NO_DOOR_CONSISTENCY;
+				i++;
+			}
+			i = 0;
+			content = content->next;
+		}
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
+int	ft_check_ani_textures(t_lines *content, int *err_no, char *line)
+{
+	char	**paths;
+	int		i;
+
+	i = -1;
+	paths = NULL;
+	while (content && content->type != 'A')
+		content = content->next;
+	if (content && content->type == 'A' && !(*err_no))
+	{
+		line = ft_strtrim(content->line + 3, " ");
+		paths = ft_split(line, ';');
+		ft_true_free((void **)&line);
+		if (!paths || !paths[0])
+			*err_no = ERR_BAD_TEXTURE_FILE;
+		else
+		{
+			while (paths[++i])
+				if (!ft_check_extension(paths[i], ".xpm"))
+					*err_no = ERR_BAD_TEXTURE_FILE;
+		}
+		ft_full_free((void **)paths);
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
+int	ft_check_door_textures(t_lines *content, int *err_no)
+{
+	char	*path;
+	int		i;
+
+	i = 0;
+	path = NULL;
+	while (content && content->type != 'D')
+		content = content->next;
+	if (content && content->type == 'D' && !(*err_no))
+	{
+		path = ft_strtrim(content->line + 2, " ");
+		if (!ft_check_extension(path, ".xpm"))
+			*err_no = ERR_BAD_TEXTURE_FILE;
+		ft_true_free((void **)&path);
+	}
+	if (*err_no)
 		return (0);
 	return (1);
 }
@@ -1326,13 +2246,22 @@ int	ft_check_content(t_lines *content, int *err_no)
 		return (0);
 	if (!ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
 		return (0);
-	if (!ft_check_format_textures(NULL, content, err_no, -1))
+	if (!ft_check_format_textures(NULL, content, err_no, -1) \
+		|| !ft_check_format_ani_textures(NULL, content, err_no, -1))
 		return (0);
 	if (!ft_check_format_punctuation(content, err_no))
 		return (0);
 	if (!ft_one_last_map(content, err_no))
 		return (0);
 	if (!ft_only_one_position(content, err_no))
+		return (0);
+	if (!ft_check_ani_consistency(content, err_no))
+		return (0);
+	if (!ft_check_door_consistency(content, err_no))
+		return (0);
+	if (!ft_check_ani_textures(content, err_no, NULL))
+		return (0);
+	if (!ft_check_door_textures(content, err_no))
 		return (0);
 	if (!ft_check_garbage(content, err_no))
 		return (0);
@@ -1490,7 +2419,7 @@ int	ft_check_if_flawless(char **map, int *err_no)
 		j = 0;
 		while (++j < (len - 1))
 		{
-			if (ft_strchr("NSWE0", map[i][j]))
+			if (ft_strchr("NSWE0DOXx", map[i][j]))
 			{
 				if (map[i - 1][j] == '.' || map[i + 1][j] == '.' \
 					|| map[i][j - 1] == '.' || map[i][j + 1] == '.')
@@ -1573,9 +2502,25 @@ void	ft_destroy_ani_context(t_textures **animated)
 	}
 }
 
-void	ft_unset_context(t_context *context)
+void	ft_unset_context_animated(t_context *context, t_checker *checker)
 {
-	if (context)
+	if (context && checker && checker->door)
+	{
+		ft_true_free((void **)&context->door->path);
+		ft_true_free((void **)&context->door->tex_width);
+		ft_true_free((void **)&context->door->tex_height);
+		ft_true_free((void **)&context->door);
+	}
+	if (context && checker && checker->ani)
+	{
+		ft_destroy_ani_context(context->animated);
+		ft_true_free((void **)&context->animated);
+	}
+}
+
+void	ft_unset_context(t_context *context, t_checker *checker)
+{
+	if (context && checker)
 	{
 		ft_true_free((void **)&context->north->path);
 		ft_true_free((void **)&context->south->path);
@@ -1594,11 +2539,18 @@ void	ft_unset_context(t_context *context)
 		ft_true_free((void **)&context->east);
 		ft_true_free((void **)&context->west);
 		ft_full_free((void **)context->map);
+		ft_unset_context_animated(context, checker);
 		ft_true_free((void **)&context);
 	}
 }
 
-t_context	*ft_cub3d_bonus_parsing(char **av, int *err_no)
+void	ft_init_checker(t_lines *content, t_checker *checker)
+{
+	checker->ani = ft_check_type_in_content(content, 'A');
+	checker->door = ft_check_type_in_content(content, 'D');
+}
+
+t_context	*ft_cub3d_bonus_parsing(char **av, int *err_no, t_checker *checker)
 {
 	t_context	*context;
 	t_lines		*content;
@@ -1607,7 +2559,8 @@ t_context	*ft_cub3d_bonus_parsing(char **av, int *err_no)
 	content = ft_init_content(av[1], err_no);
 	if (content && ft_check_content(content, err_no))
 	{
-		context = ft_init_t_context(err_no);
+		ft_init_checker(content, checker);
+		context = ft_init_t_context(content, err_no, checker);
 		if (context && !(*err_no))
 		{
 			ft_square_shaped_dotted_map(content);
@@ -1619,7 +2572,7 @@ t_context	*ft_cub3d_bonus_parsing(char **av, int *err_no)
 			context->map_height = ft_get_map_size(content);
 			context->map_length = ft_get_greatest_len(content);
 			if (!ft_check_if_flawless(context->map, err_no))
-				ft_unset_context(context);
+				ft_unset_context(context, checker);
 		}
 	}
 	ft_unset_content(content);
@@ -1638,8 +2591,14 @@ void	ft_print_cub3d_error_2(int err_no)
 		printf("Wrong texture file.\n");
 	else if (err_no == ERR_FLOOR_CEILLING_FORMAT)
 		printf("Wrong definition of colors for floor or ceilling.\n");
+	else if (err_no == ERR_WRONG_FORMAT_ANI)
+		printf("Wrong format for animation line.\n");
 	else if (err_no == ERR_WRONG_FORMAT_SURFACES)
 		printf("Wrong surfaces format.\n");
+	else if (err_no == ERR_NO_ANI_CONSISTENCY)
+		printf("Animation textures needed for this map.\n");
+	else if (err_no == ERR_NO_DOOR_CONSISTENCY)
+		printf("Door texture needed for this map.\n");
 	else if (err_no == ERR_UNEXPECTED_MENTIONS)
 		printf("There are unexpected mentions in your file.\n");
 }
@@ -1678,7 +2637,21 @@ void	ft_destroy_img_safely(t_textures *texture, t_vars *vars)
 		mlx_destroy_image(vars->mlx_datas->mlx, texture);
 }
 
-void	ft_unset_vars(t_vars *vars)
+void	ft_destroy_ani(t_vars *vars)
+{
+	t_context	*context;
+	int			i;
+
+	context = vars->context;
+	i = 0;
+	while (context->animated[i])
+	{
+		ft_destroy_img_safely(context->animated[i]->tex_img, vars);
+		i++;
+	}
+}
+
+void	ft_unset_vars(t_vars *vars, t_checker *checker)
 {
 	t_context	*context;
 
@@ -1687,31 +2660,39 @@ void	ft_unset_vars(t_vars *vars)
 	ft_destroy_img_safely(context->south->tex_img, vars);
 	ft_destroy_img_safely(context->east->tex_img, vars);
 	ft_destroy_img_safely(context->west->tex_img, vars);
+	if (checker->ani)
+		ft_destroy_ani(vars);
+	if (checker->door)
+		ft_destroy_img_safely(context->door->tex_img, vars);
+	ft_destroy_img_safely(vars->minimap->img, vars);
 	ft_destroy_img_safely(vars->mlx_datas->img, vars);
 	mlx_destroy_window(vars->mlx_datas->mlx, vars->mlx_datas->win);
 	mlx_destroy_display(vars->mlx_datas->mlx);
-	ft_unset_context(context);
+	ft_unset_context(context, checker);
+	ft_true_free((void **)&vars->minimap);
 	ft_true_free((void **)&vars->mlx_datas->mlx);
 	ft_true_free((void **)&vars->keys);
 	ft_true_free((void **)&vars->mlx_datas);
 	ft_true_free((void **)&vars->position);
+	ft_true_free((void **)&vars->rays_door);
 	ft_true_free((void **)&vars->rays);
 	ft_true_free((void **)&vars);
 }
 
-void	ft_init_cub3d(t_vars *vars, t_context *context, int err_no)
+void	ft_init_cub3d(t_vars *vars, t_context *context, int err_no, \
+	t_checker *checker)
 {
-	vars = ft_get_vars(context, &err_no);
+	vars = ft_get_vars(context, &err_no, checker);
 	if (context && vars && !err_no)
 	{
 		ft_hooks_activation(vars);
 		mlx_loop_hook(vars->mlx_datas->mlx, ft_cub3d, vars);
 		mlx_loop(vars->mlx_datas->mlx);
-		ft_unset_vars(vars);
+		ft_unset_vars(vars, checker);
 	}
 	else
 	{
-		ft_unset_vars(vars);
+		ft_unset_vars(vars, checker);
 		ft_print_cub3d_error_1(err_no);
 	}
 }
@@ -1721,14 +2702,17 @@ int	main(int ac, char **argv)
 	int			err_no;
 	t_context	*context;
 	t_vars		*vars;
+	t_checker	checker;
 
 	err_no = 0;
+	checker.ani = 0;
+	checker.door = 0;
 	vars = NULL;
 	if (ac == 2 && ft_check_extension(argv[1], ".cub"))
 	{
-		context = ft_cub3d_bonus_parsing(argv, &err_no);
+		context = ft_cub3d_bonus_parsing(argv, &err_no, &checker);
 		if (!err_no)
-			ft_init_cub3d(vars, context, err_no);
+			ft_init_cub3d(vars, context, err_no, &checker);
 		else
 			ft_print_cub3d_error_1(err_no);
 	}

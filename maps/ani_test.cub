@@ -3,7 +3,7 @@ C 25,25,50
 
 ANI ./textures/fail.xpm;
 
-DR 0.xpm
+DR .xpm
 SO ./textures/t_gungeon_south.xpm
 NO ./textures/t_gungeon_north.xpm
 WE ./textures/t_gungeon_west.xpm

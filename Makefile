@@ -11,7 +11,7 @@ LIBMLX = mlx/libmlx.a
 SRCSDIR = ./srcs/
 
 SRCS = \
-${SRCSDIR}ft_full_cub3D.c
+${SRCSDIR}ft_full_cub3D_bonus.c
 
 HEADERDIR = includes/
 
