@@ -1478,7 +1478,7 @@ void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, t_ch
 		ft_set_texture(context->door, md);
 	if (checker->ani)
 	{
-			ft_set_animated_texture(context->animated, md);
+		ft_set_animated_texture(context->animated, md);
 		if (!ft_check_animated_texture(context->animated))
 			*err_no = ERR_BAD_TEXTURE_FILE;
 	}
@@ -1491,7 +1491,7 @@ void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, t_ch
 
 int	ft_total_frames(t_textures **animated)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (animated && animated[i])
@@ -1504,7 +1504,7 @@ t_vars	*ft_get_vars(t_context *context, int *err_no,t_checker *checker)
 	t_vars		*vars;
 	t_mlx_datas	*md;
 
-	ft_show_context(context);
+	// ft_show_context(context);
 	vars = ft_init_vars(context);
 	if (checker->ani)
 		vars->ani_frames = ft_total_frames(context->animated);
@@ -1520,22 +1520,6 @@ t_vars	*ft_get_vars(t_context *context, int *err_no,t_checker *checker)
 		ft_set_minimap(vars);
 	}
 	return (vars);
-}
-
-void	ft_check_lst_lines(t_lines *lst)
-{
-	int	i;
-
-	i = 0;
-	printf("check :\n");
-	while (lst)
-	{
-		printf("%d\t%c; len %d\t;", i, lst->type, lst->len);
-		printf("%s\n", lst->line);
-		lst = lst->next;
-		i++;
-	}
-	printf("end check.\n");
 }
 
 int	ft_file_lines_counter(int fd)
@@ -2176,14 +2160,63 @@ int	ft_check_door_consistency(t_lines *content, int *err_no)
 	return (1);
 }
 
+int	ft_check_ani_textures(t_lines *content, int *err_no, char *line)
+{
+	char	**paths;
+	int		i;
+
+	i = -1;
+	paths = NULL;
+	while (content && content->type != 'A')
+		content = content->next;
+	if (content && content->type == 'A')
+	{
+		line = ft_strtrim(content->line + 3, " ");
+		paths = ft_split(line, ';');
+		ft_true_free((void **)&line);
+		if (!paths || !paths[0])
+			*err_no = 0;
+		else
+		{
+			while (paths[++i])
+				if (!ft_check_extension(paths[i], ".xpm"))
+					*err_no = ERR_BAD_TEXTURE_FILE;
+		}
+		ft_full_free((void **)paths);
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
+int	ft_check_door_textures(t_lines *content, int *err_no)
+{
+	char	*path;
+	int		i;
+
+	i = 0;
+	path = NULL;
+	while (content && content->type != 'D')
+		content = content->next;
+	if (content && content->type == 'D')
+	{
+		path = ft_strtrim(content->line + 2, " ");
+		if (!ft_check_extension(path, ".xpm"))
+			*err_no = ERR_BAD_TEXTURE_FILE;
+		ft_true_free((void **)&path);
+	}
+	if (*err_no)
+		return (0);
+	return (1);
+}
+
 int	ft_check_content(t_lines *content, int *err_no)
 {
 	char	*path;
 
 	path = NULL;
-	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no))
-		return (0);
-	if (!ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
+	if (!ft_just_enough_surfaces(content, (int [2]){0, 0}, err_no) \
+		|| !ft_just_enough_paths(content, (int [6]){0, 0, 0, 0, 0, 0}, err_no))
 		return (0);
 	if (!ft_check_format_textures(path, content, err_no, -1))
 		return (0);
@@ -2198,6 +2231,10 @@ int	ft_check_content(t_lines *content, int *err_no)
 	if (!ft_check_ani_consistency(content, err_no))
 		return (0);
 	if (!ft_check_door_consistency(content, err_no))
+		return (0);
+	if (!ft_check_ani_textures(content, err_no, NULL))
+		return (0);
+	if (!ft_check_door_textures(content, err_no))
 		return (0);
 	return (1);
 }
