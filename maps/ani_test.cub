@@ -1,17 +1,16 @@
 
 C 25,25,50
 
-ANI ;
+ANI /nfs/homes/alprival/Cub3d/textures/t_gungeon_door.xpm;
 
 DR /nfs/homes/alprival/Cub3d/textures/t_gungeon_door.xpm
 SO /nfs/homes/alprival/Cub3d/textures/t_gungeon_south.xpm
 NO /nfs/homes/alprival/Cub3d/textures/t_gungeon_north.xpm
-
+WE /nfs/homes/alprival/Cub3d/textures/t_gungeon_west.xpm
 EA /nfs/homes/alprival/Cub3d/textures/t_gungeon_east.xpm
 
 F 130,100,70
 
-WE /nfs/homes/alprival/Cub3d/textures/t_gungeon_west.xpm
 1111111111111111111111111111111111111111111111111111111111111
 10000000000D000000000000000AAAAAAA0000000000000000D0000000001
 10A00000000D00000000000000A0000000A000000000000000D0000000A01

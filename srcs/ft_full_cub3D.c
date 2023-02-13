@@ -1480,7 +1480,11 @@ void	ft_get_full_textures(t_context *context, t_mlx_datas *md, int *err_no, t_ch
 	ft_set_texture(context->west, md);
 	ft_set_texture(context->east, md);
 	if (checker->door)
+	{
 		ft_set_texture(context->door, md);
+		if (!context->door->tex_img)
+			*err_no = ERR_BAD_TEXTURE_FILE;
+	}
 	if (checker->ani)
 	{
 		ft_set_animated_texture(context->animated, md);
@@ -2180,7 +2184,7 @@ int	ft_check_ani_textures(t_lines *content, int *err_no, char *line)
 		paths = ft_split(line, ';');
 		ft_true_free((void **)&line);
 		if (!paths || !paths[0])
-			*err_no = 0;
+			*err_no = ERR_BAD_TEXTURE_FILE;
 		else
 		{
 			while (paths[++i])
