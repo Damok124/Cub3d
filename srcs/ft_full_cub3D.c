@@ -2224,7 +2224,6 @@ int	ft_check_garbage(t_lines *content, int *err_no)
 {
 	while (content && !(*err_no))
 	{
-		printf("type : [%c] line :%s", content->type, content->line);
 		if (content->type == '0' && content->line && content->line[0] != '\0')
 			*err_no = ERR_UNEXPECTED_MENTIONS;
 		content = content->next;
@@ -2706,7 +2705,7 @@ int	main(int ac, char **argv)
 			ft_print_cub3d_error_1(err_no);
 	}
 	else
-		write(2, "Error.\nCheck your arguments.\n", 24);
+		write(2, "Error.\nCheck your arguments.\n", 29);
 	ft_close_stdfds();
 	return (0);
 }
