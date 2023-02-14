@@ -6,7 +6,7 @@
 /*   By: zharzi <zharzi@student.42angouleme.fr>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/31 13:48:56 by zharzi            #+#    #+#             */
-/*   Updated: 2023/02/14 18:42:55 by zharzi           ###   ########.fr       */
+/*   Updated: 2023/02/14 20:35:31 by zharzi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,6 @@
 # define WALL 5
 # define DOOR 6
 # define ANIMATION 7
-# define DOOR_ANIMATION 8
 # define DOOR_CLOSED 9
 
 # define SQ_SIZE 64
@@ -209,11 +208,11 @@ typedef struct s_context {
 	t_rgb		floor;
 	t_rgb		ceiling;
 	char		**map;
-	int			frames_door;
 	int			frames;
 	double		step;
 	int			map_height;
 	int			map_length;
+	int			nb_anim;
 	char		orientation;
 }				t_context;
 
@@ -223,8 +222,150 @@ typedef struct s_vars {
 	t_player	*position;
 	t_keys		*keys;
 	t_rays		*rays;
-	t_rays		*rays_door;
 	t_minimap	*minimap;
-	int			ani_frames;
 }				t_vars;
+
+void			ft_angle_adjustement(double *angle);
+double			ft_distance(double ax, double ay, double bx, double by);
+void			ft_mlx_pixel_put(t_vars *vars, int x, int y, int color);
+char			*ft_right_color_from_xpm(t_textures *wall, double step, \
+					double rank);
+char			*ft_left_color_from_xpm(t_textures *wall, double step, \
+					double rank);
+unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
+					double rank, int read_from);;
+unsigned int	ft_get_wall_color(t_textures *texture, double step, \
+					t_rays *rays);
+void			ft_print_type(double step, unsigned int *col,
+					t_vars *vars, t_rays *rays);
+void			ft_print_column(t_vars *vars, int line_s,
+					int line_e, t_rays *rays);
+void			ft_3d_display(t_vars *vars, t_rays *rays);
+void			ft_ray_impact_wall(t_vars *vars, int dov, t_rays *ray);
+void			ft_deep_of_view_explorer(t_vars *vars, int dov, t_rays *rays);
+void			ft_parallel_axis(t_vars *vars, int dov, t_rays *rays);
+void			ft_h_not_parallel_axis(t_vars *vars, int coeff, t_rays *rays);
+void			ft_v_not_parallel_axis(t_vars *vars, int coeff, t_rays *rays);
+void			ft_horizontal_axis_intersection(t_vars *vars, t_rays *rays);
+void			ft_vertical_axis_intersection(t_vars *vars, t_rays *rays);
+void			ft_wall_identification(t_player *position, t_rays *rays);
+void			ft_minimap_pixel_put(t_minimap *minimap, int x, \
+					int y, int color);
+void			ft_confirm_wall_type(t_rays *r, char **map, int x, int y);
+void			ft_animate_frames(int *frames);
+void			ft_draw_environment(t_vars *vars, t_rays *rays);
+void			ft_pixel_around_impacts(t_vars *vars, int size, \
+					unsigned int color);
+void			ft_draw_ray_hit(t_vars *vars, unsigned int color, t_rays *rays);
+void			ft_draw_rays_minimap(t_vars *vars, t_rays *rays);
+void			ft_put_pixel_around(t_vars *vars, int size, unsigned int color);
+void			ft_draw_player(t_vars *vars);
+void			ft_draw_square_minimap(t_vars *vars, int y, int x, int color);
+void			ft_draw_minispaces(t_vars *vars);
+void			ft_init_minitools(t_minitools *tools, t_player *pos);
+void			ft_put_minimap_on_display(t_vars *vars, \
+					t_player *pos, t_minimap *mini);
+void			ft_draw_miniwalls(t_vars *vars);
+void			ft_draw_minimap(t_vars *vars);
+int				ft_mouse_interactions(int x, int y, t_vars *vars);
+void			ft_rotation(t_vars *vars);
+int				ft_map_wall(t_vars *vars);
+void			ft_foreward_backward(t_vars *vars);
+void			ft_left_right(t_vars *vars);
+void			ft_collision(t_vars *vars, t_margin *margin, int i);
+int				ft_putchar_on_map(t_vars *vars, int x, int y, int type);
+int				ft_open_door(t_vars *vars, int x, int y, double ang);
+void			ft_close_door(t_vars *vars, int x, int y, double ang);
+void			ft_map_door(t_vars *vars);
+void			ft_keyboard_interactions(t_vars *vars);
+void			ft_draw_ceilling(t_context *context, t_vars *vars);
+void			ft_draw_floor(t_context *context, t_vars *vars);
+int				ft_player_around(t_vars *vars, int x, int y);
+int				ft_cub3d(t_vars *vars);
+int				ft_click_cross(void *mlx_ptr);
+int				ft_hold_key(int keycode, t_vars *vars);
+int				ft_release_key(int keycode, t_vars *vars);
+void			ft_hooks_activation(t_vars *vars);
+int				ft_if_player_here(t_vars *vars, int y, int x);
+double			ft_get_first_angle(char orientation);
+t_player		*ft_get_player_position(t_vars *vars, char orientation);
+t_keys			*ft_init_keys(void);
+void			ft_set_minimap(t_vars *vars);
+t_minimap		*ft_init_minimap(void);
+t_vars			*ft_init_vars(t_context *context);
+void			ft_set_texture(t_textures *data, t_mlx_datas *md);
+void			ft_get_textures_paths(t_context *context, t_lines *content);
+void			ft_set_animated_texture(t_textures **animated, t_mlx_datas *md);
+int				ft_check_animated_texture(t_textures **animated);
+void			ft_get_full_textures(t_context *context, t_mlx_datas *md, \
+					int *err_no, t_checker *checker);
+int				ft_total_frames(t_textures **animated);
+t_vars			*ft_get_vars(t_context *context, int *err_no, \
+					t_checker *checker);
+int				ft_file_lines_counter(int fd);
+int				ft_potential_map_line(char *str, int len);
+int				ft_strs_are_digits(char **strs);
+int				ft_atoi_rgb_safe(const char *nptr, int *check);
+char			ft_check_valid_fc(char *str);
+char			ft_check_valid_nswe(char *str);
+char			ft_check_valid_animation(char *str);
+char			ft_check_valid_door(char *str);
+char			ft_type_specifier(char *str, int target_type);
+char			ft_define_line_type(char *str, int len);
+t_lines			*ft_fill_content(int size, int fd, int index);
+t_lines			*ft_init_content(char *filename, int *err_no);
+t_textures		*ft_init_t_textures(void);
+int				ft_get_animation_len(t_lines *content);
+char			**ft_get_animated_textures(t_lines *content);
+t_textures		**ft_init_ani_textures(t_lines *content);
+t_context		*ft_init_t_context(t_lines *content, int *err, \
+					t_checker *checker);
+void			ft_unset_content(t_lines *content);
+int				ft_just_enough_surfaces(t_lines *content, \
+					int *tab, int *err_no);
+void			ft_enough_paths_err_no(int *tab, int *err_no);
+int				ft_just_enough_paths(t_lines *content, int *tab, int *err_no);
+int				ft_one_last_map(t_lines *content, int *err_no);
+int				ft_only_one_position(t_lines *content, int *err_no);
+void			ft_check_one_texture(char *path, int *err_no);
+void			ft_check_duplicates(char *path, int *err_no, char c);
+int				ft_check_format_punctuation(t_lines *content, int *err_no);
+int				ft_check_format_textures(char *path, t_lines *content, \
+					int *err_no, int i);
+int				ft_check_format_ani_textures(char *path, t_lines *content, \
+					int *err, int i);
+int				ft_check_type_in_content(t_lines *content, char type);
+int				ft_check_ani_consistency(t_lines *content, int *err_no);
+int				ft_check_door_consistency(t_lines *content, int *err_no);
+int				ft_check_ani_textures(t_lines *content, int *err_no, \
+					char *line);
+int				ft_check_door_textures(t_lines *content, int *err_no);
+int				ft_check_garbage(t_lines *content, int *err_no);
+int				ft_check_content(t_lines *content, int *err_no);
+int				ft_get_greatest_len(t_lines *content);
+char			*ft_line_to_standard(char *str, int max);
+void			ft_spotted_spaces(char *str);
+t_lines			*ft_add_empty_line_to_map(int max, t_lines *next);
+void			ft_square_shaped_dotted_map(t_lines *content);
+int				ft_get_map_size(t_lines *lst);
+char			**ft_get_map(t_lines *lst);
+int				ft_check_if_flawless(char **map, int *err_no);
+t_rgb			ft_get_rgb(t_lines *content, char type);
+char			ft_get_player_orientation(t_lines *content);
+void			ft_destroy_ani_context(t_textures **animated);
+void			ft_unset_context_animated(t_context *context, \
+					t_checker *checker);
+void			ft_unset_context(t_context *context, t_checker *checker);
+void			ft_init_checker(t_lines *content, t_checker *checker);
+t_context		*ft_cub3d_bonus_parsing(char **av, int *err_no, \
+					t_checker *checker);
+void			ft_print_cub3d_error_2(int err_no);
+void			ft_print_cub3d_error_1(int err_no);
+void			ft_destroy_img_safely(t_textures *texture, t_vars *vars);
+void			ft_destroy_ani(t_vars *vars);
+void			ft_unset_vars(t_vars *vars, t_checker *checker);
+void			ft_init_cub3d(t_vars *vars, t_context *context, int err_no, \
+					t_checker *checker);
+int				main(int ac, char **argv);
+
 #endif
