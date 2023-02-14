@@ -255,7 +255,6 @@ unsigned int	ft_get_color_from_xpm(t_textures *wall, double step, \
 		return (*(unsigned int *)ft_left_color_from_xpm(wall, step, rank));
 }
 
-
 unsigned int	ft_get_wall_color(t_textures *texture, double step, \
 	t_rays *rays)
 {
@@ -298,12 +297,14 @@ void	ft_print_column(t_vars *vars, int line_start,
 
 	vars->context->step = 0;
 	pixel = 0;
-	while ((line_start + pixel) < line_end - 1 && line_start + pixel < WINDOW_HEIGHT)
+	while ((line_start + pixel) < line_end - 1
+		&& line_start + pixel < WINDOW_HEIGHT)
 	{
 		pixel++;
-		if(line_start + pixel > 0)
+		if (line_start + pixel > 0)
 		{
-			vars->context->step = ((double)pixel / (double)(line_end - line_start));
+			vars->context->step = \
+				((double)pixel / (double)(line_end - line_start));
 			ft_print_type(vars->context->step, &col, vars, rays);
 			if (col != 0xff00ff)
 				ft_mlx_pixel_put(vars, rays->r_id, (line_start + pixel), col);
@@ -746,7 +747,6 @@ t_keys	*ft_init_keys(void)
 	keys->right_arr = 0;
 	return (keys);
 }
-
 
 t_vars	*ft_init_vars(t_context *context)
 {

@@ -356,43 +356,43 @@ void	ft_print_type(double step, unsigned int *col,
 		*col = ft_get_wall_color(context->west, step, rays, vars);
 }
 
-void	ft_print_column(t_vars *vars, int line_start,
-		int line_end, t_rays *rays)
+void	ft_print_column(t_vars *vars, int line_s,
+		int line_e, t_rays *rays)
 {
 	unsigned int	col;
 	int				pixel;
 
 	vars->context->step = 0;
 	pixel = 0;
-	while ((line_start + pixel) < line_end - 1 && line_start + pixel < WINDOW_HEIGHT)
+	while ((line_s + pixel) < line_e - 1
+		&& line_s + pixel < WINDOW_HEIGHT)
 	{
 		pixel++;
-		if (line_start + pixel > 0)
+		if (line_s + pixel > 0)
 		{
-			vars->context->step = ((double)pixel / (double)(line_end - line_start));
+			vars->context->step = ((double)pixel / (double)(line_e - line_s));
 			ft_print_type(vars->context->step, &col, vars, rays);
 			if (col != 0xff00ff)
-				ft_mlx_pixel_put(vars, rays->r_id, (line_start + pixel), col);
+				ft_mlx_pixel_put(vars, rays->r_id, (line_s + pixel), col);
 		}
 	}
 }
 
-void	ft_print_door(t_vars *vars, int line_start, int line_end, t_rays *rays)
+void	ft_print_door(t_vars *vars, int line_s, int line_e, t_rays *rays)
 {
 	unsigned int	col;
 	int				pixel;
 
 	pixel = 0;
-
-	while ((line_start + pixel) < line_end - 1 && line_start + pixel < WINDOW_HEIGHT)
+	while ((line_s + pixel) < line_e - 1 && line_s + pixel < WINDOW_HEIGHT)
 	{
 		pixel++;
-		if(line_start + pixel > 0)
+		if (line_s + pixel > 0)
 		{
-			vars->context->step = ((double)pixel / (double)(line_end - line_start));
+			vars->context->step = ((double)pixel / (double)(line_e - line_s));
 			ft_print_type(vars->context->step, &col, vars, rays);
 			if (col != 0xff00ff)
-				ft_mlx_pixel_put(vars, rays->r_id, (line_start + pixel), col);
+				ft_mlx_pixel_put(vars, rays->r_id, (line_s + pixel), col);
 		}
 	}
 }
