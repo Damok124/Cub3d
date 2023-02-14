@@ -382,9 +382,6 @@ void	ft_confirm_wall_type(t_rays *r, char **map, int x, int y)
 {
 	if (map[y / SQ_SIZE][x / SQ_SIZE] == 'D')
 		r->wall_type = DOOR;
-	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'X' \
-		|| map[y / SQ_SIZE][x / SQ_SIZE] == 'x')
-		r->wall_type = DOOR_ANIMATION;
 	else if (map[y / SQ_SIZE][x / SQ_SIZE] == 'A')
 		r->wall_type = ANIMATION;
 	else
@@ -411,7 +408,7 @@ void	ft_animate_frames(int *frames)
 
 	if (!j)
 		j = 1;
-	if (i++ / 20)
+	if (i++ / 7)
 	{
 		i = 0;
 		if (*frames > 10 && j == 1)
@@ -720,10 +717,10 @@ int	ft_map_wall(t_vars *vars)
 	map = vars->context->map;
 	player_y = (int)vars->position->player_y;
 	player_x = (int)vars->position->player_x;
-	if (ft_strchr("1ADxX", map[(player_y + 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1ADxX", map[(player_y - 22) / 64][(player_x - 22) / 64])
-		|| ft_strchr("1ADxX", map[(player_y - 22) / 64][(player_x + 22) / 64])
-		|| ft_strchr("1ADxX", map[(player_y + 22) / 64][(player_x - 22) / 64]))
+	if (ft_strchr("1AD", map[(player_y + 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1AD", map[(player_y - 22) / 64][(player_x - 22) / 64])
+		|| ft_strchr("1AD", map[(player_y - 22) / 64][(player_x + 22) / 64])
+		|| ft_strchr("1AD", map[(player_y + 22) / 64][(player_x - 22) / 64]))
 		return (1);
 	return (0);
 }
@@ -800,15 +797,9 @@ int	ft_putchar_on_map(t_vars *vars, int x, int y, int type)
 
 	map = vars->context->map;
 	if (type == DOOR)
-	{
-		vars->context->frames_door = 1;
 		map[y][x] = 'O';
-	}
 	else
-	{
-		vars->context->frames_door = 59;
 		map[y][x] = 'D';
-	}
 	return (1);
 }
 
@@ -2167,7 +2158,7 @@ int	ft_check_if_flawless(char **map, int *err_no)
 		j = 0;
 		while (++j < (len - 1))
 		{
-			if (ft_strchr("NSWE0DOXx", map[i][j]))
+			if (ft_strchr("NSWE0DO", map[i][j]))
 			{
 				if (map[i - 1][j] == '.' || map[i + 1][j] == '.' \
 					|| map[i][j - 1] == '.' || map[i][j + 1] == '.')
