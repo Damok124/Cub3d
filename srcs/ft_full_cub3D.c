@@ -1548,16 +1548,6 @@ char	ft_get_player_orientation(t_lines *content)
 	return ('N');
 }
 
-void	ft_show_content(t_lines *content)
-{
-	printf("\nBEFORE PARSING\n");
-	while (content)
-	{
-		printf("%c %s\n", content->type, content->line);
-		content = content->next;
-	}
-}
-
 void	ft_destroy_ani_context(t_textures **animated)
 {
 	int	i;

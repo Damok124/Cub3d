@@ -1,9 +1,9 @@
 
 C 25,25,50
 
-ANI ./textures/fail.xpm;
+ANI ./textures/flame1.xpm;./textures/flame2.xpm;./textures/flame3.xpm;
 
-DR .xpm
+DR ./textures/t_gungeon_door.xpm
 SO ./textures/t_gungeon_south.xpm
 NO ./textures/t_gungeon_north.xpm
 WE ./textures/t_gungeon_west.xpm
