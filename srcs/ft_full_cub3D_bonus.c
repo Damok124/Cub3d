@@ -1006,12 +1006,12 @@ int	ft_putchar_on_map(t_vars *vars, int x, int y, int type)
 	if (type == DOOR)
 	{
 		vars->context->frames_door = 1;
-		map[y][x] = 'X';
+		map[y][x] = 'O';
 	}
 	else
 	{
 		vars->context->frames_door = 59;
-		map[y][x] = 'x';
+		map[y][x] = 'D';
 	}
 	return (1);
 }
@@ -1180,29 +1180,29 @@ int	ft_parse_map_to_close(t_vars *vars)
 	return (0);
 }
 
-void	ft_door_animation(t_vars *vars)
-{
-	static int	i;
+// void	ft_door_animation(t_vars *vars)
+// {
+// 	static int	i;
 
-	if (vars->keys->e || (vars->context->frames_door > 0
-			&& vars->context->frames_door < 60))
-	{
-		ft_animate_frames_door(&vars->context->frames_door);
-		i++;
-		ft_draw_door(vars, vars->rays_door);
-	}
-	if (i > 1)
-		i++;
-	if (i / 60 && (vars->context->frames_door == 59
-			|| vars->context->frames_door == 1))
-	{
-		if (ft_parse_map_to_close(vars))
-		{
-			vars->context->frames_door = 0;
-			i = 0;
-		}
-	}
-}
+// 	if (vars->keys->e || (vars->context->frames_door > 0
+// 			&& vars->context->frames_door < 60))
+// 	{
+// 		ft_animate_frames_door(&vars->context->frames_door);
+// 		i++;
+// 		ft_draw_door(vars, vars->rays_door);
+// 	}
+// 	if (i > 1)
+// 		i++;
+// 	if (i / 60 && (vars->context->frames_door == 59
+// 			|| vars->context->frames_door == 1))
+// 	{
+// 		if (ft_parse_map_to_close(vars))
+// 		{
+// 			vars->context->frames_door = 0;
+// 			i = 0;
+// 		}
+// 	}
+// }
 
 int	ft_cub3d(t_vars *vars)
 {
@@ -1219,7 +1219,7 @@ int	ft_cub3d(t_vars *vars)
 	ft_keyboard_interactions(vars);
 	ft_animate_frames(&vars->context->frames);
 	ft_draw_environment(vars, vars->rays);
-	ft_door_animation(vars);
+	// ft_door_animation(vars);
 	ft_draw_minimap(vars);
 	mlx_put_image_to_window(md->mlx, md->win, md->img, 0, 0);
 	return (1);
